@@ -32,7 +32,7 @@ $patern.="|mercadopago_success|mercadopago_failure|mercadopagoinit|changepasswor
 $patern=strtolower($patern);
 
 return array(
-	'name'=>'Kinago',
+	'name'=>'Kinago3',
 	
 	'defaultController'=>'store',
 		
