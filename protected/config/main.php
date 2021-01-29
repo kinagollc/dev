@@ -32,7 +32,7 @@ $patern.="|mercadopago_success|mercadopago_failure|mercadopagoinit|changepasswor
 $patern=strtolower($patern);
 
 return array(
-	'name'=>'Karinderia Multiple Restaurant',
+	'name'=>'Kinago',
 	
 	'defaultController'=>'store',
 		
@@ -144,10 +144,10 @@ return array(
 				
 		'db'=>array(	        
 		    'class'            => 'CDbConnection' ,
-			'connectionString' => 'mysql:host=localhost;dbname=kmrs',
+			'connectionString' => 'mysql:host=localhost;dbname=kina_gocloud',
 			'emulatePrepare'   => true,
-			'username'         => 'root',
-			'password'         => '',
+			'username'         => 'kina_gocloud',
+			'password'         => 'Ikv^n^Djl4ujzzIF',
 			'charset'          => 'utf8',
 			'tablePrefix'      => 'mt_',
 	    ),
