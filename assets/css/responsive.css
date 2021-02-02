@@ -1,6 +1,13 @@
 
 @media only screen and (max-width : 1024px) 
 {
+.ismobile {
+display:none;
+}
+html, body
+{
+padding-top:22px;
+}
 
 .top-menu-wrapper img.logo{
 border:0px solid white;
