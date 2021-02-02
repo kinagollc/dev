@@ -74,7 +74,7 @@ data-image-src="<?php echo assetsURL()."/images/b6.jpg"?>">
 <div class="sections section-how-it-works">
 <div class="container">
  <h2><?php echo t("How it works")?></h2>
- <p class="center"><?php echo t("Get your favourite food in 4 simple steps")?></p>
+ <p class="center"><?php echo t("Get your favourite items in 4 simple steps")?></p>
  
  <div class="row">
    <div class="col-md-3 col-sm-3 center">
