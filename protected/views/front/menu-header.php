@@ -3,16 +3,17 @@
  <div class="layer"></div>
  <img class="mobile-banner" src="<?php echo empty($background)?assetsURL()."/images/b-2-mobile.jpg":uploadURL()."/$background"; ?>">
 </div>
-
-<div id="parallax-wrap" class="parallax-search parallax-menu" 
+<div id="parallax-wrap" class="parallax-search parallax-menu"  
 data-parallax="scroll" data-position="top" data-bleed="10" 
-data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uploadURL()."/$background"; ?>">
-
+data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uploadURL()."/$background"; ?> ">
 <div class="search-wraps center menu-header">
 
       <img class="logo-medium bottom15" src="<?php echo $merchant_logo;?>">
+      <h1><?php echo clearString($restaurant_name)?></h1>
       
-	  <div class="mytable">
+	<p><i class="fa fa-map-marker"></i> <?php echo $merchant_address?></p>
+		<p><i class="fa fa-phone"></i> <a href="tel:<?php echo $restaurant_phone?>"><?php echo $restaurant_phone?></a></p>
+		<div class="mytable">
 	     <div class="mycol">
 	        <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
 	     </div>
@@ -26,17 +27,24 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     <div class="mycol">
 	        <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>             
 	     </div>
+	     <?php if ($minimum_order>0):?>
 	     <div class="mycol">
 	        <p class="small"><?php echo t("Minimum Order").": ".FunctionsV3::prettyPrice($minimum_order)?></p>
 	     </div>
+	     <?php else :?>
+	     <div class="mycol">
+	      <p class="small"><?php echo t("&nbsp;")?></p>
+	      </div>
+	     <?php endif;?>
 	     
 	     <div class="mycol">
-	        <a href="javascript:;" data-id="<?php echo $merchant_id?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$merchant_id?>"><i class="ion-android-favorite-outline"></i></a>
+	        <a href="javascript:;" data-id="<?php echo $merchant_id?>"  title="<?php echo t("add to your favorite places")?>" class="add_favorites <?php echo "fav_".$merchant_id?>"><i class="ion-android-favorite-outline"></i></a>
 	     </div>
 	     
-	   </div> <!--mytable-->
+	   </div>
+		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
+	 <!--mytable-->
 
-	<h1><?php echo clearString($restaurant_name)?></h1>
 	
 	<?php if(!empty($social_facebook_page) || !empty($social_twitter_page) || !empty($social_google_page)):?>
 	<ul class="merchant-social-list">
@@ -67,19 +75,9 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	</ul>
 	<?php endif;?>
 	
-	<p><i class="fa fa-map-marker"></i> <?php echo $merchant_address?></p>
-	<p class="small"><?php echo FunctionsV3::displayCuisine($cuisine);?></p>
-	<p><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
-	
-	<?php if ( getOption($merchant_id,'merchant_show_time')=="yes"):?>
-	<p class="small">
-	<?php echo t("Merchant Current Date/Time").": ".
-	Yii::app()->functions->translateDate(date('F d l')." ".timeFormat(date('c'),true));?>
-	</p>
-	<?php endif;?>
 	
 	<?php if (!empty($merchant_website)):?>
-	<p class="small">
+	<p class="small" style="display:none;">
 	<?php echo t("Website").": "?>
 	<a target="_blank" href="<?php echo FunctionsV3::fixedLink($merchant_website)?>">
 	  <?php echo $merchant_website;?>
