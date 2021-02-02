@@ -114,6 +114,15 @@ border:1px solid #444;
 display:block;
 }
 
+.mobile-home-banner
+{
+display:none;
+}
+
+.mobile-banner
+{
+display:none;
+}
 
 body .mobile-banner
 {
