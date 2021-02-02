@@ -6,7 +6,7 @@
 *******************************************/
 
 /* ********************************************************
- *   Karenderia Multiple Restaurant 
+ *   Kinago
  *   11 October 14 Version 1.0.0 initial release
  *   Last Update : 14 october 2014 Version 1.0.1
  *   Last Update : 12 november 2014 Version 1.0.2
