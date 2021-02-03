@@ -351,10 +351,6 @@ class UpdateController extends CController
 		$this->alterTable('mobile2_device_reg',array(
 		  'subscribe_topic'=>"int(1) NOT NULL DEFAULT '1'",
 		));
-
-		$this->alterTable('client',array(
-		  'stic_dark_theme'=>"int(1) NOT NULL DEFAULT '0'",
-		));	
 				
 		$this->alterTable('mobile2_broadcast',array(
 		  'fcm_response'=>"text",
@@ -508,7 +504,7 @@ class UpdateController extends CController
 		}
 		
 		/*END 1.5.2*/
-
+		
 		/*1.5.4*/
 		$loger[] = DatataseMigration::addColumn("{{order_delivery_address}}",array(
 		  'first_name'=>"varchar(255) NOT NULL DEFAULT ''",
@@ -523,6 +519,7 @@ class UpdateController extends CController
 		));		
 		/*1.5.4*/
 		
+						
 	    /*VIEW TABLES*/	    
 	    $stmt=array();
 	    

@@ -2799,30 +2799,7 @@ class FunctionsV3
 		}
 		return false;
 	}
-	public static function sticPrettyDate($date='')
-{
-	if (!empty($date)){
-		$date_format=getOptionA('website_date_format');
-		if (empty($date_format)){
-			$date_format="l, M j";
-		}
-		$date = date($date_format,strtotime($date));
-		return Yii::app()->functions->translateDate($date);
-	}
-	return false;
-}
-
-public static function sticPrettyTime($time='')
-{
-	if (!empty($time)){
-		$format=getOptionA('website_time_format');			
-		if(empty($format)){
-			$format="g:i a";
-		}
-		return date($format,strtotime($time));
-	}
-	return false;
-}
+	
 	public static function isMerchantCommission($mtid='')
 	{
 		if ( Yii::app()->functions->isMerchantCommission($mtid)){
