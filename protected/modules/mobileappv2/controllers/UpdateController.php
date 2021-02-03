@@ -508,7 +508,7 @@ class UpdateController extends CController
 		}
 		
 		/*END 1.5.2*/
-		
+
 		/*1.5.4*/
 		$loger[] = DatataseMigration::addColumn("{{order_delivery_address}}",array(
 		  'first_name'=>"varchar(255) NOT NULL DEFAULT ''",
@@ -523,7 +523,6 @@ class UpdateController extends CController
 		));		
 		/*1.5.4*/
 		
-						
 	    /*VIEW TABLES*/	    
 	    $stmt=array();
 	    
