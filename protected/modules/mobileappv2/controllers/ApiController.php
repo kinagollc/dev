@@ -395,6 +395,7 @@ class ApiController extends CController
 		
 		$p = new CHtmlPurifier();
 		$contact_content_default = mt("We are always happy to hear from our clients and visitors, you may contact us anytime");
+		$contact_content = $p->purify(getOptionA('contact_content'));
 		
 		$contact_content = isset($get_opt['contact_content'])?$get_opt['contact_content']:'';
 		$contact_content = $p->purify($contact_content);
@@ -1455,6 +1456,52 @@ class ApiController extends CController
 								));
 							}						
 						}
+						try {							
+							$params = array(
+							  'merchant_id'=>$merchant_id,
+							  'provider'=>$provider,
+							  'from_lat'=>$val['latitude'],
+							  'from_lng'=>$val['lontitude'],
+							  'to_lat'=>$lat,
+							  'to_lng'=>$lng,
+							  'delivery_charges'=>$val['delivery_charges'],
+							  'unit'=>$unit,
+							  'delivery_distance_covered'=>$val['delivery_distance_covered'],
+							  'order_subtotal'=>0,
+							  'minimum_order'=>$val['minimum_order_raw']
+							);			
+																										
+							$resp_distance = CheckoutWrapperTemp::getDeliveryDetails($params);							
+															
+							$distance = $resp_distance['distance'];			
+											
+							if(in_array('distace',(array)$search_options)){
+								$val['stic_distance_plot'] = mobileWrapper::t("[distance]",array(
+					 			   '[distance]'=>$resp_distance['pretty_distance']
+					 			));
+							}
+
+				 			if(in_array('delivery_fee',(array)$search_options)){
+								if($resp_distance['delivery_fee']>0){
+									$val['stic_delivery_fee'] = mobileWrapper::t("[fee]",array(
+				                	 '[fee]'=>FunctionsV3::prettyPrice($resp_distance['delivery_fee'])
+				                	));
+								}			
+				 			}
+
+				 			if(in_array('minimum_order',(array)$search_options)){
+								if($resp_distance['minimum_order']>0){
+									$val['minimum_order'] = mobileWrapper::t("[min]",array(
+				 				  	 '[min]'=>FunctionsV3::prettyPrice($resp_distance['minimum_order_raw'])
+				                	));
+								}		
+				 			} else $val['minimum_order']='';
+
+				 		} catch (Exception $e) {			 							
+ 							$val['distance_plot'] = Yii::t("mobile2","Distance : [error]",array(
+ 							 '[error]'=>$e->getMessage()
+ 							));
+ 						}
 					}
 					
 					
@@ -1474,7 +1521,8 @@ class ApiController extends CController
 						   ));
 						   $offers[] = array(
 							 'raw'=>mt("Free[fee]",array('[fee]'=>FunctionsV3::prettyPrice($free_delivery_above))),
-							 'full'=>$free_above
+							 'full'=>$free_above,
+							 'icon'=> "delivery"
 						   );
 						}			    	
 						$val['offers']=$offers;	    	
@@ -1989,6 +2037,7 @@ class ApiController extends CController
 				
 				$data['latitude']=$res['latitude'];
 				$data['lontitude']=$res['lontitude'];
+				$data['delivery_estimation']=$res['delivery_estimation'];
 				
 				$data['cuisine']=FunctionsV3::displayCuisine($res['cuisine']);
 				$data['logo']=mobileWrapper::getImage($res['logo']);
@@ -2028,6 +2077,26 @@ class ApiController extends CController
 				if($offers=mobileWrapper::getOffersByMerchantNew($merchant_id)){
 	 				$data['offers']=$offers;
 	 			}
+
+	 			if($voucher=FunctionsV3::merchantActiveVoucher($merchant_id)){
+					$vouchers = array();
+					if (method_exists("FunctionsV3","merchantActiveVoucher")){
+						if ( $voucher=FunctionsV3::merchantActiveVoucher($merchant_id)){
+							foreach ($voucher as $voucher_val) {
+								if ( $voucher_val['voucher_type']=="fixed amount"){
+									$v_amount=FunctionsV3::prettyPrice($voucher_val['amount']);
+								} else $v_amount=number_format( ($voucher_val['amount']/100)*100 )."%";
+								
+								$vouchers[] = mt("[discount] off | Use coupon [code]",array(
+									'[discount]'=>$v_amount,
+									'[code]'=>$voucher_val['voucher_name']
+								));
+							}			    				
+							$val['vouchers']=$vouchers;	 
+						}
+					}
+	 				$data['vouchers']=$vouchers;
+	 			}
 	 			
 		    	if($res['is_sponsored']==2){
 		    		$data['sponsored'] =  $this->t("Sponsored");
@@ -2046,10 +2115,13 @@ class ApiController extends CController
 		    	  'subject'=>$res['restaurant_name'],
 		    	  'files'=>''
 		    	);
-		    	
-		    	
+			 	
+			 	if(in_array('minimum_order',(array)$options)){
+    	       		$data['stic_min_order'] = getOption($this->merchant_id,'merchant_minimum_order');     	
+		    	}
+
 		    	$data['delivery_fee'] = '';
-				if($show_delivery_fee){
+			 if($show_delivery_fee){
 					try {						
 						$provider = mobileWrapper::getMapProvider();											
 						$params_fee =  array(
@@ -2066,9 +2138,21 @@ class ApiController extends CController
 						  'minimum_order'=>isset($res['minimum_order'])?$res['minimum_order']:0
 						);						
 						$resp_fee = CheckoutWrapperTemp::getDeliveryDetails($params_fee);
-						$data['delivery_fee'] =  mt("Delivery charges: [fee]",array(
-						  '[fee]'=>FunctionsV3::prettyPrice($resp_fee['delivery_fee'])
-						));
+						$distance = $resp_fee['distance'];			
+										
+						if(in_array('distace',(array)$options)){
+							$data['stic_distance_plot'] = mobileWrapper::t("[distance]",array(
+				 			   '[distance]'=>$resp_fee['pretty_distance']
+				 			));
+						}
+
+			 			if(in_array('delivery_fee',(array)$options)){
+							if($resp_fee['delivery_fee']>0){
+								$data['stic_delivery_fee'] = mobileWrapper::t("[fee]",array(
+			                	 '[fee]'=>FunctionsV3::prettyPrice($resp_fee['delivery_fee'])
+			                	));
+							}			
+			 			}
 									
 					} catch (Exception $e) {							
 			        }    							        
@@ -2913,7 +2997,7 @@ class ApiController extends CController
           	   );
 				
 			} catch (Exception $e) {
-	   	  	    //echo $e->getMessage();
+	   	  	    echo $e->getMessage();
 	   	  	 }
 		} 
 		endif;
@@ -4612,6 +4696,8 @@ class ApiController extends CController
 				  '[trans_type]'=>t($val['trans_type']),
 				  '[order_id]'=>t($val['order_id']),
 				));
+				$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
+				$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
 				$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
 				$val['total_w_tax'] = FunctionsV3::prettyPrice($val['total_w_tax']);
 				$val['payment_type'] = mobileWrapper::t(FunctionsV3::prettyPaymentTypeTrans($val['trans_type'],$val['payment_type']));
@@ -4681,15 +4767,18 @@ class ApiController extends CController
 			
 			switch ($tab) {
 				case "processing":		
-				    $msg1 = $this->t("There is no processing order");			        
+				    $msg1 = $this->t("There is no processing order");
+				    $msg2 = $this->t("Try again later");			        
 					break;
 			
 				case "completed":			
-				    $msg1 = $this->t("There is no completed order");	
+				    $msg1 = $this->t("There is no completed order");
+				    $msg2 = $this->t("Try again later");
 					break;
 					
 				case "cancelled":				
-				    $msg1 = $this->t("There is no cancelled order");	
+				    $msg1 = $this->t("There is no cancelled order");
+				    $msg2 = $this->t("Try again later");	
 					break;
 							
 				default:
@@ -4789,6 +4878,8 @@ class ApiController extends CController
 				$val['booking_ref'] = mobileWrapper::t("Booking ID#[booking_id]",array(
 				  '[booking_id]'=> $val['booking_id']
 				));
+				$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
+				$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
 				$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
 				$val['logo']=mobileWrapper::getImage($val['logo']);
 				
@@ -4833,10 +4924,13 @@ class ApiController extends CController
 			$msg2 = $this->t("Make your first booking");
 			if($tab=="pending"){
 				$msg1 = $this->t("You have no pending booking");
+				$msg2 = $this->t("Try again later");
 			} elseif ( $tab=="approved"){
 				$msg1 = $this->t("You have no approved booking");
+				$msg2 = $this->t("Try again later");
 			} elseif ( $tab=="denied"){
 				$msg1 = $this->t("You have no denied booking");
+				$msg2 = $this->t("Try again later");
 			}
 			
 			$this->code = 6;
@@ -6263,6 +6357,23 @@ class ApiController extends CController
 		}
 		$this->output();
 	}
+
+	public function actionGetUserinfo()
+		{
+		$data=array();
+		if ($client_id = $this->checkToken()){
+			if($res = mobileWrapper::getCustomerByToken($this->data['user_token'])){
+				$data['first_name']=$res['first_name'];
+				$data['stic_dark_theme']=$res['stic_dark_theme'];
+				$this->code = 1;
+				$this->msg = "ok";
+				$this->details = array(
+				  'data'=>$data
+				);
+			} else $this->msg = $this->t("User don't have a name!");
+		}
+		$this->output();
+	}
 	
 	public function actionUpdateProfile()
 	{
@@ -6387,7 +6498,7 @@ class ApiController extends CController
 				$data['contact_phone']= $res['contact_phone'];
 				$data['latitude']=$res['latitude'];
 				$data['lontitude']=$res['lontitude'];
-				
+				$data['merchant_table_booking'] = getOption($merchant_id,'merchant_table_booking');
 				$data['cuisine']=FunctionsV3::displayCuisine($res['cuisine']);		
 				$ratings=Yii::app()->functions->getRatings($merchant_id); 	
 				$data['rating']=$ratings;	
@@ -8253,6 +8364,25 @@ class ApiController extends CController
 		mobileWrapper::registeredDevice($this->data);	
 		$this->code = 1;	
 		$this->msg = "ok";
+		$this->output();
+	}
+
+	public function actionsaveDarkMode()
+	{
+		$this->data = $_POST;		
+		if ($client_id = $this->checkToken()){
+			$stic_dark_theme = isset($this->data['stic_dark_theme'])?(integer)$this->data['stic_dark_theme']:0;
+			$params = array(
+			  'stic_dark_theme'=>$stic_dark_theme,
+			  'date_modified'=>FunctionsV3::dateNow(),
+			  'ip_address'=>$_SERVER['REMOTE_ADDR']
+			);
+			$db = new DbExt();
+			if ($db->updateData("{{client}}",$params,'client_id', $client_id) ){
+				$this->code = 1;
+				$this->msg = $this->t("profile successfully updated");
+			} else $this->msg = $this->t("ERROR: cannot update records.");
+		}
 		$this->output();
 	}
 	
