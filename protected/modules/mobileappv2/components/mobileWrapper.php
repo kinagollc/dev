@@ -51,7 +51,7 @@ class mobileWrapper
 			$image=Yii::app()->functions->getOptionAdmin('mobile_default_image_not_available');
 		}					
 		
-		$default_image = Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$default";	
+		// $default_image = Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$default";	
 		if(!empty($image_set)){
 			$default_image = Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$image_set";	
 		}
@@ -444,9 +444,9 @@ class mobileWrapper
     			   $applicable_to=json_decode($val['applicable_to'],true);	
     			   if(is_array($applicable_to) && count($applicable_to)>=1){
     			   	  foreach ($applicable_to as $applicable_to_val) {    			   	  	 
-    			   	  	 $applicable_to_list.=t($applicable_to_val).",";
+    			   	  	 $applicable_to_list.=t($applicable_to_val).", ";
     			   	  }
-    			   	  $applicable_to_list = substr($applicable_to_list,0,-1);
+    			   	  $applicable_to_list = substr($applicable_to_list,0,-2);
     			   }    			
     			}    		 
     			
@@ -2636,6 +2636,7 @@ class mobileWrapper
 		   	     'title'=>!empty($val['title'])?$val['title']:$val['title_default'],
 		   	     'sub_title'=>!empty($val['sub_title'])?$val['sub_title']:$val['sub_title_default'],
 		   	     'banner'=>mobileWrapper::getImage($val['banner_name']),
+		   	     'banner_name'=>mobileWrapper::getImage($val['banner_name']),
 		   	     'actions'=>!empty($val['actions'])?$val['actions']:'tags',
 		   	     'page_id'=>$val['page_id'],
 		   	     'custom_url'=>$val['custom_url']
@@ -3136,10 +3137,10 @@ class mobileWrapper
 			foreach ($res as $val) {
 				if($multipleField){
 					$cuisine_json['cuisine_name_trans']=!empty($val['cuisine_name_trans'])?json_decode($val['cuisine_name_trans'],true):'';					
-					$cuisine.= qTranslate($val['cuisine_name'],'cuisine_name',$cuisine_json).",";
-				} else $cuisine.="$val[cuisine_name],";				
+					$cuisine.= qTranslate($val['cuisine_name'],'cuisine_name',$cuisine_json)." · ";
+				} else $cuisine.="$val[cuisine_name] · ";				
 			}			
-			$cuisine = substr($cuisine,0,-1);
+			$cuisine = substr($cuisine,0,-3);
 		}	
 		return $cuisine;	
 	}

@@ -1439,7 +1439,7 @@ class ApiController extends CController
 					if(in_array('delivery_estimation',(array)$search_options)){
 						if(!empty($val['delivery_estimation'])){
 							$val['delivery_estimation_raw'] = $val['delivery_estimation'];
-							$val['delivery_estimation'] =  mobileWrapper::t("Delivery Est: [estimation]",array(
+							$val['delivery_estimation'] =  mobileWrapper::t("[estimation]",array(
 							 '[estimation]'=>mt($val['delivery_estimation'])
 						    ));						    
 						}
@@ -1450,11 +1450,57 @@ class ApiController extends CController
 					if($search_mode=="address"){
 						if(in_array('delivery_distance',(array)$search_options)){
 							if($val['delivery_distance_covered']>0){
-								$val['delivery_distance'] = mobileWrapper::t("Delivery Distance: [delivery_distance]",array(
+								$val['delivery_distance'] = mobileWrapper::t("[delivery_distance]",array(
 								 '[delivery_distance]'=>$val['delivery_distance_covered']." $pretty_unit"
 								));
 							}						
 						}
+						try {							
+							$params = array(
+							  'merchant_id'=>$merchant_id,
+							  'provider'=>$provider,
+							  'from_lat'=>$val['latitude'],
+							  'from_lng'=>$val['lontitude'],
+							  'to_lat'=>$lat,
+							  'to_lng'=>$lng,
+							  'delivery_charges'=>$val['delivery_charges'],
+							  'unit'=>$unit,
+							  'delivery_distance_covered'=>$val['delivery_distance_covered'],
+							  'order_subtotal'=>0,
+							  'minimum_order'=>$val['minimum_order_raw']
+							);			
+																										
+							$resp_distance = CheckoutWrapperTemp::getDeliveryDetails($params);							
+															
+							$distance = $resp_distance['distance'];			
+											
+							if(in_array('distace',(array)$search_options)){
+								$val['stic_distance_plot'] = mobileWrapper::t("[distance]",array(
+					 			   '[distance]'=>$resp_distance['pretty_distance']
+					 			));
+							}
+
+				 			if(in_array('delivery_fee',(array)$search_options)){
+								if($resp_distance['delivery_fee']>0){
+									$val['stic_delivery_fee'] = mobileWrapper::t("[fee]",array(
+				                	 '[fee]'=>FunctionsV3::prettyPrice($resp_distance['delivery_fee'])
+				                	));
+								}			
+				 			}
+
+				 			if(in_array('minimum_order',(array)$search_options)){
+								if($resp_distance['minimum_order']>0){
+									$val['minimum_order'] = mobileWrapper::t("[min]",array(
+				 				  	 '[min]'=>FunctionsV3::prettyPrice($resp_distance['minimum_order_raw'])
+				                	));
+								}		
+				 			} else $val['minimum_order']='';
+
+				 		} catch (Exception $e) {			 							
+ 							$val['distance_plot'] = Yii::t("mobile2","Distance : [error]",array(
+ 							 '[error]'=>$e->getMessage()
+ 							));
+ 						}
 					}
 					
 					
@@ -1473,8 +1519,9 @@ class ApiController extends CController
 							 '[subtotal]'=>$free_delivery_above
 						   ));
 						   $offers[] = array(
-							 'raw'=>mt("Free[fee]",array('[fee]'=>FunctionsV3::prettyPrice($free_delivery_above))),
-							 'full'=>$free_above
+							 'raw'=>mt("[fee]",array('[fee]'=>FunctionsV3::prettyPrice($free_delivery_above))),
+							 'full'=>$free_above,
+							 'icon'=> "delivery"
 						   );
 						}			    	
 						$val['offers']=$offers;	    	
@@ -1534,7 +1581,7 @@ class ApiController extends CController
 					if($search_type=="allMerchant" && $current_page=="tabbar" && $home_all_as_list==1){				   
 											
 						if(in_array('minimum_order',(array)$search_options)){
-						  $val['minimum_order'] = mobileWrapper::t("Minimum Order: [min]", array(
+						  $val['minimum_order'] = mobileWrapper::t("[min]", array(
 						  '[min]'=>FunctionsV3::prettyPrice($val['minimum_order_raw'])
 						  ));		 
 					    } else $val['minimum_order']='';
@@ -1564,14 +1611,14 @@ class ApiController extends CController
 							$distance = $resp_distance['distance'];			
 											
 							if(in_array('distace',(array)$search_options)){
-								$val['distance_plot'] = mobileWrapper::t("Distance : [distance]",array(
+								$val['distance_plot'] = mobileWrapper::t("[distance]",array(
 					 			   '[distance]'=>$resp_distance['pretty_distance']
 					 			));
 							}
 							
 				 			if(in_array('minimum_order',(array)$search_options)){
 					 			$val['minimum_order_raw']=$resp_distance['min_order'];
-					 			$val['minimum_order'] = mobileWrapper::t("Minimum Order: [min]", array(
+					 			$val['minimum_order'] = mobileWrapper::t("[min]", array(
 								  '[min]'=>FunctionsV3::prettyPrice($resp_distance['min_order'])
 								));		
 				 			} else {
@@ -1581,7 +1628,7 @@ class ApiController extends CController
 							
 				 			if(in_array('delivery_fee',(array)$search_options)){
 								if($resp_distance['delivery_fee']>0){
-									$val['delivery_fee'] = mobileWrapper::t("Delivery Fee: [fee]",array(
+									$val['delivery_fee'] = mobileWrapper::t("[fee]",array(
 				                	 '[fee]'=>FunctionsV3::prettyPrice($resp_distance['delivery_fee'])
 				                	));
 								}			
@@ -1595,12 +1642,12 @@ class ApiController extends CController
 					} else {
 						  //dump("SEARCH BY LOCATIONx");		
 						  if(in_array('minimum_order',(array)$search_options)){
-							  $val['minimum_order'] = mobileWrapper::t("Minimum Order: [min]", array(
+							  $val['minimum_order'] = mobileWrapper::t("[min]", array(
 							  '[min]'=>FunctionsV3::prettyPrice($val['minimum_order_raw'])
 							  ));		 
 						  }
 						  if(in_array('delivery_fee',(array)$search_options)){
-							  $val['delivery_fee'] = mobileWrapper::t("Delivery Fee: [fee]",array(
+							  $val['delivery_fee'] = mobileWrapper::t("[fee]",array(
 			                	 '[fee]'=>FunctionsV3::prettyPrice($val['location_fee'])
 			                  ));
 						  }
@@ -1989,6 +2036,7 @@ class ApiController extends CController
 				
 				$data['latitude']=$res['latitude'];
 				$data['lontitude']=$res['lontitude'];
+				$data['delivery_estimation']=$res['delivery_estimation'];
 				
 				$data['cuisine']=FunctionsV3::displayCuisine($res['cuisine']);
 				$data['logo']=mobileWrapper::getImage($res['logo']);
@@ -2028,6 +2076,26 @@ class ApiController extends CController
 				if($offers=mobileWrapper::getOffersByMerchantNew($merchant_id)){
 	 				$data['offers']=$offers;
 	 			}
+
+	 			if($voucher=FunctionsV3::merchantActiveVoucher($merchant_id)){
+					$vouchers = array();
+					if (method_exists("FunctionsV3","merchantActiveVoucher")){
+						if ( $voucher=FunctionsV3::merchantActiveVoucher($merchant_id)){
+							foreach ($voucher as $voucher_val) {
+								if ( $voucher_val['voucher_type']=="fixed amount"){
+									$v_amount=FunctionsV3::prettyPrice($voucher_val['amount']);
+								} else $v_amount=number_format( ($voucher_val['amount']/100)*100 )."%";
+								
+								$vouchers[] = mt("[discount] off | Use coupon [code]",array(
+									'[discount]'=>$v_amount,
+									'[code]'=>$voucher_val['voucher_name']
+								));
+							}			    				
+							$val['vouchers']=$vouchers;	 
+						}
+					}
+	 				$data['vouchers']=$vouchers;
+	 			}
 	 			
 		    	if($res['is_sponsored']==2){
 		    		$data['sponsored'] =  $this->t("Sponsored");
@@ -2046,10 +2114,13 @@ class ApiController extends CController
 		    	  'subject'=>$res['restaurant_name'],
 		    	  'files'=>''
 		    	);
-		    	
-		    	
+			 	
+			 	if(in_array('minimum_order',(array)$options)){
+    	       		$data['stic_min_order'] = getOption($this->merchant_id,'merchant_minimum_order');     	
+		    	}
+
 		    	$data['delivery_fee'] = '';
-				if($show_delivery_fee){
+				// if($show_delivery_fee){
 					try {						
 						$provider = mobileWrapper::getMapProvider();											
 						$params_fee =  array(
@@ -2066,13 +2137,25 @@ class ApiController extends CController
 						  'minimum_order'=>isset($res['minimum_order'])?$res['minimum_order']:0
 						);						
 						$resp_fee = CheckoutWrapperTemp::getDeliveryDetails($params_fee);
-						$data['delivery_fee'] =  mt("Delivery charges: [fee]",array(
-						  '[fee]'=>FunctionsV3::prettyPrice($resp_fee['delivery_fee'])
-						));
+						$distance = $resp_fee['distance'];			
+										
+						if(in_array('distace',(array)$options)){
+							$data['stic_distance_plot'] = mobileWrapper::t("[distance]",array(
+				 			   '[distance]'=>$resp_fee['pretty_distance']
+				 			));
+						}
+
+			 			if(in_array('delivery_fee',(array)$options)){
+							if($resp_fee['delivery_fee']>0){
+								$data['stic_delivery_fee'] = mobileWrapper::t("[fee]",array(
+			                	 '[fee]'=>FunctionsV3::prettyPrice($resp_fee['delivery_fee'])
+			                	));
+							}			
+			 			}
 									
 					} catch (Exception $e) {							
 			        }    							        
-				}			
+				// }			
 								
 		    	$settings = array();		    		    	
 				
@@ -2350,7 +2433,7 @@ class ApiController extends CController
 			$res['item_name_trans'] = $p->purify($res['item_name_trans']);
 			$res['item_description_trans'] = $p->purify($res['item_description_trans']);
 			
-			$res['photo'] = mobileWrapper::getImage($res['photo'],'default_cuisine.png');
+			$res['photo'] = mobileWrapper::getImage($res['photo'],'');
 			
 			/*GET DISH*/
 			$icon_dish= array();
@@ -2770,7 +2853,7 @@ class ApiController extends CController
 		$this->msg=mt("0 found");
 		$this->details = array(
 		  'count'=>0,
-		  'basket_count'=>mt("0 items"),		  
+		  'basket_count'=>mt("0"),		  
 		  'basket_total'=>FunctionsV3::prettyPrice(0.00001)
 		);				
 		$this->output();
@@ -3865,7 +3948,8 @@ class ApiController extends CController
 			if($res['delivery_fee']>0.0001){
 				$data['delivery_charge']=$res['delivery_fee'];
 			}
-					
+			
+			//dump($data);
 			Yii::app()->functions->displayOrderHTML( $data,$cart );
 			$code = Yii::app()->functions->code;
 		    $msg  = Yii::app()->functions->msg;
@@ -4608,10 +4692,12 @@ class ApiController extends CController
 			foreach ($res as $val) {		
 				$val['merchant_name'] = clearString($val['merchant_name']);
 				$val['status'] = mt($val['status']);
-				$val['transaction'] = mobileWrapper::t("[trans_type] #[order_id]",array(
+				$val['transaction'] = mobileWrapper::t("[order_id]",array(
 				  '[trans_type]'=>t($val['trans_type']),
 				  '[order_id]'=>t($val['order_id']),
 				));
+				$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
+				$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
 				$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
 				$val['total_w_tax'] = FunctionsV3::prettyPrice($val['total_w_tax']);
 				$val['payment_type'] = mobileWrapper::t(FunctionsV3::prettyPaymentTypeTrans($val['trans_type'],$val['payment_type']));
@@ -4681,15 +4767,18 @@ class ApiController extends CController
 			
 			switch ($tab) {
 				case "processing":		
-				    $msg1 = $this->t("There is no processing order");			        
+				    $msg1 = $this->t("There is no processing order");
+				    $msg2 = $this->t("Try again later");			        
 					break;
 			
 				case "completed":			
-				    $msg1 = $this->t("There is no completed order");	
+				    $msg1 = $this->t("There is no completed order");
+				    $msg2 = $this->t("Try again later");
 					break;
 					
 				case "cancelled":				
-				    $msg1 = $this->t("There is no cancelled order");	
+				    $msg1 = $this->t("There is no cancelled order");
+				    $msg2 = $this->t("Try again later");	
 					break;
 							
 				default:
@@ -4783,12 +4872,14 @@ class ApiController extends CController
 				   	$val['status'] = mt("Cancel approved");
 				}			
 				
-				$val['number_guest'] = mobileWrapper::t("No. of guest [count]",array(
+				$val['number_guest'] = mobileWrapper::t("[count]",array(
 				  '[count]'=> $val['number_guest']
 				));
-				$val['booking_ref'] = mobileWrapper::t("Booking ID#[booking_id]",array(
+				$val['booking_ref'] = mobileWrapper::t("[booking_id]",array(
 				  '[booking_id]'=> $val['booking_id']
 				));
+				$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
+				$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
 				$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
 				$val['logo']=mobileWrapper::getImage($val['logo']);
 				
@@ -4833,10 +4924,13 @@ class ApiController extends CController
 			$msg2 = $this->t("Make your first booking");
 			if($tab=="pending"){
 				$msg1 = $this->t("You have no pending booking");
+				$msg2 = $this->t("Try again later");
 			} elseif ( $tab=="approved"){
 				$msg1 = $this->t("You have no approved booking");
+				$msg2 = $this->t("Try again later");
 			} elseif ( $tab=="denied"){
 				$msg1 = $this->t("You have no denied booking");
+				$msg2 = $this->t("Try again later");
 			}
 			
 			$this->code = 6;
@@ -6263,6 +6357,23 @@ class ApiController extends CController
 		}
 		$this->output();
 	}
+
+	public function actionGetUserinfo()
+		{
+		$data=array();
+		if ($client_id = $this->checkToken()){
+			if($res = mobileWrapper::getCustomerByToken($this->data['user_token'])){
+				$data['first_name']=$res['first_name'];
+				$data['stic_dark_theme']=$res['stic_dark_theme'];
+				$this->code = 1;
+				$this->msg = "ok";
+				$this->details = array(
+				  'data'=>$data
+				);
+			} else $this->msg = $this->t("User don't have a name!");
+		}
+		$this->output();
+	}
 	
 	public function actionUpdateProfile()
 	{
@@ -6387,7 +6498,7 @@ class ApiController extends CController
 				$data['contact_phone']= $res['contact_phone'];
 				$data['latitude']=$res['latitude'];
 				$data['lontitude']=$res['lontitude'];
-				
+				$data['merchant_table_booking'] = getOption($merchant_id,'merchant_table_booking');
 				$data['cuisine']=FunctionsV3::displayCuisine($res['cuisine']);		
 				$ratings=Yii::app()->functions->getRatings($merchant_id); 	
 				$data['rating']=$ratings;	
@@ -6504,13 +6615,13 @@ class ApiController extends CController
 			$data = array();
 			foreach ($res as $val) {						
 				if($val['as_anonymous']==1){
-					$val['customer_name'] = mobileWrapper::t("By [sitename] Customer",array(
+					$val['customer_name'] = mobileWrapper::t("[sitename] Customer",array(
 					  '[sitename]'=>$website_title
 					));
 					$val['avatar'] = mobileWrapper::getImage('x.png','avatar.png');
 				} else {
 					$val['avatar'] = mobileWrapper::getImage($val['avatar'],'avatar.png');
-					$val['customer_name'] = mobileWrapper::t("By [customer_name]",array(
+					$val['customer_name'] = mobileWrapper::t("[customer_name]",array(
 					  '[customer_name]'=>$val['customer_name']
 					));
 				}		
@@ -8255,6 +8366,25 @@ class ApiController extends CController
 		$this->msg = "ok";
 		$this->output();
 	}
+
+	public function actionsaveDarkMode()
+	{
+		$this->data = $_POST;		
+		if ($client_id = $this->checkToken()){
+			$stic_dark_theme = isset($this->data['stic_dark_theme'])?(integer)$this->data['stic_dark_theme']:0;
+			$params = array(
+			  'stic_dark_theme'=>$stic_dark_theme,
+			  'date_modified'=>FunctionsV3::dateNow(),
+			  'ip_address'=>$_SERVER['REMOTE_ADDR']
+			);
+			$db = new DbExt();
+			if ($db->updateData("{{client}}",$params,'client_id', $client_id) ){
+				$this->code = 1;
+				$this->msg = $this->t("profile successfully updated");
+			} else $this->msg = $this->t("ERROR: cannot update records.");
+		}
+		$this->output();
+	}
 	
 	public function actionlogout()
 	{
@@ -9647,12 +9777,12 @@ class ApiController extends CController
         } else  $page = 0;  
         
         $sort_by = isset($this->data['sort_by'])?$this->data['sort_by']:'';		
-        $sort_fields = isset($this->data['sort_fields'])?$this->data['sort_fields']:'discount';       
-        
+        $sort_fields = isset($this->data['sort_fields'])?$this->data['sort_fields']:'discount';
+
         if(empty($sort_by)){
         	$sort_by = "RAND()"; $sort_fields = '';
-        }	
-                
+        }       
+        
         $page_action =  isset($this->data['page_action'])?$this->data['page_action']:'';        
         
         $default_image='resto_banner.jpg';
@@ -9679,12 +9809,13 @@ class ApiController extends CController
 			 'area_id'=>$area_id,
 			 'postal_code'=>$postal_code,
 			));
-			
+
 			$and.= " AND a.merchant_id IN (
 			  select merchant_id from {{merchant}}
 			  where merchant_id=a.merchant_id
 			  and status IN ('active')
 			)";
+
 		} else {
 			$lat = isset($this->data['lat'])?$this->data['lat']:0;
 		    $lng = isset($this->data['lng'])?$this->data['lng']:0;
@@ -9700,7 +9831,7 @@ class ApiController extends CController
 					* cos( radians( lontitude ) - radians($lng) ) 
 					+ sin( radians($lat) ) * sin( radians( latitude ) ) ) ) 
 					AS distance		
-			";		
+			";
 			/*$and.="
 			AND merchant_id IN (
 			   select merchant_id 
@@ -9727,33 +9858,32 @@ class ApiController extends CController
 			      $query_distance from {{merchant}}
 			      where merchant_id = a.merchant_id
 			      and status IN ('active')
-			      and is_ready='2'
-			      and merchant_id IN (
-			        select merchant_id from {{opening_hours}} 
-				    where
-					merchant_id = a.merchant_id
-					and
-					day=".q($open_day)."
-					and
-					status = 'open'
-					and 
-					
-					(
-					CAST(".q($time_now)." AS TIME)
-					BETWEEN CAST(start_time AS TIME) and CAST(end_time AS TIME)
-					
-					or
-					
-					CAST(".q($time_now)." AS TIME)
-					BETWEEN CAST(start_time_pm AS TIME) and CAST(end_time_pm AS TIME)
-					
-					)
-					
-			      )
+	              and is_ready='2'
+	              and merchant_id IN (
+	              select merchant_id from {{opening_hours}} 
+	      	      where
+	      		  merchant_id = a.merchant_id
+	      		  and
+	      		  day=".q($open_day)."
+	      		  and
+	      		  status = 'open'
+	      		  and 
+	      		
+	      		  (
+	      		  CAST(".q($time_now)." AS TIME)
+	      		  BETWEEN CAST(start_time AS TIME) and CAST(end_time AS TIME)
+	      		
+	      		  or
+	      		
+	      		  CAST(".q($time_now)." AS TIME)
+	      		  BETWEEN CAST(start_time_pm AS TIME) and CAST(end_time_pm AS TIME)
+	      		
+	      		)
+	      		
+	            )
 			   )
 			)
 			";
-			
 		}
 		
         $stmt="
@@ -9768,8 +9898,8 @@ class ApiController extends CController
         $and
         ORDER BY $sort_fields $sort_by
         LIMIT $page,$page_limit
-        ";                                      
-                
+        ";                              
+        
         if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
         	
         	$total_records=0;
