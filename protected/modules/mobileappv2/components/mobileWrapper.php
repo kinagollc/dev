@@ -3627,7 +3627,7 @@ class mobileWrapper
 						break;
 				
 					default:
-						$data[$val['option_name']] = trim($val['option_value']);
+$data[$val['option_name']] = stripslashes(trim($val['option_value']));
 						break;
 				}
 				
