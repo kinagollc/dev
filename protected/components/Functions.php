@@ -1524,7 +1524,11 @@ class Functions extends CApplicationComponent
                    
                    array('visible'=>$this->AA('mobileappv2'),
                    'tag'=>'mobileappv2','label'=>'<i class="fa"></i>'.Yii::t("default","MobileApp v2"), 
-                   'url'=>Yii::app()->getBaseUrl(true)."/mobileappv2?lang=".Yii::app()->language),                
+                   'url'=>Yii::app()->getBaseUrl(true)."/mobileappv2?lang=".Yii::app()->language),     
+                     
+                   array('visible'=>$this->AA('merchantappv2'),
+                   'tag'=>'merchantappv2','label'=>''.Yii::t("default","Merchantapp v2"), 
+                   'url'=>Yii::app()->getBaseUrl(true)."/merchantappv2?lang=".Yii::app()->language),         
               
                  )),  
                 /**add ons */     

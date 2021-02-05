@@ -2457,7 +2457,14 @@ $this->msg=t("We have sent bank information instruction to your email")." :$merc
 										
 					if($resp['sms_enabled']==1 && !empty($res['merchant_phone'])){						
 						Yii::app()->functions->sendSMS($res['merchant_phone'],$sms_content);
-					}				
+					}	
+					/*SEND PUSH TO MERCHANT APP V2*/
+if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
+	Yii::app()->setImport(array(			
+	  'application.modules.merchantappv2.components.*',
+	));
+	 OrderWrapper::InsertOrderTrigger($order_id,'offline_new_bank_deposit');
+}			
 					
 				} catch (Exception $e) {
 					$this->msg = $e->getMessage();

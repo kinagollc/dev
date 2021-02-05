@@ -1270,7 +1270,13 @@ class AjaxController extends CController
       	       ':booking_id'=>$booking_id
       	     )
       	   );
-    		
+    		/*SEND PUSH TO MERCHANT APP V2*/
+if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
+	Yii::app()->setImport(array(			
+	  'application.modules.merchantappv2.components.*',
+    ));
+	OrderWrapper::InsertOrderTrigger($booking_id,'booking_request_cancel','','booking');
+}
     		$this->code = 1;
     		$this->msg = t("Your request has been sent to merchant");
     		$this->details = array(
