@@ -349,6 +349,10 @@ class UpdateController extends CController
 		   'fcm_version'=>"int(1) NOT NULL DEFAULT '0'",
 		);
 		$this->alterTable('singleapp_broadcast',$new_field);
+
+		$this->alterTable('singleapp_device_reg',array(
+		  'stic_dark_theme'=>"int(1) NOT NULL DEFAULT '0'",
+		));	
 		
 		/*END 2.3*/
 		

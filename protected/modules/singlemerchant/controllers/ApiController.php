@@ -1674,8 +1674,8 @@ class ApiController extends CController
 					  'min_delivery_order'=>(float)$resp['min_order'],
 					  'distance'=>$resp['distance'],
 					  'distance_unit'=>$resp['unit'],
-					);		
-										
+					);			
+					
 					Yii::app()->db->createCommand()->update("{{singleapp_cart}}",$params,
 		      	     'cart_id=:cart_id',
 		      	     array(
@@ -2644,6 +2644,7 @@ class ApiController extends CController
 			   'email_address'=>$res['email_address'],
 			   'contact_phone'=>$res['contact_phone'],
 			   'enabled_push'=>$res['push_enabled']>0?$res['push_enabled']:0,
+			   'stic_dark_theme'=>$res['stic_dark_theme']>0?$res['stic_dark_theme']:0,
 			   'has_pts'=>$has_pts,
 			   'avatar'=>$avatar,
 			   'social_strategy'=>$res['social_strategy'],
@@ -2749,6 +2750,37 @@ class ApiController extends CController
 				$this->msg = $this->t("Push settings updated");
 				$this->details=array(
 				  'enabled_push'=>$params['push_enabled']
+				);
+	  	    } else $this->msg = $this->t("Cannot update records, please try again later"); 
+		} else {
+			$this->code = 3;
+			$this->msg = $this->t("token not found");		
+		}
+		$this->output();
+	}
+
+	public function actionsaveDarkMode()
+	{
+		$token = isset($this->data['token'])?$this->data['token']:'';
+		if($res = SingleAppClass::getCustomerByToken($token)){
+			$client_id = $res['client_id'];		
+			$params = array(
+			  'stic_dark_theme'=>isset($this->data['stic_dark_theme'])?(integer)$this->data['stic_dark_theme']:0,
+			  'date_modified'=>FunctionsV3::dateNow(),
+			  'ip_address'=>$_SERVER['REMOTE_ADDR']
+			);		
+    		$up =Yii::app()->db->createCommand()->update("{{singleapp_device_reg}}",$params,
+      	    'device_uiid=:device_uiid AND client_id=:client_id',
+    	  	    array(
+    	  	      ':device_uiid'=>$this->device_uiid,
+    	  	      ':client_id'=>$client_id
+    	  	    )
+      	    );
+	  	    if($up){
+		  	    $this->code = 1;
+				$this->msg = $this->t("Changed successfully");
+				$this->details=array(
+				  'stic_dark_theme'=>$params['stic_dark_theme']
 				);
 	  	    } else $this->msg = $this->t("Cannot update records, please try again later"); 
 		} else {
@@ -3111,7 +3143,7 @@ class ApiController extends CController
 	        if(isset($_GET['debug'])){
 	        	dump($stmt);
 	        }		
-	        	        
+			
 	        $db=new DbExt;    
 			if ( $res = $db->rst($stmt)){
 				
@@ -3414,6 +3446,8 @@ class ApiController extends CController
 					  '[order_id]'=>t($val['order_id']),
 					));
 					$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
+					$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
+					$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
 					$val['total_w_tax'] = FunctionsV3::prettyPrice($val['total_w_tax']);
 					$val['payment_type'] = st(FunctionsV3::prettyPaymentTypeTrans($val['trans_type'],$val['payment_type']));
 					$val['logo']=SingleAppClass::getImage($val['logo']);
@@ -4110,6 +4144,29 @@ class ApiController extends CController
 		} else $this->msg = "Not login";
 		$this->output();
 	}
+
+	public function actiongetUserData()
+	{		
+		$token = isset($this->data['token'])?$this->data['token']:'';
+		$device_uiid = isset($this->data['device_uiid'])?$this->data['device_uiid']:'';
+		
+		if($res = SingleAppClass::getCustomerByTokenAndDevice($token,$device_uiid)){											
+			$client_id = (integer) $res['client_id'];			
+			$data = array(
+			   'stic_dark_theme'=>$res['stic_dark_theme']>0?$res['stic_dark_theme']:0,
+			);
+			
+			$this->code = 1;
+			$this->msg = "ok";
+			$this->details = array(
+			 'data'=>$data
+			);
+		} else {
+			$this->code = 3;
+			$this->msg = $this->t("token not found");
+		}
+		$this->output();
+	}
 	
 	public function actionsaveBooking()
 	{
@@ -4230,13 +4287,15 @@ class ApiController extends CController
 						
 			$data = array(  
 			  'merchant_name'=>clearString($res['restaurant_name']),
+			  'logo'=>SingleAppClass::getImage($res['logo']),
 			  'contact_phone'=>$res['contact_phone'],
 			  'address'=>clearString($res['complete_address']),
 			  'cuisine'=>FunctionsV3::displayCuisine($res['cuisine']),
 			  'free_delivery'=>FunctionsV3::getFreeDeliveryTag($this->merchant_id),
 			  'ratings'=>$ratings,
 			  'rating_text'=>$rating_text,
-			  'background_image'=>$merchant_photo_bg,
+			  // 'background_image'=>$merchant_photo_bg,
+			  'background_image'=>websiteUrl()."/upload/".$merchant_photo_bg,
 			  'latitude'=>$res['latitude'],
 			  'lontitude'=>$res['lontitude'],
 			);
@@ -4405,17 +4464,17 @@ class ApiController extends CController
 					
 					$val['merchant_name'] = $val['merchant_name'];
 					$val['status'] = st($val['status']);
-					$val['number_guest'] = st("No. of guest [count]",array(
+					$val['number_guest'] = st("[count]",array(
 					  '[count]'=> $val['number_guest']
 					));
-					$val['booking_ref'] = st("Booking ID#[booking_id]",array(
+					$val['booking_ref'] = st("[booking_id]",array(
 					  '[booking_id]'=> $val['booking_id']
 					));
 					$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
+					$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
+					$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
 					$val['logo']=SingleAppClass::getImage($val['logo']);
-					
 					$ratings = Yii::app()->functions->getRatings($val['merchant_id']);
-					
 					$ratings['review_count'] = st("[count] reviews",array(
 		 			  '[count]'=>$ratings['votes']
 		 			));
@@ -7298,7 +7357,7 @@ class ApiController extends CController
 					$val['avatar'] = SingleAppClass::getImage('x.png','avatar.png');
 				} else {
 					$val['avatar'] = SingleAppClass::getImage($val['avatar'],'avatar.png');
-					$val['customer_name'] = st("By [customer_name]",array(
+					$val['customer_name'] = st("[customer_name]",array(
 					  '[customer_name]'=>$val['customer_name']
 					));
 				}		
@@ -7670,10 +7729,10 @@ class ApiController extends CController
 			    		$val['date_booking_format'] = FunctionsV3::prettyDate( $val['date_booking'] )." ".FunctionsV3::prettyTime($val['booking_time']);
 			    		$val['restaurant_name']=clearString($val['restaurant_name']);
 			    		$val['logo']=SingleAppClass::getImage($val['logo']);
-			    		$val['booking_ref'] = st("Booking ID#[booking_id]",array(
+			    		$val['booking_ref'] = st("[booking_id]",array(
 						  '[booking_id]'=> $val['booking_id']
 						));
-						$val['number_guest'] = st("No. of guest [count]",array(
+						$val['number_guest'] = st("[count]",array(
 				           '[count]'=> $val['number_guest']
 				        ));
 				        

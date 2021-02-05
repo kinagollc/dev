@@ -453,7 +453,8 @@ class SingleAppClass
     	b.device_id,
     	b.device_platform,
     	b.push_enabled,
-    	b.subscribe_topic    	
+    	b.subscribe_topic,    	
+        b.stic_dark_theme       
     	
     	FROM
     	{{client}} a
