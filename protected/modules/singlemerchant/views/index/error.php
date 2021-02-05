@@ -1,0 +1,1 @@
+<div class="text-danger"><?php echo $message?></div>
