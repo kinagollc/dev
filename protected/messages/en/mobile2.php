@@ -911,8 +911,8 @@ $lang['ABOUT US'] = '';
 
 /* STIC */
 $lang['What are you looking for?'] = "What are you looking for?";
-$lang['What do you wish?'] = "Here are a wide range of categories to choose from";
-$lang['A wide range of options for you'] = "Choose a Business Category";
+$lang['What do you wish?'] = "What are you looking for?";
+$lang['A wide range of options for you'] = "Choose a Category";
 $lang['The nearest restaurants to your location'] = "Places nearest to your location";
 $lang['Choose what you wish'] = "";
 $lang['Special offers'] = "Special Offers";
@@ -921,6 +921,7 @@ $lang['See All'] = "";
 $lang['New'] = "";
 $lang['Home'] = "";
 $lang['Profile'] = "";
+$lang['View restaurant'] = "View this place";
 $lang['Enjoy it before it\'s over'] = "Enjoy before its too late!";
 $lang['Deliver to'] = "";
 $lang['Find restaurants nearby'] = "Find places nearby";
@@ -963,6 +964,7 @@ $lang['en'] = "";
 $lang['Filter By'] = "";
 $lang['Promos'] = "";
 $lang['Promo'] = "Promotions";
+$lang['Dishes on sale'] = "Items on Sale";
 $lang['Delivery Fee'] = "";
 $lang['By Services'] = "";
 $lang['By Cuisine'] = "By Category";
