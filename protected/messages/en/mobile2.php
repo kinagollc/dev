@@ -912,7 +912,7 @@ $lang['ABOUT US'] = '';
 /* STIC */
 $lang['What are you looking for?'] = "What are you looking for?";
 $lang['What do you wish?'] = "What are you looking for?";
-$lang['A wide range of options for you'] = "Choose a Category";
+$lang['A wide range of options for you'] = "start by choosing a category";
 $lang['The nearest restaurants to your location'] = "near your location";
 $lang['Choose what you wish'] = "";
 $lang['Choose what you wish'] = "that are serving your area";
@@ -961,7 +961,7 @@ $lang['Not available'] = "";
 $lang['Payment Methods'] = "";
 $lang['Location on Map'] = "";
 $lang['Support delivery executive'] = "Support this Business";
-$lang['thank your delivery executive for helping you stay safe indoors. Support them through these tought times with tip.'] = "Show your support by helping this business through tough times with a Tip.";
+$lang['Thank your delivery executive for helping you stay safe indoors. Support them through these tought times with tip.'] = "Show your support by helping this business through tough times with a Tip.";
 $lang['Book a Table'] = "Make a Reservation";
 $lang['en'] = "";
 $lang['Filter By'] = "";
