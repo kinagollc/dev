@@ -1018,49 +1018,49 @@ class Functions extends CApplicationComponent
                 array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"DashBoard"),'tag'=>"DashBoard",'label'=>'<i class="fa fa-home"></i>'.Yii::t("default","Dashboard"),
                 'url'=>array('/merchant/DashBoard')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Merchant"),'tag'=>"Merchant",'label'=>'<i class="fa fa-cutlery"></i>'.Yii::t("default","Merchant Info"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Merchant"),'tag'=>"Merchant",'label'=>'<i class="fa fa-cutlery"></i>'.Yii::t("default","Business Information"),
                 'url'=>array('/merchant/Merchant')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Settings"),'tag'=>"Settings",'label'=>'<i class="fa fa-cog"></i>'.Yii::t("default","Settings"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Settings"),'tag'=>"Settings",'label'=>'<i class="fa fa-cog"></i>'.Yii::t("default","Backend Settings"),
                 'url'=>array('/merchant/Settings')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"tablebooking"),'tag'=>"tablebooking",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Table Booking"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"tablebooking"),'tag'=>"tablebooking",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Reservations"),
                 'url'=>array('/merchant/tablebooking')),
                                                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"allorder"),'tag'=>"allorder",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","All order"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"allorder"),'tag'=>"allorder",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","All Orders"),
                 'url'=>array('/merchant/allorder')),
                                                                                
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"orderStatus"),'tag'=>"orderStatus",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Order Status"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"orderStatus"),'tag'=>"orderStatus",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Order Statuses"),
                 'url'=>array('/merchant/orderStatus')),
                                                                                
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"CategoryList"),'tag'=>"CategoryList",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Food Category"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"CategoryList"),'tag'=>"CategoryList",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Item Categories"),
                 'url'=>array('/merchant/CategoryList')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"category_sked"),'tag'=>"category_sked",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Food Category Scheduler"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"category_sked"),'tag'=>"category_sked",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Category Scheduler"),
                 'url'=>array('/merchant/category_sked')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Size"),'tag'=>"Size",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Size"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Size"),'tag'=>"Size",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Item Size's"),
                 'url'=>array('/merchant/Size')),
                                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AddOnCategory"),'tag'=>"AddOnCategory",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","AddOn Category"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AddOnCategory"),'tag'=>"AddOnCategory",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Add-On Categories"),
                 'url'=>array('/merchant/AddOnCategory')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AddOnItem"),'tag'=>"AddOnItem",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","AddOn Item"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AddOnItem"),'tag'=>"AddOnItem",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Add-On Item's"),
                 'url'=>array('/merchant/AddOnItem')),
                                 
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"ingredients"),'tag'=>"ingredients",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Ingredients"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"ingredients"),'tag'=>"ingredients",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Customizations"),
                 'url'=>array('/merchant/ingredients')),
                                 
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"CookingRef"),'tag'=>"CookingRef",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Cooking Reference"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"CookingRef"),'tag'=>"CookingRef",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Preference"),
                 'url'=>array('/merchant/CookingRef')),
                                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"FoodItem"),'tag'=>"FoodItem",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Food Item"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"FoodItem"),'tag'=>"FoodItem",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Items"),
                 'url'=>array('/merchant/FoodItem')),             
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"invoice"),'tag'=>"invoice",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Invoice"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"invoice"),'tag'=>"invoice",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Invoices"),
                 'url'=>array('/merchant/invoice')),
                 
                 /*POINTS PROGRAM*/
@@ -1086,10 +1086,10 @@ class Functions extends CApplicationComponent
 				array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"banner_settings"),'tag'=>"banner_settings",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Banner Settings"),
 				'url'=>array('/merchant/banner_settings')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"manage_credit_cards"),'tag'=>"manage_credit_cards",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Manage Credit Card"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"manage_credit_cards"),'tag'=>"manage_credit_cards",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Manage Credit Cards"),
                 'url'=>array('/merchant/manage_credit_cards')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"voucher"),'tag'=>"voucher",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Voucher"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"voucher"),'tag'=>"voucher",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Vouchers"),
                 'url'=>array('/merchant/voucher')),
                 
                 
@@ -1104,13 +1104,13 @@ class Functions extends CApplicationComponent
                    'url'=>array('/printer/merchant_panel?lang='.Yii::app()->language)),                
                    
                    
-                   array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"singleapp"),'tag'=>'singleapp', 'label'=>'<i class="fa fa-paypal"></i>'.t("Single Merchant"),
+                   array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"singleapp"),'tag'=>'singleapp', 'label'=>'<i class="fa fa-paypal"></i>'.t("App Settings"),
                    'url'=>array('/merchant/singlemerchant/banner')), 
                                                                            
                 )),   
                                 
                 // commission                
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"commission"),'tag'=>'commission','label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default",'Commission'),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"commission"),'tag'=>'commission','label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default",'Commissions'),
                    'itemOptions'=>array('class'=>''), 'items'=>array(
                    
                    array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"statement"),'tag'=>'statement', 'label'=>'<i class="fa fa-paypal"></i>'.t("Statement"), 
@@ -1155,16 +1155,16 @@ class Functions extends CApplicationComponent
                 /*array('tag'=>"home",'label'=>'<i class="fa fa-cog"></i>'.Yii::t("default","Receipt Settings"),
                 'url'=>array('/merchant/ReceiptSettings')),*/
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"review"),'tag'=>"review",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Customer reviews"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"review"),'tag'=>"review",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Customer Reviews"),
                 'url'=>array('/merchant/review')),               
                 
                 array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"SocialSettings"),'tag'=>"SocialSettings",'label'=>'<i class="fa fa-facebook-square"></i>'.Yii::t("default","Social Settings"),
                 'url'=>array('/merchant/SocialSettings')),               
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AlertSettings"),'tag'=>"AlertSettings",'label'=>'<i class="fa fa-bell"></i>'.Yii::t("default","Alert Notification"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AlertSettings"),'tag'=>"AlertSettings",'label'=>'<i class="fa fa-bell"></i>'.Yii::t("default","Alert Notifications"),
                 'url'=>array('/merchant/AlertSettings')),               
                                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"user"),'tag'=>"user",'label'=>'<i class="fa fa-users"></i>'.Yii::t("default","User"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"user"),'tag'=>"user",'label'=>'<i class="fa fa-users"></i>'.Yii::t("default","Manage Staff"),
                 'url'=>array('/merchant/user')),
                                 
                 array('tag'=>"logout",'label'=>'<i class="fa fa-sign-out"></i>'.Yii::t("default","Logout"),
