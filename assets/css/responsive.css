@@ -8,6 +8,11 @@ html, body
 {
 padding-top:22px;
 }
+
+#mobile-header{
+margin-top:-45px;
+}
+
 .moveup {
 margin-top:-22px;
 }
@@ -194,6 +199,9 @@ width:100%;
 .isntmobile {
 display:none;
 }
+#mobile-header{
+margin-top:-45px;
+}
 .border-light {
 border-top:1px solid #ededed;
 border-color:#ccc;
@@ -371,6 +379,9 @@ display:none;
 .sections.section-how-it-works {
 
 }
+#mobile-header{
+margin-top:-45px;
+}
 
 .result-merchant .infinite-item{
 margin-bottom:5px;
@@ -412,6 +423,7 @@ width: 30%;
 
 #mobile-header{
 border:0px solid yellow;
+margin-top:-45px;
 }
 
 .merchant-opening-hours .col-md-3,
@@ -644,6 +656,7 @@ width:260px;
 
 #mobile-header{
 border:0px solid green;
+margin-top:-45px;
 }
 
 .menu-nav-mobile, .cart-mobile-handle{

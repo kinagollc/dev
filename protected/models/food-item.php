@@ -70,7 +70,7 @@ if ($data['two_flavors']==2){
 }
 //dump($data['dish']);
 ?>
-<div class="container moveup view-food-item-wrap">
+<div class="container view-food-item-wrap">
    
   <!--ITEM NAME & DESCRIPTION-->
   <div class="row">
