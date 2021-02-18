@@ -74,7 +74,7 @@ if ($data['two_flavors']==2){
 <div class="container  view-food-item-wrap">
    
   <!--ITEM NAME & DESCRIPTION-->
-  <div class="row" style="margin-top:-45px;">
+  <div class="row">
     <div class="col-md-3 ">              
        <img src="<?php echo FunctionsV3::getFoodDefaultImage($data['photo']);?>" alt="<?php echo $data['item_name']?>" title="<?php echo $data['item_name']?>" class="logo-small">
     </div> <!--col-->
