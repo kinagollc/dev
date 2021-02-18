@@ -12,6 +12,7 @@ $this->renderPartial('/front/mobile_header',array(
     'title'=>$data['item_name']
 ));
 
+$exchange_rate = Item_utility::getRates();
 ?>
 
 <div class="container">
@@ -130,12 +131,17 @@ if ($data['two_flavors']==2){
                   ))?>
              <?php endif;?>
              
+             <?php 
+             $new_price = ((float)$price['price']*$exchange_rate);
+             $new_price_discount = ( (float) $price['price']- (float) $data['discount']) * $exchange_rate ;             
+             ?>
+             
              <?php if (isset($price['price'])):?>  
                 <?php if (is_numeric($data['discount'])):?>
-                    <span class="line-tru"><?php echo FunctionsV3::prettyPrice($price['price'])?></span>
-                    <span class="text-danger"><?php echo FunctionsV3::prettyPrice($price['price']-$data['discount'])?></span>
+                    <span class="line-tru"><?php echo Price_Formatter::formatNumber($new_price)?></span>
+                    <span class="text-danger"><?php echo Price_Formatter::formatNumber($new_price_discount)?></span>
                 <?php else :?>
-                    <?php echo FunctionsV3::prettyPrice($price['price'])?>
+                    <?php echo Price_Formatter::formatNumber($new_price)?>
                  <?php endif;?>
              <?php endif;?>
              
@@ -332,7 +338,8 @@ if ($data['two_flavors']==2){
             echo "&nbsp;".qTranslate($val_addon['sub_item_name'],'sub_item_name',$val_addon);
             ?>
              <span class="hide-food-price to-show">
-            <?php echo !empty($val_addon['price'])?displayPrice(getCurrencyCode(),$val_addon['price']):"-";?>
+            <?php //echo !empty($val_addon['price'])?displayPrice(getCurrencyCode(),$val_addon['price']):"-";?>
+            <?php echo !empty($val_addon['price'])? Price_Formatter::formatNumber( ((float)$val_addon['price'])*$exchange_rate  ) :"-";?>
             </span>
             </div> <!--col-->
             
@@ -367,7 +374,8 @@ if ($data['two_flavors']==2){
             
             <div class="col-md-3 col-xs-3 border text-right into-row">
             <span class="hide-food-price to-hide">
-            <?php echo !empty($val_addon['price'])?displayPrice(getCurrencyCode(),$val_addon['price']):"-";?>
+            <?php //echo !empty($val_addon['price'])?displayPrice(getCurrencyCode(),$val_addon['price']):"-";?>
+            <?php echo !empty($val_addon['price'])? Price_Formatter::formatNumber( ((float)$val_addon['price'])*$exchange_rate  ) :"-";?>
             </span>
             </div> <!--col-->
         </div> <!--row-->        

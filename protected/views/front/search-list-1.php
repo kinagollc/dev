@@ -31,9 +31,8 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
              <?php endif;?>
           </div>
           <?php if($show_delivery_info):?>
-          <div class="mycol b">
-             <?php //echo FunctionsV3::prettyPrice($val['minimum_order'])?>
-             <?php echo FunctionsV3::prettyPrice($min_fees)?>
+          <div class="mycol b">             
+             <?php echo Price_Formatter::formatNumber($min_fees)?>
              <p><?php echo t("Minimum Order")?></p>
           </div>
           <?php endif;?>
@@ -88,7 +87,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         //if($val['service']!=3){
         if($show_delivery_info){
 	        if ($delivery_fee){
-	             echo t("Delivery Fee").": ".FunctionsV3::prettyPrice($delivery_fee);
+	             echo t("Delivery Fee").": ".Price_Formatter::formatNumber($delivery_fee);
 	        } else echo  t("Delivery Fee").": ".t("Free Delivery");
         }
         ?>

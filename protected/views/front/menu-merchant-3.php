@@ -1,19 +1,16 @@
-
-
 <?php if(is_array($menu) && count($menu)>=1):?>
 <div class="menu-3 box-grey rounded" style="margin-top:0;">
 
 <?php foreach ($menu as $val):?>
 <div class="menu-3-cat bottom20">
 <h2 class="text-left menu-cat cat-<?php echo $val['category_id']?>">
-<?php echo qTranslate($val['category_name'],'category_name',$val)?>
+<?php echo $val['category_name'];?>
 </h2>
 
 <?php if (is_array($val['item']) && count($val['item'])>=1):?>
 <?php foreach ($val['item'] as $val_item):?>
 
 <?php 
-//dump($val_item);
 $atts='';
 if ( $val_item['single_item']==2){
 	  $atts.='data-price="'.$val_item['single_details']['price'].'"';
@@ -40,18 +37,23 @@ data-category_id="<?php echo $val['category_id']?>"
 <?php endif;?>
 
 <div class="row">
-  <div class="col-md-2">
+  <div class="col-md-3 removePaddingLeft">
     <img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>">
   </div> <!--col-->
-  <div class="col-md-7">
-    <p class="bold"><?php echo qTranslate($val_item['item_name'],'item_name',$val_item)?></p>  
+  <div class="col-md-6">
+    <p class="bold"><?php echo $val_item['item_name'];?></p>  
     <p class="small food-description read-more">
-    <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
+    <?php echo $val_item['item_description'];?>
     </p>
   </div> <!--col-->
   
-  <div class="col-md-3 center">
-  <p class="bold"><?php echo FunctionsV3::getItemFirstPrice($val_item['prices'],$val_item['discount'])?></p>
+  <div class="col-md-3 center">  
+  <?php 
+	$this->widget('application.components.Widget_price',array(
+	 'price'=> $val_item['prices'],
+	 'bold'=>true
+	));
+  ?>       
   </div> <!--col-->
   
 </div> <!--row-->
@@ -73,14 +75,19 @@ data-category_id="<?php echo $val['category_id']?>"
     <img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>">
   </div> <!--col-->
   <div class="col-md-7">
-    <p class="bold"><?php echo qTranslate($val_item['item_name'],'item_name',$val_item)?></p>  
+    <p class="bold"><?php echo $val_item['item_name'];?></p>  
     <p class="small food-description read-more">
-    <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
+    <?php echo $val_item['item_description'];?>
     </p>
   </div> <!--col-->
   
   <div class="col-md-3 center">
-  <p class="bold"><?php echo FunctionsV3::getItemFirstPrice($val_item['prices'],$val_item['discount'])?></p>
+  <?php 
+	$this->widget('application.components.Widget_price',array(
+	 'price'=> $val_item['prices'],
+	 'bold'=>true
+	));
+  ?> 
   </div> <!--col-->
   
 </div> <!--row-->
@@ -88,7 +95,9 @@ data-category_id="<?php echo $val['category_id']?>"
 
 <?php endforeach;?>
 <?php else :?>
+
 <p class="small text-danger"><?php echo t("no item found on this category")?></p>
+
 <?php endif;?>
 
 </div><!-- menu-3-cat-->

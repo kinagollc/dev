@@ -119,10 +119,11 @@ HTML;
 					if (!empty($item['cooking_ref'])){
 					    $cookref="<p>".qTranslate($item['cooking_ref'],'cooking_name',$item['cooking_name_trans'])."</p>";
 					}
-					$size='';
+					$size=''; $size_sms = '';
 					if (!empty($item['size_words'])){
 						$size_words=qTranslate($item['size_words'],'size_name',$item['size_name_trans']);
 					    $size="<p>".$size_words."</p>";
+					    $size_sms = $size_words;
 					}
 					
 					$ingredients='';
@@ -151,7 +152,7 @@ HTML;
 					$item_name=qTranslate($item['item_name'],'item_name',$item['item_name_trans']);
 					
 					$tr.="<tr>";
-				    $tr.="<td>".$item['qty']." ".$item_name.$size.$notes.$cookref.$ingredients."</td>";
+				    $tr.="<td>".$item['qty']." ".$item_name.$size_sms.$notes.$cookref.$ingredients."</td>";
 				    $tr.="<td>".FunctionsV3::prettyPrice($item_total)."</td>";
 				    $tr.="</tr>";
 				    

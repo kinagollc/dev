@@ -9,6 +9,9 @@ $this->renderPartial('/front/banner-receipt',array(
    'sub_text'=>t("Your order has been placed.")
 ));
 
+$used_currency = isset($data['used_currency'])?$data['used_currency']: FunctionsV3::getCurrencyCode() ;
+Price_Formatter::init( $used_currency );
+
 $ok=false;			
 if (is_array($data) && count($data)>=1){
 	$merchant_id=$data['merchant_id'];

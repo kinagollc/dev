@@ -140,24 +140,24 @@ if ($data){
 			
 			<tr>
 			<td><?php echo t("Amount")?></td>
-			<td><?php echo FunctionsV3::prettyPrice( ($amount_to_pay/100)-$card_fee  )?></td>
+			<td><?php echo Price_Formatter::formatNumber( ($amount_to_pay/100)-$card_fee  )?></td>
 			</tr> 
 			
 			<tr>
 			<td><?php echo t("Card fee")?></td>
-			<td><?php echo FunctionsV3::prettyPrice($card_fee)?></td> 
+			<td><?php echo Price_Formatter::formatNumber($card_fee)?></td> 
 			</tr>
 			
 			<tr>
 			<td><?php echo t("Total")?></td>
-			<td><?php echo FunctionsV3::prettyPrice( ($amount_to_pay) /100)?></td>
+			<td><?php echo Price_Formatter::formatNumber( ($amount_to_pay) /100)?></td>
 			</tr> 
 			
 			<?php else :?>
 			
 			<tr>
 			<td><?php echo t("Total")?></td>
-			<td><?php echo FunctionsV3::prettyPrice($amount_to_pay/100)?></td>
+			<td><?php echo Price_Formatter::formatNumber($amount_to_pay/100)?></td>
 			</tr> 
 			
 			

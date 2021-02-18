@@ -2,13 +2,15 @@
     "name": "google/apiclient",
     "type": "library",
     "description": "Client library for Google APIs",
-    "keywords": ["google"],
+    "keywords": [
+        "google"
+    ],
     "homepage": "http://developers.google.com/api-client-library/php",
     "license": "Apache-2.0",
     "require": {
         "php": ">=5.4",
         "google/auth": "^1.9",
-        "google/apiclient-services": "~0.13",
+        "google/apiclient-services": "v0.139",
         "firebase/php-jwt": "~2.0||~3.0||~4.0||~5.0",
         "monolog/monolog": "^1.17|^2.0",
         "phpseclib/phpseclib": "~0.3.10||~2.0",

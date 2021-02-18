@@ -26,10 +26,10 @@ $this->renderPartial('/front/progress-merchantsignup',array(
                 <h4><?php echo $val['title']?></h4>
                 <h3>                
                 <?php if ( $val['promo_price']>=1):?>
-                  <span class="strike-price"><?php echo FunctionsV3::prettyPrice($val['price'])?></span>
-                  <?php echo FunctionsV3::prettyPrice($val['promo_price'])?>
+                  <span class="strike-price"><?php echo Price_Formatter::formatNumber( (float)$val['price']*$exchange_rate )?></span>
+                  <?php echo Price_Formatter::formatNumber( ((float)$val['promo_price']*$exchange_rate) )?>
                 <?php else :?>
-                  <?php echo FunctionsV3::prettyPrice($val['price'])?>
+                  <?php echo Price_Formatter::formatNumber( ((float) $val['price'] * $exchange_rate) )?>
                 <?php endif;?>
                 </h3>
               </div><!-- pricing-head-->   

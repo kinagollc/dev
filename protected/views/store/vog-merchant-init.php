@@ -24,7 +24,7 @@ $this->renderPartial('/front/order-progress-bar',array(
   	<div class="row top10">
 	  <div class="col-md-3"><?php echo t("Amount")?></div>
 	  <div class="col-md-8">
-	    <?php echo FunctionsV3::prettyPrice($amount_to_pay)?>
+	    <?php echo Price_Formatter::formatNumber($amount_to_pay)?>
 	  </div>
 	</div>
 	
@@ -49,7 +49,7 @@ $this->renderPartial('/front/order-progress-bar',array(
 	  	    'xid'=>$data['order_id']
 	  	  )));
 	  	  	  
-	  echo CHtml::hiddenField('cur', Yii::app()->functions->adminCurrencyCode() );	  
+	  echo CHtml::hiddenField('cur', $currency_used );	  
 	  ?>
 	  
 	   <input type='image' src='//voguepay.com/images/buttons/checkout_blue.png' alt='Submit' />

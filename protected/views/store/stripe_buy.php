@@ -26,24 +26,24 @@ $this->renderPartial('/front/order-progress-bar',array(
  <?php if($fee>0.001):?>
   <tr>
    <td><?php echo t("Card Fee")?></td>
-   <td><?php echo FunctionsV3::prettyPrice($fee)?></td> 
+   <td><?php echo Price_Formatter::formatNumber($fee)?></td> 
  </tr>
  
  <tr>
   <td><?php echo t("Amount")?></td>
-  <td><?php echo FunctionsV3::prettyPrice( ($amount/100)-$fee  )?></td>
+  <td><?php echo Price_Formatter::formatNumber( ($amount/100)-$fee  )?></td>
  </tr> 
  
  <tr>
   <td><?php echo t("Total")?></td>
-  <td><?php echo FunctionsV3::prettyPrice( ($amount) /100)?></td>
+  <td><?php echo Price_Formatter::formatNumber( ($amount) /100)?></td>
  </tr> 
  
  <?php else :?>
  
  <tr>
   <td><?php echo t("Total")?></td>
-  <td><?php echo FunctionsV3::prettyPrice($amount/100)?></td>
+  <td><?php echo Price_Formatter::formatNumber($amount/100)?></td>
  </tr> 
  
  

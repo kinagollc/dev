@@ -14,7 +14,7 @@
 	   <div class="col-xs-6 text-right">
 	     <p>
 	     <?php echo clearString($data['merchant_name'])?></br>
-	     <?php echo FunctionsV3::prettyPrice($data['total_w_tax'])?>
+	     <?php echo Price_Formatter::formatNumber($data['total_w_tax'])?>
 	     </p>
 	   </div>
 	</div>

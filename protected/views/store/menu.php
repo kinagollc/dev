@@ -12,7 +12,7 @@ if ( !file_exists(FunctionsV3::uploadPath()."/$merchant_photo_bg")){
 
 $merchant_info=array(   
   'merchant_id'=>$merchant_id ,  
-  'minimum_order'=>$min_fees,
+  'minimum_order'=> (float) $min_fees * $exchange_rate ,
   'ratings'=>$ratings,
   'merchant_address'=>$data['merchant_address'],
   'cuisine'=>$data['cuisine'],
@@ -24,7 +24,7 @@ $merchant_info=array(
   'restaurant_phone'=>$data['restaurant_phone'],
   'social_facebook_page'=>$social_facebook_page,
   'social_twitter_page'=>$social_twitter_page,
-  'social_google_page'=>$social_google_page,
+  'social_google_page'=>$social_google_page  
 );
 $this->renderPartial('/front/menu-header',$merchant_info);
 
@@ -45,11 +45,31 @@ $this->renderPartial('/front/order-progress-bar',array(
 $now=date('Y-m-d');
 $now_time='';
 
-$todays_day = date("l");
+$todays_day = date("l"); $lazy_current_cat_id=0; $total_cat_paginate=0;
 
 $checkout=FunctionsV3::isMerchantcanCheckout($merchant_id); 
-$menu=Yii::app()->functions->getMerchantMenu($merchant_id , isset($_GET['sname'])?$_GET['sname']:'' , $todays_day ); 
 
+Item_menu::init( $merchant_id );
+Item_menu::$language = Yii::app()->language;    
+Item_menu::$currency_code = Yii::app()->session['currency'];
+
+if($menu_lazyload!=1){    
+    $menu = Item_menu::getMenu($merchant_id , date("l") );        
+} else {	
+	$menu=Item_menu::getCategoryLazyLoad($merchant_id , $todays_day );	
+	if($menu){						
+		$lazy_current_cat_id = $menu[0]['category_id'];
+		if($lazy_use_mobile){
+			$total_cat_paginate = $menu[0]['total_item'];
+		} else $total_cat_paginate = $menu[0]['total_cat_paginate'];		
+	}
+} 
+
+/*dump($menu);
+die();*/
+
+echo CHtml::hiddenField('total_cat_paginate', $total_cat_paginate>0?$total_cat_paginate:1);
+echo CHtml::hiddenField('lazy_current_cat_id',$lazy_current_cat_id);
 
 echo CHtml::hiddenField('is_merchant_open',isset($checkout['code'])?$checkout['code']:'' );
 
@@ -75,31 +95,29 @@ echo CHtml::hiddenField('merchant_required_delivery_time',
 /** add minimum order for pickup status*/
 $merchant_minimum_order_pickup=Yii::app()->functions->getOption('merchant_minimum_order_pickup',$merchant_id);
 if (!empty($merchant_minimum_order_pickup)){
-	  echo CHtml::hiddenField('merchant_minimum_order_pickup',$merchant_minimum_order_pickup);
-	  
-	  echo CHtml::hiddenField('merchant_minimum_order_pickup_pretty',
-         displayPrice(baseCurrency(),prettyFormat($merchant_minimum_order_pickup)));
+	  $merchant_minimum_order_pickup = (float)$merchant_minimum_order_pickup * $exchange_rate;	  
+	  echo CHtml::hiddenField('merchant_minimum_order_pickup', unPrettyPrice($merchant_minimum_order_pickup) );	  
+	  echo CHtml::hiddenField('merchant_minimum_order_pickup_pretty', Price_Formatter::formatNumber($merchant_minimum_order_pickup) );
 }
  
 $merchant_maximum_order_pickup=Yii::app()->functions->getOption('merchant_maximum_order_pickup',$merchant_id);
 if (!empty($merchant_maximum_order_pickup)){
-	  echo CHtml::hiddenField('merchant_maximum_order_pickup',$merchant_maximum_order_pickup);
-	  
-	  echo CHtml::hiddenField('merchant_maximum_order_pickup_pretty',
-         displayPrice(baseCurrency(),prettyFormat($merchant_maximum_order_pickup)));
+	  $merchant_maximum_order_pickup = (float)$merchant_maximum_order_pickup * $exchange_rate;	  	 
+	  echo CHtml::hiddenField('merchant_maximum_order_pickup', unPrettyPrice($merchant_maximum_order_pickup) );	  
+	  echo CHtml::hiddenField('merchant_maximum_order_pickup_pretty', Price_Formatter::formatNumber($merchant_maximum_order_pickup) );
 }  
 
 $minimum_order=$min_fees;
 if (!empty($minimum_order)){
+	$minimum_order = (float)$minimum_order*$exchange_rate;	
 	echo CHtml::hiddenField('minimum_order',unPrettyPrice($minimum_order));
-	echo CHtml::hiddenField('minimum_order_pretty',
-	 displayPrice(baseCurrency(),prettyFormat($minimum_order))
-	);
+	echo CHtml::hiddenField('minimum_order_pretty',	 Price_Formatter::formatNumber($minimum_order) );	
 }
 $merchant_maximum_order=Yii::app()->functions->getOption("merchant_maximum_order",$merchant_id);
  if (is_numeric($merchant_maximum_order)){
+ 	$merchant_maximum_order = (float)$merchant_maximum_order * $exchange_rate; 	
  	echo CHtml::hiddenField('merchant_maximum_order',unPrettyPrice($merchant_maximum_order));
-    echo CHtml::hiddenField('merchant_maximum_order_pretty',baseCurrency().prettyFormat($merchant_maximum_order));
+    echo CHtml::hiddenField('merchant_maximum_order_pretty', Price_Formatter::formatNumber($merchant_maximum_order) );
  }
 
 $is_ok_delivered=1;
@@ -132,8 +150,8 @@ if ($search_by_location){
 	echo CHtml::hiddenField('search_by_location',$search_by_location);
 }
 
-echo CHtml::hiddenField('minimum_order_dinein',FunctionsV3::prettyPrice($minimum_order_dinein));
-echo CHtml::hiddenField('maximum_order_dinein',FunctionsV3::prettyPrice($maximum_order_dinein));
+echo CHtml::hiddenField('minimum_order_dinein',Price_Formatter::formatNumber($minimum_order_dinein));
+echo CHtml::hiddenField('maximum_order_dinein',Price_Formatter::formatNumber($maximum_order_dinein));
 
 /*add meta tag for image*/
 Yii::app()->clientScript->registerMetaTag(
@@ -240,15 +258,17 @@ if ($food_viewing_private==2){
 				 $this->renderPartial('/front/menu-category',array(
 				  'merchant_id'=>$merchant_id,
 				  'menu'=>$menu,
+				  'menu_lazyload'=>$menu_lazyload,
 				  'show_image_category'=>getOption($merchant_id, 'merchant_show_category_image')
 				 ));
 				 ?>
 				</div>
 			 </div> <!--col-->
-			 <div class="col-md-8 col-xs-8 border" id="menu-list-wrapper">
+			 <div class="col-md-8 col-xs-8" id="menu-list-wrapper">
 			 
 			 <?php if($enabled_food_search_menu==1):?>
-			 <form method="GET" class="frm-search-food">			   
+			 <form method="GET" class="frm-search-food" autocomplete="off"
+				 <?php echo $menu_lazyload==1?'onsubmit="return false;"':''; ?> >			   
 			 
 			 <?php 
 			 if($is_preview==true){
@@ -266,12 +286,17 @@ if ($food_viewing_private==2){
 			  <div class="typeahead__container">
               <div class="typeahead__field">
               <div class="typeahead__query">   
-			   <?php echo CHtml::textField('sname',
+			   <?php 
+			   $search_foodname = $menu_lazyload==1?"search_foodname_lazy":"search_foodname";			   
+			   echo CHtml::textField('sname',
 			   isset($_GET['sname'])?$_GET['sname']:''
 			   ,array(
 			     'placeholder'=>t("Search"),
-			     'class'=>"form-control search_foodname required"
-			   ))?>
+			     'class'=>"form-control $search_foodname required",
+			     'autocomplete'=>"new-password"			     
+			   ));			   
+			   ?>
+			   <a href="javascript:;" class="clear_search_item"><i class="ion-ios-close-empty"></i></a>
 			   </div>
 			   </div>
 			   </div>
@@ -287,7 +312,7 @@ if ($food_viewing_private==2){
 			 <?php endif;?>
 			 
 			 <?php 
-			 $admin_activated_menu=getOptionA('admin_activated_menu');			 
+			 $admin_activated_menu = (integer) getOptionA('admin_activated_menu');			 
 			 $admin_menu_allowed_merchant=getOptionA('admin_menu_allowed_merchant');
 			 if ($admin_menu_allowed_merchant==2){			 	 
 			 	 $temp_activated_menu=getOption($merchant_id,'merchant_activated_menu');			 	 
@@ -300,35 +325,65 @@ if ($food_viewing_private==2){
 			 if($merchant_tax>0){
 			    $merchant_tax=$merchant_tax/100;
 			 }
-						 
+			 
+			 FunctionsV3::registerScript(array(
+			    "var activated_menu='$admin_activated_menu';",
+			    "var disabled_addcart='$disabled_addcart';",
+			 ),time());
+
+			 if (isset($_GET['sname'])){
+			 	if(!empty($_GET['sname'])){
+			 		$admin_activated_menu = 100;
+			 	}
+			 }
+			  
 			 switch ($admin_activated_menu)
 			 {
 			 	case 1:
-			 		$this->renderPartial('/front/menu-merchant-2',array(
+			 		$tpl = $menu_lazyload==1?"menu-lazy":"menu-merchant-2";		
+			 		$this->renderPartial('/front/'.$tpl,array(
 					  'merchant_id'=>$merchant_id,
 					  'menu'=>$menu,
-					  'disabled_addcart'=>$disabled_addcart
+					  'disabled_addcart'=>$disabled_addcart,
+					  'menu_lazyload'=>$menu_lazyload,
+					  'activated_menu'=>$admin_activated_menu
 					));
 			 		break;
 			 		
 			 	case 2:			 		
-			 		$this->renderPartial('/front/menu-merchant-3',array(
+			 	   $tpl = $menu_lazyload==1?"menu-lazy":"menu-merchant-3";			 	    
+			 		$this->renderPartial('/front/'.$tpl,array(
 					  'merchant_id'=>$merchant_id,
 					  'menu'=>$menu,
-					  'disabled_addcart'=>$disabled_addcart
+					  'disabled_addcart'=>$disabled_addcart,
+					  'menu_lazyload'=>$menu_lazyload,
+					  'activated_menu'=>$admin_activated_menu
 					));
 			 		break;
+			 		
+			 	case 100:			 		
+			 		$search_string = isset($_GET['sname'])? $_GET['sname'] :'';			 		
+			 		$this->renderPartial('/front/search_item',array(
+			 		  'data'=>Item_menu::searchByItem($search_string,$merchant_id,0,100),
+			 		  'search_string'=>$search_string
+			 		));
+			 	break;	
 			 			
-			 	default:	
-				 	$this->renderPartial('/front/menu-merchant-1',array(
+			 	default:				 	  
+			 	    $tpl = $menu_lazyload==1?"menu-lazy":"menu-merchant-1";  
+				 	$this->renderPartial('/front/'.$tpl,array(
 					  'merchant_id'=>$merchant_id,
 					  'menu'=>$menu,
 					  'disabled_addcart'=>$disabled_addcart,
 					  'tc'=>$tc,
 					  'merchant_apply_tax'=>getOption($merchant_id,'merchant_apply_tax'),
 					  'merchant_tax'=>$merchant_tax>0?$merchant_tax:0,
+					  'menu_lazyload'=>$menu_lazyload,
+					  'activated_menu'=>$admin_activated_menu
 					));
 			    break;
+			    			 	
+			    
 			 }			 
 			 ?>			
 			 </div> <!--col-->
@@ -465,7 +520,7 @@ if ($food_viewing_private==2){
 	        <p class="delivery-fee-wrap">
 	        <?php 
 	        if ($delivery_fee>0){
-	             echo t("Delivery Fee").": ".FunctionsV3::prettyPrice($delivery_fee);
+	             echo t("Delivery Fee").": ".Price_Formatter::formatNumber( ((float)$delivery_fee*(float)$exchange_rate) );
 	        } else echo  t("Delivery Fee").": ".t("Free Delivery");
 	        ?>
 	        </p>
@@ -473,7 +528,7 @@ if ($food_viewing_private==2){
 	        <?php if($min_fees>0):?>
 	         <p>	    
 	         <p><?php echo tt("Minimum Order : [fee]",array(
-	          '[fee]'=>FunctionsV3::prettyPrice($min_fees)
+	          '[fee]'=>Price_Formatter::formatNumber( ((float)$min_fees*$exchange_rate) )
 	         ))?></p>    
 	        </p>
 	        <?php endif;?>
@@ -513,21 +568,21 @@ if ($food_viewing_private==2){
            <?php if ($minimum_order>0):?>
            <div class="delivery-min">
               <p class="small center"><?php echo Yii::t("default","Subtotal must exceed")?> 
-              <?php echo displayPrice(baseCurrency(),prettyFormat($minimum_order,$merchant_id))?>
+              <?php echo Price_Formatter::formatNumber($minimum_order);?>
            </div>
            <?php endif;?>
            
            <?php if ($merchant_minimum_order_pickup>0):?>
            <div class="pickup-min">
               <p class="small center"><?php echo Yii::t("default","Subtotal must exceed")?> 
-              <?php echo displayPrice(baseCurrency(),prettyFormat($merchant_minimum_order_pickup,$merchant_id))?>
+              <?php echo Price_Formatter::formatNumber($merchant_minimum_order_pickup);?>
            </div>
            <?php endif;?>
                       
            <?php if($minimum_order_dinein>0):?>
            <div class="dinein-min">
               <p class="small center"><?php echo Yii::t("default","Subtotal must exceed")?> 
-              <?php echo FunctionsV3::prettyPrice($minimum_order_dinein)?>
+              <?php echo Price_Formatter::formatNumber($minimum_order_dinein)?>
            </div>
            <?php endif;?>
               
@@ -625,12 +680,21 @@ if ($food_viewing_private==2){
 	         
            </div><!-- delivery_asap_wrap-->
            
+           
            <?php if ( $checkout['code']==1):?>
               <a href="javascript:;" class="orange-button medium checkout"><?php echo $checkout['button']?></a>
-           <?php else :?>
+           <?php else :?>              
               <?php if ( $checkout['holiday']==1):?>
                  <?php echo CHtml::hiddenField('is_holiday',$checkout['msg'],array('class'=>'is_holiday'));?>
                  <p class="text-danger"><?php echo $checkout['msg']?></p>
+                 
+                 <?php if($checkout['is_pre_order']==1):?>
+                 
+                 <div style="margin:10px;">
+                 <a href="javascript:;" class="orange-button medium checkout"><?php echo $checkout['button']?></a>
+                 </div>
+                 
+                 <?php endif;?>
               <?php else :?>
                  <p class="text-danger"><?php echo $checkout['msg']?></p>
                  <p class="small">

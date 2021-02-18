@@ -3,6 +3,10 @@ $order_id=isset($this->data['id'])?$this->data['id']:0;
 echo CHtml::hiddenField('printing_order_id',$order_id);		
 if ( $data = FunctionsV3::getReceiptByID($order_id)){
     $merchant_id=$data['merchant_id'];
+    
+    $used_currency = isset($data['used_currency'])?$data['used_currency']: getOptionA('admin_currency_set') ;    
+    Price_Formatter::init( $used_currency );
+    
     $json_details=!empty($data['json_details'])?json_decode($data['json_details'],true):false;
     if ( $json_details !=false){
 	    Yii::app()->functions->displayOrderHTML(array(
@@ -411,6 +415,28 @@ $full_merchant_address=$merchant_info['street']." ".$merchant_info['city']. " ".
         </div>
         </div>
         
+                
+        <?php if(isset($data['exchange_rate']) && Item_utility::MultiCurrencyEnabled() ):?>
+        <?php if($data['used_currency']!=$data['base_currency']):?>
+        <div class="convertion_rate_wrap order-list-wrap">
+         <h5><?php echo t("Currency information")?></h5>
+         <table  class="tbl">
+          <tr>
+           <td><?php echo t("Currency")?></td>
+           <td>: <?php echo $data['used_currency']?></td>
+          </tr>
+          <tr>
+           <td><?php echo t("Base on Currency")?></td>
+           <td>: <?php echo $data['base_currency']?></td>
+          </tr>
+          <tr>
+           <td><?php echo t("Currency Rate")?></td>
+           <td>: <?php echo $data['exchange_rate']?></td>
+          </tr>
+         </table>
+        </div>        
+        <?php endif;?>
+        <?php endif;?>
         
           <div class="print_wrap">
             <!--<a class="print_element left" href="javascript:;">-->

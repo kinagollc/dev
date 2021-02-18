@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 
 /*
  * This file is part of the Monolog package.
@@ -11,8 +11,6 @@
 
 namespace Monolog\Handler;
 
-use Monolog\Logger;
-
 /**
  * Used for testing purposes.
  *
@@ -20,136 +18,96 @@ use Monolog\Logger;
  *
  * @author Jordi Boggiano <j.boggiano@seld.be>
  *
- * @method bool hasEmergency($record)
- * @method bool hasAlert($record)
- * @method bool hasCritical($record)
- * @method bool hasError($record)
- * @method bool hasWarning($record)
- * @method bool hasNotice($record)
- * @method bool hasInfo($record)
- * @method bool hasDebug($record)
+ * @method boolean hasEmergency($record)
+ * @method boolean hasAlert($record)
+ * @method boolean hasCritical($record)
+ * @method boolean hasError($record)
+ * @method boolean hasWarning($record)
+ * @method boolean hasNotice($record)
+ * @method boolean hasInfo($record)
+ * @method boolean hasDebug($record)
  *
- * @method bool hasEmergencyRecords()
- * @method bool hasAlertRecords()
- * @method bool hasCriticalRecords()
- * @method bool hasErrorRecords()
- * @method bool hasWarningRecords()
- * @method bool hasNoticeRecords()
- * @method bool hasInfoRecords()
- * @method bool hasDebugRecords()
+ * @method boolean hasEmergencyRecords()
+ * @method boolean hasAlertRecords()
+ * @method boolean hasCriticalRecords()
+ * @method boolean hasErrorRecords()
+ * @method boolean hasWarningRecords()
+ * @method boolean hasNoticeRecords()
+ * @method boolean hasInfoRecords()
+ * @method boolean hasDebugRecords()
  *
- * @method bool hasEmergencyThatContains($message)
- * @method bool hasAlertThatContains($message)
- * @method bool hasCriticalThatContains($message)
- * @method bool hasErrorThatContains($message)
- * @method bool hasWarningThatContains($message)
- * @method bool hasNoticeThatContains($message)
- * @method bool hasInfoThatContains($message)
- * @method bool hasDebugThatContains($message)
+ * @method boolean hasEmergencyThatContains($message)
+ * @method boolean hasAlertThatContains($message)
+ * @method boolean hasCriticalThatContains($message)
+ * @method boolean hasErrorThatContains($message)
+ * @method boolean hasWarningThatContains($message)
+ * @method boolean hasNoticeThatContains($message)
+ * @method boolean hasInfoThatContains($message)
+ * @method boolean hasDebugThatContains($message)
  *
- * @method bool hasEmergencyThatMatches($message)
- * @method bool hasAlertThatMatches($message)
- * @method bool hasCriticalThatMatches($message)
- * @method bool hasErrorThatMatches($message)
- * @method bool hasWarningThatMatches($message)
- * @method bool hasNoticeThatMatches($message)
- * @method bool hasInfoThatMatches($message)
- * @method bool hasDebugThatMatches($message)
+ * @method boolean hasEmergencyThatMatches($message)
+ * @method boolean hasAlertThatMatches($message)
+ * @method boolean hasCriticalThatMatches($message)
+ * @method boolean hasErrorThatMatches($message)
+ * @method boolean hasWarningThatMatches($message)
+ * @method boolean hasNoticeThatMatches($message)
+ * @method boolean hasInfoThatMatches($message)
+ * @method boolean hasDebugThatMatches($message)
  *
- * @method bool hasEmergencyThatPasses($message)
- * @method bool hasAlertThatPasses($message)
- * @method bool hasCriticalThatPasses($message)
- * @method bool hasErrorThatPasses($message)
- * @method bool hasWarningThatPasses($message)
- * @method bool hasNoticeThatPasses($message)
- * @method bool hasInfoThatPasses($message)
- * @method bool hasDebugThatPasses($message)
+ * @method boolean hasEmergencyThatPasses($message)
+ * @method boolean hasAlertThatPasses($message)
+ * @method boolean hasCriticalThatPasses($message)
+ * @method boolean hasErrorThatPasses($message)
+ * @method boolean hasWarningThatPasses($message)
+ * @method boolean hasNoticeThatPasses($message)
+ * @method boolean hasInfoThatPasses($message)
+ * @method boolean hasDebugThatPasses($message)
  */
 class TestHandler extends AbstractProcessingHandler
 {
-    protected $records = [];
-    protected $recordsByLevel = [];
-    private $skipReset = false;
+    protected $records = array();
+    protected $recordsByLevel = array();
 
     public function getRecords()
     {
         return $this->records;
     }
 
-    public function clear()
+    protected function hasRecordRecords($level)
     {
-        $this->records = [];
-        $this->recordsByLevel = [];
+        return isset($this->recordsByLevel[$level]);
     }
 
-    public function reset()
+    protected function hasRecord($record, $level)
     {
-        if (!$this->skipReset) {
-            $this->clear();
-        }
-    }
-
-    public function setSkipReset(bool $skipReset)
-    {
-        $this->skipReset = $skipReset;
-    }
-
-    /**
-     * @param string|int $level Logging level value or name
-     */
-    public function hasRecords($level): bool
-    {
-        return isset($this->recordsByLevel[Logger::toMonologLevel($level)]);
-    }
-
-    /**
-     * @param string|array $record Either a message string or an array containing message and optionally context keys that will be checked against all records
-     * @param string|int   $level  Logging level value or name
-     */
-    public function hasRecord($record, $level): bool
-    {
-        if (is_string($record)) {
-            $record = array('message' => $record);
+        if (is_array($record)) {
+            $record = $record['message'];
         }
 
         return $this->hasRecordThatPasses(function ($rec) use ($record) {
-            if ($rec['message'] !== $record['message']) {
-                return false;
-            }
-            if (isset($record['context']) && $rec['context'] !== $record['context']) {
-                return false;
-            }
-
-            return true;
+            return $rec['message'] === $record;
         }, $level);
     }
 
-    /**
-     * @param string|int $level Logging level value or name
-     */
-    public function hasRecordThatContains(string $message, $level): bool
+    public function hasRecordThatContains($message, $level)
     {
         return $this->hasRecordThatPasses(function ($rec) use ($message) {
             return strpos($rec['message'], $message) !== false;
         }, $level);
     }
 
-    /**
-     * @param string|int $level Logging level value or name
-     */
-    public function hasRecordThatMatches(string $regex, $level): bool
+    public function hasRecordThatMatches($regex, $level)
     {
         return $this->hasRecordThatPasses(function ($rec) use ($regex) {
             return preg_match($regex, $rec['message']) > 0;
         }, $level);
     }
 
-    /**
-     * @param string|int $level Logging level value or name
-     */
-    public function hasRecordThatPasses(callable $predicate, $level)
+    public function hasRecordThatPasses($predicate, $level)
     {
-        $level = Logger::toMonologLevel($level);
+        if (!is_callable($predicate)) {
+            throw new \InvalidArgumentException("Expected a callable for hasRecordThatSucceeds");
+        }
 
         if (!isset($this->recordsByLevel[$level])) {
             return false;
@@ -167,7 +125,7 @@ class TestHandler extends AbstractProcessingHandler
     /**
      * {@inheritdoc}
      */
-    protected function write(array $record): void
+    protected function write(array $record)
     {
         $this->recordsByLevel[$record['level']][] = $record;
         $this->records[] = $record;
@@ -176,12 +134,12 @@ class TestHandler extends AbstractProcessingHandler
     public function __call($method, $args)
     {
         if (preg_match('/(.*)(Debug|Info|Notice|Warning|Error|Critical|Alert|Emergency)(.*)/', $method, $matches) > 0) {
-            $genericMethod = $matches[1] . ('Records' !== $matches[3] ? 'Record' : '') . $matches[3];
+            $genericMethod = $matches[1] . 'Record' . $matches[3];
             $level = constant('Monolog\Logger::' . strtoupper($matches[2]));
             if (method_exists($this, $genericMethod)) {
                 $args[] = $level;
 
-                return call_user_func_array([$this, $genericMethod], $args);
+                return call_user_func_array(array($this, $genericMethod), $args);
             }
         }
 

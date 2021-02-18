@@ -72,6 +72,9 @@ class AjaxadminController extends CController
 			}
 		}
 		
+		$used_currency = FunctionsV3::getCurrencyCode();
+	    Price_Formatter::init( $used_currency );
+		
 		return true;
 	}
 	
@@ -261,6 +264,10 @@ class AjaxadminController extends CController
 		  
 		  'offline_new_bank_deposit_email',
 		  'offline_new_bank_deposit_sms',		  
+		  		  
+		  'food_is_done_to_driver_push',
+		  'auto_order_update_push',
+		  'driver_update_to_merchant_push',
 		  
 		);
 		
@@ -881,6 +888,12 @@ class AjaxadminController extends CController
     	} catch (Exception $e) {
     		$error[] =  $e->getMessage();
     	}
+    	
+    	try {
+    	    NotificationWrapper::checkMigration();
+    	} catch (Exception $e) {
+    		$error[] =  $e->getMessage();
+    	}
     	    	    	
     	if(is_array($error) && count($error)>=1){    		
     		$this->code = 1;    	
@@ -893,4 +906,723 @@ class AjaxadminController extends CController
 		$this->jsonResponse();
 	}
 	
+	public function actionMigration_items()
+	{
+		$this->data=$_POST; $page_limit = 5; $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT * FROM {{item}} a
+		WHERE item_id NOT IN (
+		  select item_id from {{item_relationship_size}}
+		  where item_id = a.item_id
+		)
+		LIMIT 0,$page_limit
+		";	                          
+        if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
+        	foreach ($res as $val) {
+        		$item_id = (integer) $val['item_id'];
+        		$merchant_id = (integer) $val['merchant_id'];
+        		        		
+        		if(empty($val['item_token'])){        			
+	        		$params = array(
+	        		  'item_token'=>ItemClass::generateFoodToken(),
+	        		  'date_modified'=>FunctionsV3::dateNow(),
+	        		  'ip_address'=>$_SERVER['REMOTE_ADDR']
+	        		);
+	        		
+	        		Yii::app()->db->createCommand()->update("{{item}}",$params,
+			  	    'item_id=:item_id',
+				  	    array(
+				  	      ':item_id'=>$item_id
+				  	    )
+			  	    );
+        		}
+        		
+        		$category = json_decode($val['category'],true);        		
+        		ItemClass::insertItemRelationship(
+	                $merchant_id,
+	                $item_id,
+	                (array)$category
+                );
+                
+                $addon_item = json_decode($val['addon_item'],true);                                 
+                ItemClass::insertItemRelationshipSubcategory(
+		           $merchant_id,
+	               $item_id,
+		           (array)$addon_item
+	            );
+	            
+	            $size = array(); $price = array(); $prices = array();
+	            	            
+	            $price = json_decode($val['price'],true);
+	            
+	            if(is_array($price) && count($price)>=1){
+	            	$x=0;
+	            	foreach ($price as $size_id=>$item_price) {
+	            		$size[$x]=$size_id; 
+	            		$prices[$x]=$item_price;
+	            		$x++;
+	            	}
+	            }
+	            	            
+	            ItemClass::insertItemRelatinship(
+                  $merchant_id,
+	              $item_id,
+	              array(
+	               'size'=>(array)$size,
+	               'price'=>(array)$prices
+	              )		              
+                );
+  
+        		
+                $_page = $page+1;
+                
+                $this->code = 1;
+                $this->msg = Yii::t("default","Processing [page] of [total]",array(
+                   '[page]'=>$_page,
+                  '[total]'=>$total_item_paginate,                  
+                ));
+                $this->details = array(
+                   'next_action' => "continue_migration",
+                   'id'=>"items",
+                   'total'=>$total_item,
+                   'page'=>$_page
+                );
+  		
+        	} /*end loop*/
+        } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"items"                   
+                );
+        }
+        
+        $this->jsonResponse();
+	}
+	
+	public function actionMigration_subcategoryitem()
+	{
+		$this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT sub_item_id,category 
+		FROM {{subcategory_item}} a		 
+		WHERE 
+		LENGTH(category) != 2
+		AND
+		sub_item_id NOT IN (
+		  select sub_item_id from {{subcategory_item_relationships}}
+		  where sub_item_id = a.sub_item_id
+		)
+		LIMIT 0,$page_limit
+		";	                
+        if($res = Yii::app()->db->createCommand($stmt)->queryAll()){        	
+        	foreach ($res as $val) {        		        		
+        		$sub_item_id = $val['sub_item_id'];
+				$category = json_decode($val['category'],true);
+				if(is_array($category) && count($category)>=1){					
+					ItemClass::insertSubcategoryItemRelationship($sub_item_id,$category);
+				}
+        	} //end foreach
+        	
+        	$_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"subcategoryitem",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+        	
+         } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"subcategoryitem"                   
+                );
+        }
+        $this->jsonResponse();                                
+	}
+		
+	public function actionMigration_translationcategory()
+	{
+		$this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT cat_id,category_name,category_description,
+		category_name_trans,category_description_trans
+		FROM {{category}} a
+		WHERE cat_id NOT IN (
+		  select cat_id from {{category_translation}}
+		  where cat_id = a.cat_id
+		)
+		LIMIT 0,$page_limit
+		";	                
+        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	
+        	foreach ($resp as $val) {        		
+				$category_name_trans = !empty($val['category_name_trans'])?json_decode($val['category_name_trans'],true):array();
+				$category_description_trans = !empty($val['category_description_trans'])?json_decode($val['category_description_trans'],true):array();
+				
+				if ( $fields=FunctionsV3::getLanguageList(false)){
+					$fields['default']='default';        			
+					foreach ($fields as $lang_code) {
+						$params = array(  
+						  'cat_id'=>(integer)$val['cat_id'],
+						  'language'=>$lang_code,
+						  'category_name'=>isset($category_name_trans[$lang_code])?$category_name_trans[$lang_code]:'',
+						  'category_description'=>isset($category_description_trans[$lang_code])?$category_description_trans[$lang_code]:'',
+						);
+						if($lang_code=="default"){
+							$params = array(  
+							  'cat_id'=>(integer)$val['cat_id'],
+							  'language'=>$lang_code,
+							  'category_name'=>$val['category_name'],
+							  'category_description'=>$val['category_description'],
+							);
+						}        										
+						Yii::app()->db->createCommand()->insert("{{category_translation}}",$params);     				
+					}
+				}													
+			}
+		
+		    $_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"translationcategory",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+        	
+          } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"translationcategory"                   
+                );
+        }
+        $this->jsonResponse();     
+	}
+	
+	public function actionMigration_sizetranslation()
+	{
+		$this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT size_id,size_name,size_name_trans		
+		FROM {{size}} a
+		WHERE size_id NOT IN (
+		  select size_id from {{size_translation}}
+		  where size_id = a.size_id
+		)
+		LIMIT 0,$page_limit
+		";	                
+        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	        	
+        	foreach ($resp as $val) {        		
+				$name_trans = !empty($val['size_name_trans'])?json_decode($val['size_name_trans'],true):array();				
+				
+				if ( $fields=FunctionsV3::getLanguageList(false)){
+					$fields['default']='default';        			
+					foreach ($fields as $lang_code) {
+						$params = array(  
+						  'size_id'=>(integer)$val['size_id'],
+						  'language'=>$lang_code,
+						  'size_name'=>isset($name_trans[$lang_code])?$name_trans[$lang_code]:''						  
+						);
+						if($lang_code=="default"){
+							$params = array(  
+							  'size_id'=>(integer)$val['size_id'],
+							  'language'=>$lang_code,
+							  'size_name'=>$val['size_name']							  
+							);
+						}        																
+						Yii::app()->db->createCommand()->insert("{{size_translation}}",$params);     				
+					}
+				}													
+			}
+		
+		    $_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"sizetranslation",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+        	
+          } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"sizetranslation"                   
+                );
+        }
+        $this->jsonResponse();     
+	}	
+	
+	public function actionMigration_subcategorytranslation()
+	{
+	   $this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT subcat_id,subcategory_name,subcategory_description,
+		subcategory_name_trans,subcategory_description_trans
+		FROM {{subcategory}} a
+		WHERE subcat_id NOT IN (
+		  select subcat_id from {{subcategory_translation}}
+		  where subcat_id = a.subcat_id
+		)
+		LIMIT 0,$page_limit
+		";	                
+        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	        	        	
+        	foreach ($resp as $val) {        		
+				$name_trans = !empty($val['subcategory_name_trans'])?json_decode($val['subcategory_name_trans'],true):array();				
+				$description = !empty($val['subcategory_description_trans'])?json_decode($val['subcategory_description_trans'],true):array();				
+				
+				if ( $fields=FunctionsV3::getLanguageList(false)){
+					$fields['default']='default';        			
+					foreach ($fields as $lang_code) {
+						$params = array(  
+						  'subcat_id'=>(integer)$val['subcat_id'],
+						  'language'=>$lang_code,
+						  'subcategory_name'=>isset($name_trans[$lang_code])?$name_trans[$lang_code]:'',
+						  'subcategory_description'=>isset($description[$lang_code])?$description[$lang_code]:'',
+						);
+						if($lang_code=="default"){
+							$params = array(  
+							  'subcat_id'=>(integer)$val['subcat_id'],
+							  'language'=>$lang_code,
+							  'subcategory_name'=>$val['subcategory_name'],						  
+							  'subcategory_description'=>$val['subcategory_description'],
+							);
+						}        																		
+						Yii::app()->db->createCommand()->insert("{{subcategory_translation}}",$params);     				
+					}
+				}													
+			}
+		
+		    $_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"subcategorytranslation",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+        	
+          } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"subcategorytranslation"                   
+                );
+        }
+        $this->jsonResponse();     
+	}
+	
+	
+	public function actionMigration_subcategory_item_translation()
+	{
+	   $this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT sub_item_id,sub_item_name,item_description,
+		sub_item_name_trans,item_description_trans		
+		FROM {{subcategory_item}} a
+		WHERE sub_item_id NOT IN (
+		  select sub_item_id from {{subcategory_item_translation}}
+		  where sub_item_id = a.sub_item_id
+		)
+		LIMIT 0,$page_limit
+		";	                        
+        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	        	        	        	
+        	foreach ($resp as $val) {        		
+				$name_trans = !empty($val['sub_item_name_trans'])?json_decode($val['sub_item_name_trans'],true):array();				
+				$description = !empty($val['item_description_trans'])?json_decode($val['item_description_trans'],true):array();				
+				
+				if ( $fields=FunctionsV3::getLanguageList(false)){
+					$fields['default']='default';        			
+					foreach ($fields as $lang_code) {
+						$params = array(  
+						  'sub_item_id'=>(integer)$val['sub_item_id'],
+						  'language'=>$lang_code,
+						  'sub_item_name'=>isset($name_trans[$lang_code])?$name_trans[$lang_code]:'',
+						  'item_description'=>isset($description[$lang_code])?$description[$lang_code]:'',
+						);
+						if($lang_code=="default"){
+							$params = array(  
+							  'sub_item_id'=>(integer)$val['sub_item_id'],
+							  'language'=>$lang_code,
+							  'sub_item_name'=>$val['sub_item_name'],						  
+							  'item_description'=>$val['item_description'],
+							);
+						}    																					
+						Yii::app()->db->createCommand()->insert("{{subcategory_item_translation}}",$params);     				
+					}
+				}													
+			}
+		
+		    $_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"subcategory_item_translation",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+        	
+          } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"subcategory_item_translation"                   
+                );
+        }
+        $this->jsonResponse();     
+	}
+	
+	public function actionMigration_ingredients_translation()
+	{
+		$this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT ingredients_id,ingredients_name,ingredients_name_trans
+		FROM {{ingredients}} a
+		WHERE ingredients_id NOT IN (
+		  select ingredients_id from {{ingredients_translation}}
+		  where ingredients_id = a.ingredients_id
+		)
+		LIMIT 0,$page_limit
+		";	                        
+        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	        	       
+        	foreach ($resp as $val) {        		
+				$name_trans = !empty($val['ingredients_name_trans'])?json_decode($val['ingredients_name_trans'],true):array();				
+				
+				if ( $fields=FunctionsV3::getLanguageList(false)){
+					$fields['default']='default';        			
+					foreach ($fields as $lang_code) {
+						$params = array(  
+						  'ingredients_id'=>(integer)$val['ingredients_id'],
+						  'language'=>$lang_code,
+						  'ingredients_name'=>isset($name_trans[$lang_code])?$name_trans[$lang_code]:''						  
+						);
+						if($lang_code=="default"){
+							$params = array(  
+							  'ingredients_id'=>(integer)$val['ingredients_id'],
+							  'language'=>$lang_code,
+							  'ingredients_name'=>$val['ingredients_name']							  
+							);
+						}        																					
+						Yii::app()->db->createCommand()->insert("{{ingredients_translation}}",$params);     				
+					}
+				}													
+			}
+		
+		    $_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"ingredients_translation",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+        	
+          } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"ingredients_translation"                   
+                );
+        }
+        $this->jsonResponse();     
+	}	
+	
+	
+	public function actionMigration_cooking_ref_translation()
+	{
+		$this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT cook_id,cooking_name,cooking_name_trans
+		FROM {{cooking_ref}} a
+		WHERE cook_id NOT IN (
+		  select cook_id from {{cooking_ref_translation}}
+		  where cook_id = a.cook_id
+		)
+		LIMIT 0,$page_limit
+		";	                        
+        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	        	       
+        	foreach ($resp as $val) {        		
+				$name_trans = !empty($val['cooking_name_trans'])?json_decode($val['cooking_name_trans'],true):array();				
+				
+				if ( $fields=FunctionsV3::getLanguageList(false)){
+					$fields['default']='default';        			
+					foreach ($fields as $lang_code) {
+						$params = array(  
+						  'cook_id'=>(integer)$val['cook_id'],
+						  'language'=>$lang_code,
+						  'cooking_name'=>isset($name_trans[$lang_code])?$name_trans[$lang_code]:''						  
+						);
+						if($lang_code=="default"){
+							$params = array(  
+							  'cook_id'=>(integer)$val['cook_id'],
+							  'language'=>$lang_code,
+							  'cooking_name'=>$val['cooking_name']							  
+							);
+						}     						
+						Yii::app()->db->createCommand()->insert("{{cooking_ref_translation}}",$params);     				
+					}
+				}													
+			}
+		
+		    $_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"cooking_ref_translation",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+        	
+          } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"cooking_ref_translation"                   
+                );
+        }
+        $this->jsonResponse();     
+	}	
+
+	public function actionMigration_item_translation()
+	{
+	   $this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT item_id,item_name,item_description,item_name_trans,item_description_trans		
+		FROM {{item}} a
+		WHERE item_id NOT IN (
+		  select item_id from {{item_translation}}
+		  where item_id = a.item_id
+		)
+		LIMIT 0,$page_limit
+		";	                        
+        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	        	        	        	
+        	foreach ($resp as $val) {        		
+				$name_trans = !empty($val['item_name_trans'])?json_decode($val['item_name_trans'],true):array();				
+				$description = !empty($val['item_description_trans'])?json_decode($val['item_description_trans'],true):array();				
+				
+				if ( $fields=FunctionsV3::getLanguageList(false)){
+					$fields['default']='default';        			
+					foreach ($fields as $lang_code) {
+						$params = array(  
+						  'item_id'=>(integer)$val['item_id'],
+						  'language'=>$lang_code,
+						  'item_name'=>isset($name_trans[$lang_code])?$name_trans[$lang_code]:'',
+						  'item_description'=>isset($description[$lang_code])?$description[$lang_code]:'',
+						);
+						if($lang_code=="default"){
+							$params = array(  
+							  'item_id'=>(integer)$val['item_id'],
+							  'language'=>$lang_code,
+							  'item_name'=>$val['item_name'],						  
+							  'item_description'=>$val['item_description'],
+							);
+						}    																								
+						Yii::app()->db->createCommand()->insert("{{item_translation}}",$params);     				
+					}
+				}													
+			}
+		
+		    $_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"item_translation",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+        	
+          } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"item_translation"                   
+                );
+        }
+        $this->jsonResponse();     
+	}	
+	
+	public function actionMigration_cuisine_translation()
+	{
+		$this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+                        
+        $stmt="
+		SELECT cuisine_id,cuisine_name,cuisine_name_trans
+		FROM {{cuisine}} a
+		WHERE cuisine_id NOT IN (
+		  select cuisine_id from {{cuisine_translation}}
+		  where cuisine_id = a.cuisine_id
+		)
+		LIMIT 0,$page_limit
+		";	                        
+        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	        	       
+        	foreach ($resp as $val) {        		
+				$name_trans = !empty($val['cuisine_name_trans'])?json_decode($val['cuisine_name_trans'],true):array();				
+				
+				if ( $fields=FunctionsV3::getLanguageList(false)){
+					$fields['default']='default';        			
+					foreach ($fields as $lang_code) {
+						$params = array(  
+						  'cuisine_id'=>(integer)$val['cuisine_id'],
+						  'language'=>$lang_code,
+						  'cuisine_name'=>isset($name_trans[$lang_code])?$name_trans[$lang_code]:''						  
+						);
+						if($lang_code=="default"){
+							$params = array(  
+							  'cuisine_id'=>(integer)$val['cuisine_id'],
+							  'language'=>$lang_code,
+							  'cuisine_name'=>$val['cuisine_name']							  
+							);
+						}     												
+						Yii::app()->db->createCommand()->insert("{{cuisine_translation}}",$params);     				
+					}
+				}													
+			}
+		
+		    $_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"cuisine_translation",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+        	
+          } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"cuisine_translation"                   
+                );
+        }
+        $this->jsonResponse();     
+	}
+		
 } /*end class*/

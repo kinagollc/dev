@@ -14,6 +14,10 @@ class MapsWrapper
 		if(!is_array($provider)){
 			$provider = FunctionsV3::getMapProvider();
 		}
+		
+		if(empty($address)){
+			throw new Exception( t("Invalid address") );
+		}
 					
 		switch ($provider['provider']) {
 			case "google.maps":				

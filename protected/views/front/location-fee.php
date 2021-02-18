@@ -21,7 +21,10 @@
     <td><?php echo $val['city_name']?></td>
     <td><?php echo $val['area_name']?></td>
     <td><?php echo $val['postal_code']?></td>
-    <td><?php echo FunctionsV3::prettyPrice($val['fee'])?></td>
+    <td><?php 
+      $fee =  (float)$val['fee'] *  (float)$rates;
+      echo Price_Formatter::formatNumber($fee);
+    ?></td>
     <td>
     <?php echo CHtml::radioButton('location_fee',false,array(
      'value'=>$val['rate_id']

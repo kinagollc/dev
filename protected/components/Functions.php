@@ -1018,49 +1018,49 @@ class Functions extends CApplicationComponent
                 array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"DashBoard"),'tag'=>"DashBoard",'label'=>'<i class="fa fa-home"></i>'.Yii::t("default","Dashboard"),
                 'url'=>array('/merchant/DashBoard')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Merchant"),'tag'=>"Merchant",'label'=>'<i class="fa fa-cutlery"></i>'.Yii::t("default","Business Information"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Merchant"),'tag'=>"Merchant",'label'=>'<i class="fa fa-cutlery"></i>'.Yii::t("default","Merchant Info"),
                 'url'=>array('/merchant/Merchant')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Settings"),'tag'=>"Settings",'label'=>'<i class="fa fa-cog"></i>'.Yii::t("default","Backend Settings"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Settings"),'tag'=>"Settings",'label'=>'<i class="fa fa-cog"></i>'.Yii::t("default","Settings"),
                 'url'=>array('/merchant/Settings')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"tablebooking"),'tag'=>"tablebooking",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Reservations"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"tablebooking"),'tag'=>"tablebooking",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Table Booking"),
                 'url'=>array('/merchant/tablebooking')),
                                                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"allorder"),'tag'=>"allorder",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","All Orders"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"allorder"),'tag'=>"allorder",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","All order"),
                 'url'=>array('/merchant/allorder')),
                                                                                
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"orderStatus"),'tag'=>"orderStatus",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Order Statuses"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"orderStatus"),'tag'=>"orderStatus",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Order Status"),
                 'url'=>array('/merchant/orderStatus')),
                                                                                
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"CategoryList"),'tag'=>"CategoryList",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Item Categories"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"CategoryList"),'tag'=>"CategoryList",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Food Category"),
                 'url'=>array('/merchant/CategoryList')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"category_sked"),'tag'=>"category_sked",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Category Scheduler"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"category_sked"),'tag'=>"category_sked",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Food Category Scheduler"),
                 'url'=>array('/merchant/category_sked')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Size"),'tag'=>"Size",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Item Size's"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"Size"),'tag'=>"Size",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Size"),
                 'url'=>array('/merchant/Size')),
                                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AddOnCategory"),'tag'=>"AddOnCategory",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Add-On Categories"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AddOnCategory"),'tag'=>"AddOnCategory",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","AddOn Category"),
                 'url'=>array('/merchant/AddOnCategory')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AddOnItem"),'tag'=>"AddOnItem",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Add-On Item's"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AddOnItem"),'tag'=>"AddOnItem",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","AddOn Item"),
                 'url'=>array('/merchant/AddOnItem')),
                                 
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"ingredients"),'tag'=>"ingredients",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Customizations"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"ingredients"),'tag'=>"ingredients",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Ingredients"),
                 'url'=>array('/merchant/ingredients')),
                                 
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"CookingRef"),'tag'=>"CookingRef",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Preference"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"CookingRef"),'tag'=>"CookingRef",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Cooking Reference"),
                 'url'=>array('/merchant/CookingRef')),
                                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"FoodItem"),'tag'=>"FoodItem",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Items"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"FoodItem"),'tag'=>"FoodItem",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Food Item"),
                 'url'=>array('/merchant/FoodItem')),             
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"invoice"),'tag'=>"invoice",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Invoices"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"invoice"),'tag'=>"invoice",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Invoice"),
                 'url'=>array('/merchant/invoice')),
                 
                 /*POINTS PROGRAM*/
@@ -1086,10 +1086,10 @@ class Functions extends CApplicationComponent
 				array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"banner_settings"),'tag'=>"banner_settings",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Banner Settings"),
 				'url'=>array('/merchant/banner_settings')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"manage_credit_cards"),'tag'=>"manage_credit_cards",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Manage Credit Cards"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"manage_credit_cards"),'tag'=>"manage_credit_cards",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Manage Credit Card"),
                 'url'=>array('/merchant/manage_credit_cards')),
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"voucher"),'tag'=>"voucher",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Vouchers"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"voucher"),'tag'=>"voucher",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Voucher"),
                 'url'=>array('/merchant/voucher')),
                 
                 
@@ -1104,13 +1104,13 @@ class Functions extends CApplicationComponent
                    'url'=>array('/printer/merchant_panel?lang='.Yii::app()->language)),                
                    
                    
-                   array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"singleapp"),'tag'=>'singleapp', 'label'=>'<i class="fa fa-paypal"></i>'.t("App Settings"),
+                   array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"singleapp"),'tag'=>'singleapp', 'label'=>'<i class="fa fa-paypal"></i>'.t("Single Merchant"),
                    'url'=>array('/merchant/singlemerchant/banner')), 
                                                                            
                 )),   
                                 
                 // commission                
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"commission"),'tag'=>'commission','label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default",'Commissions'),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"commission"),'tag'=>'commission','label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default",'Commission'),
                    'itemOptions'=>array('class'=>''), 'items'=>array(
                    
                    array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"statement"),'tag'=>'statement', 'label'=>'<i class="fa fa-paypal"></i>'.t("Statement"), 
@@ -1155,16 +1155,16 @@ class Functions extends CApplicationComponent
                 /*array('tag'=>"home",'label'=>'<i class="fa fa-cog"></i>'.Yii::t("default","Receipt Settings"),
                 'url'=>array('/merchant/ReceiptSettings')),*/
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"review"),'tag'=>"review",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Customer Reviews"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"review"),'tag'=>"review",'label'=>'<i class="fa fa-list-alt"></i>'.Yii::t("default","Customer reviews"),
                 'url'=>array('/merchant/review')),               
                 
                 array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"SocialSettings"),'tag'=>"SocialSettings",'label'=>'<i class="fa fa-facebook-square"></i>'.Yii::t("default","Social Settings"),
                 'url'=>array('/merchant/SocialSettings')),               
                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AlertSettings"),'tag'=>"AlertSettings",'label'=>'<i class="fa fa-bell"></i>'.Yii::t("default","Alert Notifications"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"AlertSettings"),'tag'=>"AlertSettings",'label'=>'<i class="fa fa-bell"></i>'.Yii::t("default","Alert Notification"),
                 'url'=>array('/merchant/AlertSettings')),               
                                 
-                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"user"),'tag'=>"user",'label'=>'<i class="fa fa-users"></i>'.Yii::t("default","Manage Staff"),
+                array('visible'=>FunctionsV3::hasMerchantAccessToMenu($user_access,"user"),'tag'=>"user",'label'=>'<i class="fa fa-users"></i>'.Yii::t("default","User"),
                 'url'=>array('/merchant/user')),
                                 
                 array('tag'=>"logout",'label'=>'<i class="fa fa-sign-out"></i>'.Yii::t("default","Logout"),
@@ -1524,11 +1524,19 @@ class Functions extends CApplicationComponent
                    
                    array('visible'=>$this->AA('mobileappv2'),
                    'tag'=>'mobileappv2','label'=>'<i class="fa"></i>'.Yii::t("default","MobileApp v2"), 
-                   'url'=>Yii::app()->getBaseUrl(true)."/mobileappv2?lang=".Yii::app()->language),     
-                     
+                   'url'=>Yii::app()->getBaseUrl(true)."/mobileappv2?lang=".Yii::app()->language),                
+                   
                    array('visible'=>$this->AA('merchantappv2'),
-                   'tag'=>'merchantappv2','label'=>''.Yii::t("default","Merchantapp v2"), 
-                   'url'=>Yii::app()->getBaseUrl(true)."/merchantappv2?lang=".Yii::app()->language),         
+                   'tag'=>'merchantappv2','label'=>'<i class="fa"></i>'.Yii::t("default","Merchantapp v2"), 
+                   'url'=>Yii::app()->getBaseUrl(true)."/merchantappv2?lang=".Yii::app()->language),                
+                   
+                   array('visible'=>$this->AA('driverapp'),
+                   'tag'=>'driverapp','label'=>'<i class="fa"></i>'.Yii::t("default","Driver app"), 
+                   'url'=>Yii::app()->getBaseUrl(true)."/driver?lang=".Yii::app()->language),                
+                   
+                   array('visible'=>$this->AA('multicurrency'),
+                   'tag'=>'multicurrency','label'=>'<i class="fa"></i>'.Yii::t("default","Multi Currency"), 
+                   'url'=>Yii::app()->getBaseUrl(true)."/multicurrency?lang=".Yii::app()->language),                
               
                  )),  
                 /**add ons */     
@@ -1628,6 +1636,58 @@ class Functions extends CApplicationComponent
                    array('visible'=>$this->AA('voguepay'),'tag'=>'voguepay',
                    'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","voguepay"), 
                    'url'=>array('admin/voguepay')),  
+                   
+                   array('visible'=>$this->AA('tap'),'tag'=>'tap',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","Tap"), 
+                   'url'=>array('admin/tap')),  
+                   
+                   array('visible'=>$this->AA('paymongo'),'tag'=>'paymongo',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","paymongo"), 
+                   'url'=>array('admin/paymongo')),  
+                   
+                   array('visible'=>$this->AA('redsys'),'tag'=>'redsys',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","redsys"), 
+                   'url'=>array('admin/redsys')),                    
+                   
+                   array('visible'=>$this->AA('xendit'),'tag'=>'xendit',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","xendit"), 
+                   'url'=>array('admin/xendit')),                    
+                   
+                   array('visible'=>$this->AA('culqi'),'tag'=>'culqi',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","culqi"), 
+                   'url'=>array('admin/culqi')),                    
+                   
+                   array('visible'=>$this->AA('flutterwave'),'tag'=>'flutterwave',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","flutterwave"), 
+                   'url'=>array('admin/flutterwave')),                    
+                   
+                   array('visible'=>$this->AA('paystack'),'tag'=>'paystack',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","paystack"), 
+                   'url'=>array('admin/paystack')),                    
+                   
+                   array('visible'=>$this->AA('scanpay'),'tag'=>'scanpay',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","scanpay"), 
+                   'url'=>array('admin/scanpay')),                    
+                   
+                   array('visible'=>$this->AA('billplz'),'tag'=>'billplz',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","billplz"), 
+                   'url'=>array('admin/billplz')),                    
+                   
+                   array('visible'=>$this->AA('toyyibpay'),'tag'=>'toyyibpay',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","toyyibpay"), 
+                   'url'=>array('admin/toyyibpay')),                    
+                   
+                   array('visible'=>$this->AA('amanpay'),'tag'=>'amanpay',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","amanpay"), 
+                   'url'=>array('admin/amanpay')),                    
+                   
+                   array('visible'=>$this->AA('sofort'),'tag'=>'sofort',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","sofort"), 
+                   'url'=>array('admin/sofort')),                    
+                   
+                   array('visible'=>$this->AA('sofort'),'tag'=>'payhere',
+                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","payhere"), 
+                   'url'=>array('admin/payhere')),                    
                     
                  )),                               
                  
@@ -2890,7 +2950,7 @@ class Functions extends CApplicationComponent
 					} else $size_name='';
 
 									
-					$formatted_price = FunctionsV3::prettyPrice($price);
+					$formatted_price = Price_Formatter::formatNumber($price);
 	    			
 	    			$discount_price = 0;
 	    			if($discount>=0.001){
@@ -2904,7 +2964,7 @@ class Functions extends CApplicationComponent
 					  'size_trans'=>!empty($size_info['size_name_trans'])?json_decode($size_info['size_name_trans'],true):'',
 					  'formatted_price'=>$formatted_price,
 					  'discount_price'=>$discount_price,
-					  'formatted_discount_price'=>FunctionsV3::prettyPrice($discount_price)
+					  'formatted_discount_price'=>Price_Formatter::formatNumber($discount_price)
 					);
 				} else {
 					$data[]=array(
@@ -2959,7 +3019,7 @@ class Functions extends CApplicationComponent
 							  'photo'=>$subitem_details['photo'],
 							  'sub_item_name_trans'=>!empty($subitem_details['sub_item_name_trans'])?json_decode($subitem_details['sub_item_name_trans'],true):'',
 							  'item_description_trans'=>!empty($subitem_details['item_description_trans'])?json_decode($subitem_details['item_description_trans'],true):'',
-							  'pretty_price'=>FunctionsV3::prettyPrice($subitem_details['price'])
+							  'pretty_price'=>Price_Formatter::formatNumber($subitem_details['price'])
 							);
 						}						
 					}
@@ -3251,7 +3311,7 @@ class Functions extends CApplicationComponent
 		
 	public function getMerchantMenu($merchant_id='',$food_name='', $todays_day='')
 	{		
-		$data=array();
+		$data=array();			
 		$this->data='list';
 		if ( $res=$this->getCategoryList2($merchant_id , $food_name , $todays_day )){						
 			foreach ($res as $cat_i=>$cat_name) {				
@@ -3352,6 +3412,9 @@ class Functions extends CApplicationComponent
     	$merchant_packaging_wise = getOption($mid,'merchant_packaging_wise');
     	$wise_packaging_fee = 0;
     	$merchant_packaging_charge = 0;
+    	$card_fees = 0;
+    	
+    	$exchange_rate = isset($data['exchange_rate']) ? (float)$data['exchange_rate'] : 1;
     	    	    	    		       
     	if (isset($cart_item)){
     		if (is_array($cart_item) && count($cart_item)>=1){
@@ -3373,10 +3436,13 @@ class Functions extends CApplicationComponent
     				}
     				
     				$price=cleanNumber(unPrettyPrice($val['price']));
+    				
     				if (!empty($val['discount'])){
     					$val['discount']=unPrettyPrice($val['discount']);
     					$price=$price-$val['discount'];
-    				}    			
+    				}    		
+    				
+    				$price = (float) $price * $exchange_rate;
     				
     				$qty=$val['qty'];  /** fixed addon qty */    				
     				$total_price=$val['qty']*(float)$price;
@@ -3462,6 +3528,8 @@ class Functions extends CApplicationComponent
 			          
 			          //dump($val);
 			          
+			          $_category_name = isset($res_category['category_name_trans'])?$res_category['category_name']:'';
+			          
 			          // array value
 			          $item_array[$key]=array(
 			            'item_id'=>$val['item_id'],
@@ -3470,7 +3538,7 @@ class Functions extends CApplicationComponent
 			            'size_id'=>$_size_id, // inventory
 			            'qty'=>$val['qty'],
 			            //'normal_price'=>prettyFormat($val['price']),
-			            'normal_price'=>$val['price'],
+			            'normal_price'=> (float)$val['price'] *  (float)$exchange_rate  ,
 			            'discounted_price'=>$price,
 			            'discount'=>$val['discount'],
 			            'order_notes'=>isset($val['notes'])?$val['notes']:'',
@@ -3478,7 +3546,7 @@ class Functions extends CApplicationComponent
 			            'ingredients'=>isset($val['ingredients'])?$val['ingredients']:'',
 			            'non_taxable'=>isset($val['non_taxable'])?$val['non_taxable']:1,
 			            'category_id'=>isset($val['category_id'])?$val['category_id']:'',
-			            'category_name'=>isset($res_category['category_name_trans'])?$res_category['category_name']:'',
+			            'category_name'=>!empty($_category_name)?$_category_name:$res_category['category_name'],
 			            'category_name_trans'=>isset($category_name_trans)?$category_name_trans:'',			            
 			            'item_name_trans'=>isset($food_infos)?$food_infos:'',
 			            'size_name_trans'=>isset($size_info_trans)?$size_info_trans:'',
@@ -3489,14 +3557,14 @@ class Functions extends CApplicationComponent
 			          
 			          if (!empty($val['discount'])){
 			          	  $htm.="<p class=\"uk-text-small\">".
-			          	  "<span class=\"normal-price\">".displayPrice(baseCurrency(),prettyFormat($val['price']))." </span>".
-			          	  "<span class=\"sale-price\">".displayPrice(baseCurrency(),prettyFormat($price))."</span>"
+			          	  "<span class=\"normal-price\">". Price_Formatter::formatNumber( ((float)$val['price']*$exchange_rate) ) ." </span>".
+			          	  "<span class=\"sale-price\">". Price_Formatter::formatNumber($price) ."</span>"
 			          	  ."</p>";		
 			          	  	          	  
 			          } else {
 			          	
 			          	$htm.="<p class=\"uk-text-small\">".			          	  
-			          	  "<span class=\"base-price\">".displayPrice(baseCurrency(),prettyFormat($val['price']))."</span>"
+			          	  "<span class=\"base-price\">". Price_Formatter::formatNumber($price) ."</span>"
 			          	  ."</p>";			          	  
 			          }
 			          
@@ -3542,7 +3610,7 @@ class Functions extends CApplicationComponent
 			             
 			             
 			            $htm.='</div>';
-			             $htm.='<div class="d">'.displayPrice(baseCurrency(),prettyFormat($total_price,$mid)).'</div>';
+			             $htm.='<div class="d">'. Price_Formatter::formatNumber($total_price) .'</div>';
 			          $htm.='</div>';
 			          $htm.='<div class="clear"></div>';
 			          
@@ -3592,6 +3660,10 @@ class Functions extends CApplicationComponent
 			          	 		$addon_item_price= unPrettyPrice($val_subs[1]);
 			          	 		$addon_item_price=(integer)$addon_qty*$addon_item_price;
 			          	 		
+			          	 		$addon_raw_price = (float)$addon_raw_price* (float)$exchange_rate;
+			          	 		$addon_item_price = (float)$addon_item_price* (float)$exchange_rate;
+			          	 		
+			          	 		
 			          	 		/** two flavor */
 			          	 		if (!isset($val['two_flavors'])){
 			          	 			$val['two_flavors']='';
@@ -3628,11 +3700,11 @@ class Functions extends CApplicationComponent
 			          	 		}
 			          	 					          	 			          	 					          	 		
 			          	 		$htm.='<div class="a">'.$addon_qty.'x</div>';
-$htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2],
+$htm.='<div class="b uk-text-muted">'. Price_Formatter::formatNumber($addon_raw_price) ." ".qTranslate($val_subs[2],
 'sub_item_name',$addon_name_trans).'</div>';
 						          $htm.='<div class="manage">';							             
 						             if ( $addon_item_price!=0){
-						             $htm.='<div class="d">'.displayPrice(baseCurrency(),prettyFormat($addon_item_price)).'</div>';
+						             $htm.='<div class="d">'. Price_Formatter::formatNumber($addon_item_price) .'</div>';
 						             } else $htm.='<div class="d">-</div>';
 						          $htm.='</div>';
 						        $htm.='<div class="clear"></div>';
@@ -3771,6 +3843,12 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
     			if ( $data['delivery_type']=="dinein"){    				
     				$merchant_packaging_charge=0;
     			}
+    			
+    	
+    			
+    			$delivery_charges = (float)$delivery_charges * (float)$exchange_rate;
+    			$merchant_packaging_charge = (float)$merchant_packaging_charge * (float)$exchange_rate;
+    			
     			    			
                 /*VOUCHER*/                                                
     			$has_voucher=false;
@@ -3860,6 +3938,9 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 				        $less_voucher=0; 
 			        }
 		        }
+		        
+		        $less_voucher = (float)$less_voucher * (float)$exchange_rate;
+		        $less_voucher_orig = (float)$less_voucher_orig * (float)$exchange_rate;
 
 		        if ($less_voucher==TRUE){
 		        	$subtotal=$subtotal-$less_voucher;
@@ -3991,6 +4072,7 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 		        	      	
 				    if (isset($_SESSION['pts_redeem_amt']) && $_SESSION['pts_redeem_amt']>0.01){
 				    	$pts_redeem_amt=unPrettyPrice($_SESSION['pts_redeem_amt']);				    					    	
+				    	$pts_redeem_amt = (float)$pts_redeem_amt * (float)$exchange_rate;
 				    	if($calculation_method==2){
 				    	   $subtotal=unPrettyPrice($subtotal);
 				    	   $pts_redeem_amt_found=true;
@@ -3998,6 +4080,8 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 				    } elseif ( isset($data['points_amount'])){
 				    	
 				    	$pts_redeem_amt=unPrettyPrice($data['points_amount']);  	
+				    	$pts_redeem_amt = (float)$pts_redeem_amt * (float)$exchange_rate;
+				    	
 				    	if($calculation_method==2){
 				    	   $subtotal=unPrettyPrice($subtotal);
 				    	   $pts_redeem_amt_found=true;
@@ -4006,8 +4090,9 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 				    } else {
 					    if ($receipt==TRUE){			    	
 					    	if (isset($data['points_discount']) && $data['points_discount']>0){
-					    	   $pts_redeem_amt=unPrettyPrice($data['points_discount']);
-					    	   //if ($order_infos['calculation_method']==2){
+					    	   $pts_redeem_amt=unPrettyPrice($data['points_discount']);					    	   
+					    	   $pts_redeem_amt = (float)$pts_redeem_amt * (float)$exchange_rate;
+					    	   
 					    	   if($calculation_method==2){
 					    	   	  $subtotal=unPrettyPrice($subtotal);
 					    	   	  $pts_redeem_amt_found=true;
@@ -4076,19 +4161,17 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 
 		         	 if ( $show_discount==true):		         	 			        
 			           $htm.=FunctionsV3::receiptRowTotal( t("Discount")." $merchant_discount_amount%" ,
-			           displayPrice(baseCurrency(),prettyFormat($discounted_amount,$mid)));
+			           Price_Formatter::formatNumber($discounted_amount)
+			           );
 			         endif;
-			         
-			         /*$htm.=FunctionsV3::receiptRowTotal("Sub Total",
-			         displayPrice(baseCurrency(),prettyFormat($subtotal+$less_voucher,$mid)),'','cart_subtotal'
-			         );*/
+			         			         
 		          				         
 			         if ($receipt==TRUE){
 			         	$voucher_code=" - ".$order_infos['voucher_code']."";
 			         } else $voucher_code='';
 			         			         
 			         $htm.=FunctionsV3::receiptRowTotal( Yii::t("default","Less Voucher")." ".$voucher_type ,
-			         "(".displayPrice(baseCurrency(),prettyFormat($less_voucher,$mid).")" )
+			         "(". Price_Formatter::formatNumber($less_voucher) .")" 
 			         );	         
 			         
 			         if (FunctionsV3::hasModuleAddon("pointsprogram")){ 			         	 
@@ -4104,19 +4187,17 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 				         }
 				         if($pts_redeem_amt>0){
 					         $htm.=FunctionsV3::receiptRowTotal('Points Discount',
-					         "(".PointsProgram::price($pts_redeem_amt).")" );	
+					         "(".Price_Formatter::formatNumber($pts_redeem_amt).")" );	
 				         } 	
 			         }
 			         			         
-			         $htm.=FunctionsV3::receiptRowTotal("Sub Total",
-			         displayPrice(baseCurrency(),prettyFormat($subtotal,$mid))
-			         );
+			         $htm.=FunctionsV3::receiptRowTotal("Sub Total", Price_Formatter::formatNumber($subtotal) );
 			         		        
 		         } else {			         
 		         	
 			         if ( $show_discount==true):			         
 			         $htm.=FunctionsV3::receiptRowTotal( t("Discount")." $merchant_discount_amount%",
-			           "(".displayPrice(baseCurrency(),prettyFormat($discounted_amount,$mid)).")"
+			           "(". Price_Formatter::formatNumber($discounted_amount) .")"
 			          );
 			         endif;
 		         			         
@@ -4149,20 +4230,20 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 				                
 				         if($pts_redeem_amt>0){
 					         $htm.=FunctionsV3::receiptRowTotal('Points Discount',
-					         "(".PointsProgram::price($pts_redeem_amt).")" );	
+					         "(".Price_Formatter::formatNumber($pts_redeem_amt).")" );	
 				         } 	
 			         }
 			         			         
 			        $htm.=FunctionsV3::receiptRowTotal('Sub Total',
-			        displayPrice(baseCurrency(),prettyFormat($subtotal,$mid)),'','cart_subtotal'
-			        );
+			        Price_Formatter::formatNumber($subtotal) ,'','cart_subtotal' );
 			        
 		         }   		
 		         
 		         		         
 		         if (!empty($delivery_charges)){
 		            $htm.=FunctionsV3::receiptRowTotal('Delivery Fee',
-		            displayPrice(baseCurrency(),prettyFormat($delivery_charges,$mid)));
+		            Price_Formatter::formatNumber($delivery_charges)
+		            );
 		         }		         
 		         
 		         if ( $free_delivery==true){			         
@@ -4172,7 +4253,7 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 		         if (!empty($merchant_packaging_charge)){		
 		           if($merchant_packaging_charge>=0.001){         
 			           $htm.=FunctionsV3::receiptRowTotal("Packaging",
-			             displayPrice(baseCurrency(),prettyFormat($merchant_packaging_charge,$mid))
+			             Price_Formatter::formatNumber($merchant_packaging_charge)			             
 			           );
 		           }
 		         }
@@ -4180,7 +4261,7 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 		         if ( !empty($tax)){				 
 		         	 if($taxable_subtotal>0.0001){    
 				         $htm.=FunctionsV3::receiptRowTotal( t("Tax")." $tax_amt%" ,
-				         displayPrice(baseCurrency(),prettyFormat($taxable_subtotal,$mid))
+				          Price_Formatter::formatNumber($taxable_subtotal)
 				         );
 		         	 }
 		         }
@@ -4194,8 +4275,9 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 		         }
 		         		         
 		         if (isset($data['tip_enabled'])){		         	
-		         	if ($data['tip_enabled']==2 && $data['tip_percent']>=0.0001){
-		         		$data['cart_tip_value'] =  $subtotal * $data['tip_percent'];
+		         	if ($data['tip_enabled']==2 && $data['tip_percent']>=0.0001){		         				         	
+		         		$data['cart_tip_value'] =  $subtotal * $data['tip_percent'];		         		
+		         		
 		         		$data['cart_tip_percentage']=$data['tip_percent']*100;
 		         		
 		         		$t_cart_tip_percentage = explode(".",$data['cart_tip_percentage']);		         				         
@@ -4205,7 +4287,7 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 		         		}
 		         		
 		         		$htm.=FunctionsV3::receiptRowTotal( t("Tips")." ".number_format($data['cart_tip_percentage'],$tip_decimal_places)."%" ,
-			            displayPrice(baseCurrency(),prettyFormat($data['cart_tip_value'],$mid))
+			              Price_Formatter::formatNumber($data['cart_tip_value'])
 			            );			       
 			            
 			            			            
@@ -4215,19 +4297,32 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 		         	}
 		         }
 		        		         
-		         if (isset($data['card_fee'])){
-		         	if ( $data['card_fee'] >=0.0001) {
-			            $htm.=FunctionsV3::receiptRowTotal("Card Fee",
-			            displayPrice(baseCurrency(),prettyFormat($data['card_fee'],$mid))
-			            );			            
-			            $total+=$data['card_fee'];
-		         	}
-		         }    		
 		         
+		         /*CARD FEE*/			                 
+		         if (isset($data['card_fee']) || isset($data['card_percentage'])){		         	
+		         	 $fee = isset($data['card_fee'])?(float)$data['card_fee']:0;		  
+		         	 $card_percentage = isset($data['card_percentage'])?(float)$data['card_percentage']:0;		         	 
+		         	 //dump("$card_percentage=>$fee");		         	 
+		         	 if($fee>0 || $card_percentage>0){
+			             if($card_percentage>0){			             	
+			            	$card_fees = (float)$total*((float)$data['card_percentage']/100);			            	
+			             }		         	
+			             if($fee>0){
+			            	$card_fees+=(float)$data['card_fee'];
+			             }
+			             
+			             $card_fees = (float)$card_fees * (float)$exchange_rate;
+			             
+			             $htm.=FunctionsV3::receiptRowTotal("Card Fee", Price_Formatter::formatNumber($card_fees) );
+			             $total+=(float)$card_fees;
+		         	 }		         	 
+		         }    		
+
+		         //dump($card_fees);        		      
 		       
 		       /*VOUCHER*/
 		       if($has_voucher_orig){
-		         $htm.=FunctionsV3::receiptRowTotal(t("Voucher"), "(".FunctionsV3::prettyPrice($less_voucher_orig).")" );  
+		         $htm.=FunctionsV3::receiptRowTotal(t("Voucher"), "(".Price_Formatter::formatNumber($less_voucher_orig).")" );  
 		         $total=unPrettyPrice($total)-unPrettyPrice($less_voucher_orig);
 		       }
 		       
@@ -4235,7 +4330,7 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 		       /*POINTS PROGRAM*/
 		       if (FunctionsV3::hasModuleAddon("pointsprogram")){			       	  
 		           if($pts_redeem_amt_found){
-		           	  $htm.=FunctionsV3::receiptRowTotal(t("Points Discount"), "(".FunctionsV3::prettyPrice($pts_redeem_amt_orig).")" );  
+		           	  $htm.=FunctionsV3::receiptRowTotal(t("Points Discount"), "(".Price_Formatter::formatNumber($pts_redeem_amt_orig).")" );  
 		           	  $total=unPrettyPrice($total)-unPrettyPrice($pts_redeem_amt_orig);
 		           	  //$pts_redeem_amt=$pts_redeem_amt_orig;
 		           }
@@ -4244,16 +4339,17 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 		       /*DISCOUNT*/
 		       if($has_discount){
 		       	  $htm.=FunctionsV3::receiptRowTotal( t("Discount")." $merchant_discount_amount%",
-			           "(".displayPrice(baseCurrency(),prettyFormat($discounted_amount,$mid)).")"
+			           "(". Price_Formatter::formatNumber($discounted_amount) .")"
 			          );
 		          $total=unPrettyPrice($total)-unPrettyPrice($discounted_amount);
 		       }
 		         		       		       
 		       $htm.="<div class=\"row cart_total_wrap bold\">";
 	    	   $htm.="<div class=\"col-md-6 col-xs-6  text-right\">".t("Total")."</div>";
-	    	   $htm.="<div class=\"col-md-6 col-xs-6  text-right cart_total\">".
-	    	   displayPrice(baseCurrency(),prettyFormat($total,$mid))."</div>";
+	    	   $htm.="<div class=\"col-md-6 col-xs-6  text-right cart_total\">".	    	   
+	    	   Price_Formatter::formatNumber($total) ."</div>";
 	    	   $htm.="</div>";
+	    	   
 
 		       /*POINTS PROGRAM*/
 		       if (FunctionsV3::hasModuleAddon("pointsprogram")){			       	 		       
@@ -4316,17 +4412,15 @@ $htm.='<div class="b uk-text-muted">'."$addon_raw_price ".qTranslate($val_subs[2
 		         'less_voucher_orig'=>$less_voucher_orig,		         
 		       );		
 		       		       
-		       
-		       //dump($item_array_total);
-		       
+		       		       
 		       if ($receipt){		       	  
 		       	  $item_array_total['voucher_value']=isset($data['voucher_amount'])?$data['voucher_amount']:0;
 		       	  $item_array_total['voucher_types']=isset($data['voucher_type'])?$data['voucher_type']:'';
 		       }
 		       
-		       if (isset($data['card_fee'])){
-		       	   if ( $data['card_fee'] >0) {
-		       	   	   $item_array_total['card_fee']=$data['card_fee'];
+		       if (isset($data['card_fee']) || isset($data['card_percentage']) ){
+		       	   if($card_fees>0){
+		       	   	   $item_array_total['card_fee']=$card_fees;
 		       	   }
 		       }
 		       
@@ -7213,7 +7307,7 @@ $menu_html.="</li>";
     			} catch (Exception $e){
     				$msg  = $e->getMessage();
     			}
-    			break;
+    			break;    			    	
     			    			    		       	
 		    default:
 		       $msg="No sms gateway selected";
@@ -8749,8 +8843,33 @@ $menu_html.="</li>";
     	{{order}}
     	WHERE status IN ($used_status)
     	$and
-    	";      	    	
-    	if($res = Yii::app()->db->createCommand($stmt)->queryRow()){    		
+    	";      	 
+    	
+    	if(Item_utility::MultiCurrencyEnabled() && Yii::app()->db->schema->getTable("{{view_order_summary}}") ){
+    		$stmt="SELECT 
+	    	IFNULL(sum(total_commission_ex),0) as total_commission,
+	    	
+	    	IFNULL((
+	    	  select sum(total_commission_ex)
+	    	  from {{view_order_summary}}
+	    	  where status IN ($used_status)    
+	    	  $and $and_today	  
+	    	),0) as total_today,
+	    	
+	    	IFNULL((
+	    	  select sum(total_commission_ex)
+	    	  from {{view_order_summary}}
+	    	  where status IN ($used_status)    
+	    	  $and $and_last	  
+	    	),0) as total_last
+	    	
+	    	FROM
+	    	{{view_order_summary}}
+	    	WHERE status IN ($used_status)
+	    	$and
+	    	";      	 
+    	}        	   	    	
+    	if($res = Yii::app()->db->createCommand($stmt)->queryRow()){       		
     		return $res;
     	}
     	return $balance;
@@ -8879,7 +8998,7 @@ $menu_html.="</li>";
 	    	select sum(amount) from
 	    	{{withdrawal}}
 	    	where
-	    	merchant_id=a.merchant_id
+	    	merchant_id=".q($merchant_id)."	    
 	    	and status IN ('pending','paid','processing','approved')
 	    	),0) as total_payout,
 	    	
@@ -8896,8 +9015,35 @@ $menu_html.="</li>";
 	    	WHERE merchant_id=".q($merchant_id)."	    
 	    	and status IN ($used_status)	 
 	    	$and   		    	
-	    	";    		    		
-    		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){       			
+	    	";    		 
+    		if(Item_utility::MultiCurrencyEnabled() && Yii::app()->db->schema->getTable("{{view_order_summary}}") ){
+    			$stmt="SELECT
+		    	IFNULL(sum(a.merchant_earnings_ex),'0') as merchant_earnings,
+		    	
+		    	IFNULL((
+		    	select sum(amount) from
+		    	{{withdrawal}}
+		    	where
+		    	merchant_id=".q($merchant_id)."	    
+		    	and status IN ('pending','paid','processing','approved')
+		    	),0) as total_payout,
+		    	
+		    	IFNULL((
+		    	  select sum(merchant_earnings_ex)
+		    	  from {{view_order_summary}}
+		    	  WHERE merchant_id=".q($merchant_id)."	    
+		    	  and status IN ($used_status)	  
+		    	  and payment_type IN ($offline)
+		    	),0) as offline_balance
+		    	
+		    	FROM
+		    	{{view_order_summary}} a
+		    	WHERE merchant_id=".q($merchant_id)."	    
+		    	and status IN ($used_status)	 
+		    	$and   		    	
+	    	";    		 
+    		}    		
+    		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){     			
     			$merchant_earnings = (float)$res['merchant_earnings'];
     			$total_payout = (float)$res['total_payout'];
     			$offline_balance = (float)$res['offline_balance'];
@@ -8946,11 +9092,23 @@ $menu_html.="</li>";
     	WHERE merchant_id=".q($merchant_id)."
     	AND status IN ($used_status)
     	$and    	
-    	";    	       	    	    	
-    	if($res = Yii::app()->db->createCommand($stmt)->queryRow()){     		
+    	";    	        	
+    	if (Item_utility::MultiCurrencyEnabled() && Yii::app()->db->schema->getTable("{{view_order_summary}}") ){
+    		$stmt="SELECT 
+	    	sum(total_commission_ex) as total_commission,
+	    	sum(total_w_tax_ex) as total_w_tax,
+	    	count(*) as total_order
+	    	FROM
+	    	{{view_order_summary}}
+	    	WHERE merchant_id=".q($merchant_id)."
+	    	AND status IN ($used_status)
+	    	$and    	
+	    	";    	
+    	}    	
+    	if($res = Yii::app()->db->createCommand($stmt)->queryRow()){     		    		
     		return array(
-    		  'balance'=>$res['total_w_tax']-$res['total_commission'],
-    		  'count'=>$res['total_order']
+    		  'balance'=>(float)$res['total_w_tax'] - (float)$res['total_commission'],
+    		  'count'=>(integer)$res['total_order']
     		);
     	}
     	return false;    	    	   
@@ -8986,11 +9144,22 @@ $menu_html.="</li>";
     	WHERE status IN ($used_status)
     	AND merchant_id=".q($merchant_id)."    	
     	$and
-    	";      		
+    	";      				
+		if (Item_utility::MultiCurrencyEnabled() && Yii::app()->db->schema->getTable("{{view_order_summary}}") ){
+			$stmt="SELECT 
+	    	sum(total_w_tax_ex) as total_w_tax,
+	    	count(*) as total_order
+	    	FROM
+	    	{{view_order_summary}}
+	    	WHERE status IN ($used_status)
+	    	AND merchant_id=".q($merchant_id)."    	
+	    	$and
+	    	";     
+		}
 		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
 			return array(
-    		  'balance'=>$res['total_w_tax'],
-    		  'count'=>$res['total_order']
+    		  'balance'=>(float)$res['total_w_tax'],
+    		  'count'=>(integer)$res['total_order']
     		);
 		}
 		return false;

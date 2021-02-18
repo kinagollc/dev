@@ -1538,6 +1538,11 @@ function dump(data)
 	console.debug(data);
 }
 
+dump2 = function(data) {
+	alert(JSON.stringify(data));	
+};
+
+
 function get_booking()
 {		
 	var params="action=getNewBooking";
@@ -2450,6 +2455,7 @@ function callAjax(action,params,button)
 	 	} else {
 	 	   switch (action){	
 		 	  	case "getNotification":
+		 	  	case "migrate_item":
 		 	  	//
 		 	  	break;
 		 	  	
@@ -2589,12 +2595,37 @@ function callAjax(action,params,button)
 	 	 	 	
 	 	 	 	case "getNotification":
 	 	 	 	  $(".system_notification").addClass("uk-badge-danger");
+	 	 	 	  $(".system_notification").addClass("pulse");
 	 	 	 	  $(".system_notification").html( data.details.count);
 	 	 	 	  html='';
 	 	 	 	  $.each(data.details.error, function( index_error, val_error ) {
 	 	 	 	  	html+='<li><a href="javascript:;">'+val_error+'</a></li>';
 	 	 	 	  });
 	 	 	 	  $(".system_notification_list").html(html);
+	 	 	 	break;
+	 	 	 	
+	 	 	 	case "migrate_item":	 		 	 	 	  
+	 	 	 	  $("#update_count").val( data.details.next_page );
+	 	 	 	  $(".update_status").append("<li>"+ data.msg +"</li>")
+	 	 	 	  setTimeout(function(){ 		   
+	 	 	 	  	  migrateItem();
+		          }, 1*1000);		
+	 	 	 	break;
+	 	 	 	
+	 	 	 	case "Migrate_category":	 		 	 	 	  
+	 	 	 	case "Migrate_item_translation":
+	 	 	 	case "Migrate_size_translation":
+	 	 	 	case "Migrate_subcategory_translation":
+	 	 	 	case "Migrate_subcategory_item_translation":
+	 	 	 	case "Migrate_ingredients_translation":
+	 	 	 	case "Migrate_cooking_ref_translation":
+	 	 	 	case "Migrate_cooking_ref_translation":
+	 	 	 	
+	 	 	 	  $("#update_count").val( data.details.next_page );
+	 	 	 	  $(".update_status").append("<li>"+ data.msg +"</li>")
+	 	 	 	  setTimeout(function(){ 		   
+	 	 	 	  	  Migrate_items( data.details.table );
+		          }, 1*1000);		
 	 	 	 	break;
 	 	 	 	
 	 	 	 	default:
@@ -2629,10 +2660,15 @@ function callAjax(action,params,button)
 	 	 	 	
 	 	 	 	case "getNotification":
 	 	 	 	  $(".system_notification").removeClass("uk-badge-danger");
+	 	 	 	  $(".system_notification").removeClass("pulse");
 	 	 	 	  $(".system_notification").html( '');
 	 	 	 	  html='';	 	 	 	  
 	 	 	 	  html+='<li><a href="javascript:;">'+data.msg+'</a></li>';	 	 	 	  
 	 	 	 	  $(".system_notification_list").html(html);
+	 	 	 	break;
+	 	 	 	
+	 	 	 	case "migrate_item":	
+	 	 	 	  $(".update_status").append("<li>"+ data.msg +"</li>")
 	 	 	 	break;
 	 	 	 	
 	 	 		default:
@@ -3375,5 +3411,156 @@ jQuery(document).ready(function() {
 		}, 1000);		
 	}
 	
+	
+	$( document ).on( "click", ".delete_item", function() {
+		var ans=confirm(js_lang.deleteWarning);        
+        if (ans){        	        	        	
+        	processAjax( ajax_merchant_action ,"id=" + $(this).data("id") );
+        }		
+	});
+		
+	$( document ).on( "click", ".migration", function() {
+		var $id = $(this).data("id");
+		var $total = $(".migration_"+$id+"_total").val();
+		var $page = $(".migration_"+$id+"_count").val();		
+		processAjax("Migration_"+$id,"total="+ $total + "&page=" + $page , null, 1 );
+	});
+
 });
 /*end ready*/
+
+migrateItem = function(){
+	$update_count = $("#update_count").val();	
+	callAjax("migrate_item",'page='+ $update_count + "&total_item=" + total_item);
+};
+
+Migrate_items = function($table){
+	$update_count = $("#update_count").val();	
+	callAjax("Migrate_"+ $table ,'page='+ $update_count + "&total_item=" + total_item + "&table="+ $table);
+};
+
+
+	
+var getTimeNow = function(){
+	var d = new Date();
+    var n = d.getTime(); 
+    return n;
+};	
+
+var process_ajax_request = {};
+var timer = {};
+
+/*mycall 2*/
+var processAjax = function(action , data , single_call, silent, method , loader_object ){
+	
+	var timenow = getTimeNow();
+	if(!empty(single_call)){			
+		var timenow = single_call;
+	}	
+	
+	if(empty(method)){
+		method="POST";
+		data+=addValidationRequest();		
+	} 
+		
+	process_ajax_request[timenow] = $.ajax({
+	  url: ajax_url+"/"+action,
+	  method: method,
+	  data: data ,
+	  dataType: "json",
+	  timeout: 20000,
+	  crossDomain: true,
+	  beforeSend: function( xhr ) {   
+	  	 if ((typeof silent !== "undefined") && (silent !== null)) {	  	    
+	  	 } else {
+	  	 	if ((typeof  loader_object !== "undefined") && ( loader_object !== null)) {	  	 		
+	  	 		loader_object.find("i").removeClass("fas fa-cloud-download-alt").addClass("fas fa-spinner fa-spin");
+	  	 	} else {
+	  	 	   busy(true);	
+	  	 	}
+	  	 }
+         if(process_ajax_request[timenow] != null) {	
+         	dump("request aborted");     
+         	process_ajax_request[timenow].abort();
+            clearTimeout( timer[timenow] );
+         } else {         	
+         	timer[timenow] = setTimeout(function() {				
+				process_ajax_request[timenow].abort();
+				uk_msg( "Request taking lot of time. Please try again" );
+	        }, 20000); 
+         }
+      }
+    });
+    
+    process_ajax_request[timenow].done(function( data ) {
+	     dump('done');	
+	     var next_action='';     
+	     
+	     if ((typeof  data.details !== "undefined") && ( data.details !== null)) {
+	     	if ((typeof  data.details.next_action !== "undefined") && ( data.details.next_action !== null)) {
+	     	   next_action = data.details.next_action;
+	     	}
+	     }
+	     
+	     if (data.code==1){
+	     	switch(next_action){
+	     			     		
+	     		case "refresh_table":
+	     		  table_reload();
+	     		break;
+	     		
+	     		case "continue_migration":	     		  
+	     		  var $id = data.details.id;
+	     		  var $page_count = data.details.page;
+	     		  var $total_item = data.details.total;
+	     		  $(".migration_" + $id ).html( data.msg );
+	     		  $(".migration_"+ $id +"_count" ).val( $page_count );	     		  	     		  
+	     		  setTimeout(function(){ 		   
+	 	 	 	  	  processAjax("Migration_"+$id,"total="+ $total_item + "&page=" + $page_count , null, 1  );
+		          }, 1*1000);		
+	     		break;
+	     		
+	     		case "done_migration":
+	     		  var $id = data.details.id;
+	     		  $(".migration_" + $id ).html( data.msg );
+	     		break;
+	     				     		
+	     		default:	     		  
+	     		  uk_msg( data.msg );
+	     		break;
+	     	}
+	     } else {
+	     	// failed
+	     	switch(next_action){
+	     		case "silent":
+	     		  //
+	     		break;
+	     		
+	     		default:
+	     		  uk_msg( data.msg );
+	     		break;
+	     	}	     	
+	     }
+	});    	
+	/*end done*/
+	
+	/*ALWAYS*/
+    process_ajax_request[timenow].always(function() {    	
+    	if ((typeof  loader_object !== "undefined") && ( loader_object !== null)) {
+    		loader_object.find("i").removeClass("fas fa-spinner fa-spin").addClass("fas fa-cloud-download-alt");
+    	} else {
+    	    busy(false);	
+    	}
+        dump("ajax always");
+        process_ajax_request[timenow]=null;  
+        clearTimeout(timer[timenow]);
+    });
+    
+    /*FAIL*/
+    process_ajax_request[timenow].fail(function( jqXHR, textStatus ) {    	
+    	clearTimeout(timer[timenow]);        
+        uk_msg( textStatus );
+    });  
+    
+};
+/*end mycall*/

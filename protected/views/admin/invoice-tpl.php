@@ -20,7 +20,7 @@ $date_to=FunctionsV3::prettyDate($invoice_info['date_to']);
 
 <p>
 <b><?php echo t("Invoice")?></b> 
-<?php echo Yii::t("dafault","We hereby send you an invoice for our services in the period [from] - [to]",array(
+<?php echo Yii::t("default","We hereby send you an invoice for our services in the period [from] - [to]",array(
   '[from]'=>$date_from,
   '[to]'=>$date_to,
 ))?></p>
@@ -50,7 +50,7 @@ $total_commission+=$val['total_commission'];
   <tr>
     <td width="70" <?php echo $style;?>>  <span style="padding-left:20px;"><?php echo $val['order_id']?></span> </td>
     <td width="150" <?php echo $style;?>><?php echo FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created'])?></td>
-    <td width="90" align="left" <?php echo $style;?>><?php echo FunctionsV3::prettyPrice($val['total_w_tax'])?></td>
+    <td width="90" align="left" <?php echo $style;?>><?php echo normalPrettyPrice($val['total_w_tax'])?></td>
     <td width="90" align="left" <?php echo $style;?>>         
       <?php 
       if ($val['commision_type']=="percentage"){
@@ -60,7 +60,7 @@ $total_commission+=$val['total_commission'];
       }
       ?>
     </td>
-    <td width="90" align="left" <?php echo $style;?>><?php echo FunctionsV3::prettyPrice($val['total_commission'])?></td>    
+    <td width="90" align="left" <?php echo $style;?>><?php echo normalPrettyPrice($val['total_commission'])?></td>    
   </tr>
 <?php endforeach;?>
 <tr>
@@ -68,9 +68,9 @@ $total_commission+=$val['total_commission'];
     <b><?php echo t("Total")?></b>
   </td>
   <td width="150"  height="15px;" <?php echo $style;?>>&nbsp;</td>
-  <td width="90" height="15px;" align="left" <?php echo $style;?> ><b><?php echo FunctionsV3::prettyPrice($total_w_tax)?></b></td>
+  <td width="90" height="15px;" align="left" <?php echo $style;?> ><b><?php echo normalPrettyPrice($total_w_tax)?></b></td>
   <td width="90" height="15px;" align="left" <?php echo $style;?>></td>
-  <td width="90" height="15px;" align="left" <?php echo $style;?>><b><?php echo FunctionsV3::prettyPrice($total_commission)?></b></td>
+  <td width="90" height="15px;" align="left" <?php echo $style;?>><b><?php echo normalPrettyPrice($total_commission)?></b></td>
 </tr>
 </tbody>
 </table>

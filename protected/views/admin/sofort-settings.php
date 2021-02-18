@@ -8,9 +8,9 @@
   <label class="uk-form-label"><?php echo t("Enabled")." ".t("Sofort Payments")?>?</label>
   <?php 
   echo CHtml::checkBox('admin_sofort_enabled',
-  getOptionA('admin_sofort_enabled')==2?true:false
+  getOptionA('admin_sofort_enabled')==1?true:false
   ,array(
-    'value'=>2,
+    'value'=>1,
     'class'=>"icheck"
   ))
   ?> 
@@ -34,7 +34,21 @@
   echo CHtml::textField('admin_sofort_lang',
   Yii::app()->functions->getOptionAdmin('admin_sofort_lang')
   ,array(
-    'class'=>"uk-form-width-large"
+    'class'=>"uk-form-width-large",
+    'placeholder'=>t("example en,de"),
+    'maxlength'=>2
+  ))
+  ?>
+</div>
+
+
+<div class="uk-form-row">
+  <label class="uk-form-label"><?php echo t("Card fee")?></label>
+  <?php 
+  echo CHtml::textField('admin_sofort_fee',
+  Yii::app()->functions->getOptionAdmin('admin_sofort_fee')
+  ,array(
+    'class'=>"uk-form-width-large numeric_only"
   ))
   ?>
 </div>

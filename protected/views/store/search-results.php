@@ -204,7 +204,7 @@ echo CHtml::hiddenField('clien_long',$data['client']['long']);
            <?php if (!empty($filter_minimum)):?>                      
            <a href="<?php echo FunctionsV3::clearSearchParams('filter_minimum')?>">[<?php echo t("Clear")?>]</a>
            <?php endif;?>
-           <?php if ( $minimum_list=FunctionsV3::minimumDeliveryFee()):?>
+           <?php if ( $minimum_list=FunctionsV3::minimumDeliveryFeeNew($exchange_rate)):?>
            <div class="filter-box">
 	           <a href="javascript:;">	             
 	             <span>
@@ -354,8 +354,8 @@ echo CHtml::hiddenField('clien_long',$data['client']['long']);
 	             	   $location_data
 	             	);
 	             }      
-	              
-	             if ( $display_type=="listview"){
+	             
+	             if ( $display_type=="listview"){	             	
 	             	 $this->renderPartial('/front/search-list-2',array(
 					   'data'=>$data,
 					   'val'=>$val,
@@ -364,11 +364,11 @@ echo CHtml::hiddenField('clien_long',$data['client']['long']);
 					   'distance'=>$distance,
 					   'distance_covered'=> (float) $val['delivery_distance_covered'],
 					   'unit_pretty'=>$unit_pretty,
-					   'delivery_fee'=> (float) $delivery_fee,
+					   'delivery_fee'=> (float) $delivery_fee * $exchange_rate ,
 					   'search_by_location'=>$search_by_location,
-					   'min_fees'=>(float) $min_fees
+					   'min_fees'=>(float) $min_fees * $exchange_rate
 					 ));
-	             } else {
+	             } else {	             	
 		             $this->renderPartial('/front/search-list-1',array(
 					  'data'=>$data,
 					   'val'=>$val,
@@ -377,9 +377,9 @@ echo CHtml::hiddenField('clien_long',$data['client']['long']);
 					   'distance'=>$distance,
 					   'distance_covered'=> (float) $val['delivery_distance_covered'],
 					   'unit_pretty'=>$unit_pretty,
-					   'delivery_fee'=> (float) $delivery_fee,
+					   'delivery_fee'=> (float) $delivery_fee * $exchange_rate,
 					   'search_by_location'=>$search_by_location,
-					   'min_fees'=>(float) $min_fees
+					   'min_fees'=>(float) $min_fees * $exchange_rate
 					 ));
 	             }
 				 ?>

@@ -71,6 +71,9 @@ class AjaxmerchantController extends CController
 				
 		/*ADD SECURITY VALIDATION TO ALL REQUEST*/	
 		
+		$used_currency = FunctionsV3::getCurrencyCode();
+        Price_Formatter::init( $used_currency );
+		
 		return true;
 	}
 	
@@ -633,5 +636,132 @@ class AjaxmerchantController extends CController
 		} else $this->msg = t("order id not valid");
 		$this->jsonResponse();
 	}		
+	
+	public function actiondeleteCategory()	
+	{	
+		try {			
+			$merchant_id = (integer) Yii::app()->functions->getMerchantID();
+			$cat_id = isset($this->data['id'])?(integer)$this->data['id']:0;
+			ItemClass::deleteCategory( $merchant_id,$cat_id );
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>"refresh_table"
+			);
+		} catch (Exception $e) {
+		    $this->msg = t($e->getMessage());
+		}
+
+		$this->jsonResponse();
+	}
+	
+	public function actiondeleteSize()	
+	{	
+		try {			
+			$merchant_id = (integer) Yii::app()->functions->getMerchantID();
+			$size_id = isset($this->data['id'])?(integer)$this->data['id']:0;
+			ItemClass::deleteSize($merchant_id,$size_id);			
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>"refresh_table"
+			);
+		} catch (Exception $e) {
+		    $this->msg = t($e->getMessage());
+		}
+
+		$this->jsonResponse();
+	}
+	
+	public function actiondeleteAddonCategory()	
+	{	
+		try {			
+			$merchant_id = (integer) Yii::app()->functions->getMerchantID();
+			$id = isset($this->data['id'])?(integer)$this->data['id']:0;
+			ItemClass::deleteAddonCategory( $merchant_id, $id);
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>"refresh_table"
+			);
+		} catch (Exception $e) {
+		    $this->msg = t($e->getMessage());
+		}
+
+		$this->jsonResponse();
+	}
+	
+	public function actiondeleteAddonItem()	
+	{	
+		try {			
+			$merchant_id = (integer) Yii::app()->functions->getMerchantID();
+			$id = isset($this->data['id'])?(integer)$this->data['id']:0;			
+			ItemClass::deleteAddonItem( $merchant_id, $id);
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>"refresh_table"
+			);
+		} catch (Exception $e) {
+		    $this->msg = t($e->getMessage());
+		}
+
+		$this->jsonResponse();
+	}
+	
+	public function actiondeleteIngredients()	
+	{	
+		try {			
+			$merchant_id = (integer) Yii::app()->functions->getMerchantID();
+			$id = isset($this->data['id'])?(integer)$this->data['id']:0;			
+			ItemClass::deleteIngredients( $merchant_id, $id);
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>"refresh_table"
+			);
+		} catch (Exception $e) {
+		    $this->msg = t($e->getMessage());
+		}
+
+		$this->jsonResponse();
+	}
+	
+	public function actiondeleteCookingRef()	
+	{	
+		try {			
+			$merchant_id = (integer) Yii::app()->functions->getMerchantID();
+			$id = isset($this->data['id'])?(integer)$this->data['id']:0;			
+			ItemClass::deleteCookingRef( $merchant_id, $id);
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>"refresh_table"
+			);
+		} catch (Exception $e) {
+		    $this->msg = t($e->getMessage());
+		}
+
+		$this->jsonResponse();
+	}
+	
+	public function actiondeleteFoodItem()	
+	{	
+		try {			
+			$merchant_id = (integer) Yii::app()->functions->getMerchantID();
+			$id = isset($this->data['id'])?(integer)$this->data['id']:0;			
+			ItemClass::deleteFoodItem( $merchant_id, $id);
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>"refresh_table"
+			);
+		} catch (Exception $e) {
+		    $this->msg = t($e->getMessage());
+		}
+
+		$this->jsonResponse();
+	}
+	
 	
 } /*end class*/

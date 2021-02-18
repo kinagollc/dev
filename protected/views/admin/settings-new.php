@@ -1012,6 +1012,20 @@ if(!empty($restrict_order_by_status)){
   ?>  
 </div>
 
+
+<div class="uk-form-row">
+  <label class="uk-form-label" style="width:180px;padding-right:20px;">
+  <?php echo t("Enabled lazyload")?></label>  
+  <?php 
+  echo CHtml::checkBox('admin_menu_lazyload',
+   getOptionA('admin_menu_lazyload')==1?true:false
+   ,array(
+   'class'=>"icheck",
+   'value'=>1
+  ))
+  ?>  
+</div>
+
 <div class="uk-form-row">
   <label class="uk-form-label"><?php echo Yii::t("default","Default Menu")?></label>
   <?php 

@@ -55,7 +55,7 @@ if (!empty($merchant_payout_bank_account)){
         ?>      
         <tr>            
             <td><?php echo FormatDateTime($val['date_created'],false)?></td>
-            <td><?php echo displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['amount']))?></td>
+            <td><?php echo Price_Formatter::formatNumber($val['amount'])?></td>
             <td><?php echo $val['payment_type']?></td>
             <td><?php echo $val['payment_method']?></td>
             <td><?php echo $account?></td>

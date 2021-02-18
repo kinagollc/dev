@@ -173,7 +173,6 @@ class Ajax extends AjaxAdmin
 	    		}	    	
 	    	}	
 	    	
-	    	$DbExt=new DbExt;    	
 	    	
 	    	$stmt="SELECT a.*,b.is_commission,
 	    	(
@@ -214,21 +213,57 @@ class Ajax extends AjaxAdmin
 	    	LIMIT 0,2000
 	    	";
 	    	
+	    	if (Item_utility::MultiCurrencyEnabled() && Yii::app()->db->schema->getTable("{{view_order_summary}}") ){
+	    		$stmt="SELECT a.*,b.is_commission,
+		    	(
+		    	select restaurant_name 
+		    	from
+		    	{{merchant}}
+		    	where merchant_id = a.merchant_id 
+		    	) as merchant_name,
+		    	
+		    	(
+		    	select sum(total_w_tax_ex) 
+		    	from
+		    	{{view_order_summary}}
+		    	where merchant_id = a.merchant_id 	  
+		    	$and_date  		 
+		    	) as total_order,
+		    	
+		    	(
+		    	select sum(total_commission_ex)
+		    	from
+		    	{{view_order_summary}}
+		    	where merchant_id = a.merchant_id 	 
+		    	$and_date   		 
+		    	) as total_commission
+		    	
+		    	FROM
+		    	{{order}} a	  	    
+		    	left join {{merchant}} b
+				On
+				a.merchant_id=b.merchant_id
+		    	  	  
+		    	$where
+		    	$and	    	
+		    	AND b.is_commission='2'
+		    	
+		    	GROUP BY merchant_id
+		    	ORDER BY order_id DESC
+		    	LIMIT 0,2000
+		    	";
+	    	}
+	    	
 	    	//dump($stmt);
 	    	
 	    	$_SESSION['kr_export_stmt']=$stmt;	    	
 	    			    
-	    	if ( $res=$DbExt->rst($stmt)){	 
+	    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
 	    		
 	    		$total_commission=0;
 	    		foreach ($res as $val) {	    		
 	    			$link=websiteUrl()."/admin/merchantcommissiondetails";	    			
-	    			
-	    			/*$link.="?mtid=".$val['merchant_id'];	 
-	    			$link.="&where=".$where;	 
-	    			$link.="&and=".$and;	    			
-	    			dump($link);*/
-	    			
+	    				    			
 	    			$link.="?mtid=".$val['merchant_id'];
 	    			$link.="&where=$where_params";
 	    			$link.="&and=$and_params";
@@ -241,13 +276,13 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 	    			$feed_data['aaData'][]=array(
 	    			  $val['merchant_id'],
 	    			  stripslashes($val['merchant_name']),
-	    			  displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['total_order'])),
-	    			  displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['total_commission'])),
+	    			  Price_Formatter::formatNumber($val['total_order']),
+	    			  Price_Formatter::formatNumber($val['total_commission']),
 	    			  $action	    			  
 	    		    );
 	    		}	    		
 	    		
-	    		$feed_data['total_commission']=displayPrice(adminCurrencySymbol(),normalPrettyPrice($total_commission));
+	    		$feed_data['total_commission']=Price_Formatter::formatNumber($total_commission);
 	    		$this->otableOutput($feed_data);
 	    	}	   
 	    	$this->otableNodata();					
@@ -362,10 +397,28 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 		ORDER BY order_id DESC
 		";
 		
-		if (isset($_GET['debug'])){
-			dump($this->data);	    	
-            dump($stmt);
-	    }	    	
+		$mc_enabled = false;
+		
+		if (Item_utility::MultiCurrencyEnabled() && Yii::app()->db->schema->getTable("{{view_order_summary}}") ){
+			$stmt="
+			SELECT a.*,		
+			(
+	    	select restaurant_name 
+	    	from
+	    	{{merchant}}
+	    	where merchant_id = a.merchant_id 
+	    	) as merchant_name    	
+			FROM		
+			{{view_order_summary}} a
+			WHERE 1
+			$where
+			$and
+			ORDER BY order_id DESC
+			";
+			$mc_enabled = true;
+		}
+		
+		
 		$total_order=0;	
 	    $total_commission=0;    	
 	    
@@ -377,29 +430,48 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 				if(!isset($val['total_order'])){
 					$val['total_order']=0;
 				}		
-				$total_order=$total_order+$val['total_order'];
-	    		$total_commission=$total_commission+$val['total_commission'];
-	    			
-				/*$date=prettyDate($val['date_created'],true);
-	    	    $date=Yii::app()->functions->translateDate($date);	    	    */
+				
+				if(!$mc_enabled){
+					$total_order=$total_order+$val['total_order'];
+		    		$total_commission=$total_commission+$val['total_commission'];
+				} else {
+					$total_order=$total_order+$val['total_order'];
+	    		    $total_commission=$total_commission+$val['total_commission_ex'];
+				}			
+	    							
 				$date=FormatDateTime($val['date_created']);
 	    	    
-	    	    $feed_data['total_commission']=displayPrice(adminCurrencySymbol(),
-	    	    normalPrettyPrice($total_commission));
-	    	    $feed_data['merchant_name']=ucwords($val['merchant_name']);
+	    	    $feed_data['total_commission']=Price_Formatter::formatNumber($total_commission);
+	    	    $feed_data['merchant_name']=clearString($val['merchant_name']);
 	    	    
-	    	    if ( $val['commision_ontop']==1){
-	    	    	$total_w_tax="<a  class=\"view-receipt\" data-id=\"$val[order_id]\" href=\"javascript:;\">".displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['sub_total']))."</a>";
+	    	    if(!$mc_enabled){
+		    	    if ( $val['commision_ontop']==1){
+		    	    	$total_w_tax="<a  class=\"view-receipt\" data-id=\"$val[order_id]\" href=\"javascript:;\">".Price_Formatter::formatNumber($val['sub_total'])."</a>";
+		    	    } else {
+		    	    	$total_w_tax="<a  class=\"view-receipt\" data-id=\"$val[order_id]\" href=\"javascript:;\">".Price_Formatter::formatNumber($val['total_w_tax'])."</a>";
+		    	    }	    	    
+	    	    } else{
+	    	    	if ( $val['commision_ontop']==1){
+		    	    	$total_w_tax="<a  class=\"view-receipt\" data-id=\"$val[order_id]\" href=\"javascript:;\">".Price_Formatter::formatNumber($val['sub_total_ex'])."</a>";
+		    	    } else {
+		    	    	$total_w_tax="<a  class=\"view-receipt\" data-id=\"$val[order_id]\" href=\"javascript:;\">".Price_Formatter::formatNumber($val['total_w_tax_ex'])."</a>";
+		    	    }	    	    
+	    	    }
+	    	    
+	    	    if(!$mc_enabled){
+		    	    $val_percent_commision = $val['total_commission'];
+		    	    $val_total_commission = $val['total_commission'];
 	    	    } else {
-	    	    	$total_w_tax="<a  class=\"view-receipt\" data-id=\"$val[order_id]\" href=\"javascript:;\">".displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['total_w_tax']))."</a>";
-	    	    }	    	    
+	    	    	$val_percent_commision = $val['total_commission_ex'];
+	    	        $val_total_commission = $val['total_commission_ex'];
+	    	    }			
 	    	    
 	    	    $feed_data['aaData'][]=array(
 					$val['order_id'],
 					t($val['payment_type']),
 					$total_w_tax,
-					normalPrettyPrice($val['percent_commision']),
-					displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['total_commission'])),
+					Price_Formatter::convertToRaw($val_percent_commision),
+					Price_Formatter::formatNumber($val_total_commission),
 					$date
 				);
 			}	
@@ -428,9 +500,9 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 		$resp = Yii::app()->functions->getTotalCommission();		
 		
 		$commission=array(
-		  'total_com'=>FunctionsV3::prettyPrice($resp['total_commission']),
-		  'total_today'=>FunctionsV3::prettyPrice($resp['total_today']),
-		  'total_last'=>FunctionsV3::prettyPrice($resp['total_last'])
+		  'total_com'=>Price_Formatter::formatNumber($resp['total_commission']),
+		  'total_today'=>Price_Formatter::formatNumber($resp['total_today']),
+		  'total_last'=>Price_Formatter::formatNumber($resp['total_last'])
 		);
 		$this->code=1;
 		$this->msg="Ok";
@@ -552,7 +624,7 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 		$merchant_id = Yii::app()->functions->getMerchantID();
 		$balance = Yii::app()->functions->getMerchantBalance($merchant_id);
 		
-		$this->details=FunctionsV3::prettyPrice($balance);
+		$this->details=Price_Formatter::formatNumber($balance);
 		$this->code=1;
 		$this->msg="ok";
 	}
@@ -622,41 +694,64 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 	    $trans_type
 	    ORDER BY order_id DESC
 	    ";
-	    if (isset($_GET['debug'])){
-	        dump($stmt);
+	    
+	    $mc_enabled = false;
+	    if (Item_utility::MultiCurrencyEnabled() && Yii::app()->db->schema->getTable("{{view_order_summary}}") ){
+	    	$stmt="SELECT * FROM
+		    {{view_order_summary}}
+		    WHERE
+		    merchant_id=".Yii::app()->functions->q($mtid)."
+		    AND status in ($orderstats)
+		    $and	    
+		    $trans_type
+		    ORDER BY order_id DESC
+		    ";
+	    	$mc_enabled = true;
 	    }
 	    
 	    $_SESSION['kr_export_stmt']=$stmt;
 	    
 	    $total_amount=0;
 	    $total_payable=0;
-	    if ( $res=$this->rst($stmt)){
-	    	foreach ($res as $val) {	    			    		
-	    		//$date=prettyDate($val['date_created']);
-	    		/*$date=date('M d,Y G:i:s',strtotime($val['date_created']));
-			    $date=Yii::app()->functions->translateDate($date);*/					
+	    if($res = Yii::app()->db->createCommand($stmt)->queryAll()){	    	
+	    	foreach ($res as $val) {	    			    			    		
 	    		$date=FormatDateTime($val['date_created']);
-			    
-			    $total=$val['total_w_tax'];
-			    if ( $val['commision_ontop']==1){
-			    	$total=$val['sub_total'];
-			    }
-			    
-			    $total_commission=$val['total_commission'];
-			    $amount=$total-$total_commission;
-			    
-			    $amount=$val['merchant_earnings'];
+	    		
+	    		if(!$mc_enabled){
+	    		
+	    			$total=$val['total_w_tax'];
+				    if ( $val['commision_ontop']==1){
+				    	$total=$val['sub_total'];
+				    }
+				    
+				    $total_commission=$val['total_commission'];
+				    $amount=$total-$total_commission;
+				    
+				    $amount=$val['merchant_earnings'];
+	    				
+	    		} else {
+	    			
+	    			$total=$val['total_w_tax_ex'];
+				    if ( $val['commision_ontop']==1){
+				    	$total=$val['sub_total_ex'];
+				    }
+				    
+				    $total_commission=$val['total_commission_ex'];
+				    $amount=$total-$total_commission;
+				    
+				    $amount=$val['merchant_earnings_ex'];
+	    		}			    			   
 			    
 			    $link="<a href=\"javascript:;\" class=\"view-receipt\"  data-id=\"$val[order_id]\"  >".
-			    displayPrice(adminCurrencySymbol(),normalPrettyPrice($total))."</a>";
+			    Price_Formatter::formatNumber($total)."</a>";
 			    			    
 	    		$feed_data['aaData'][]=array(
 	    		    $val['order_id'],
 	    		    strtoupper($val['payment_type']),
 	    		    $link,	    		    
 	    		    normalPrettyPrice($val['percent_commision']),
-	    		    displayPrice(adminCurrencySymbol(),normalPrettyPrice($total_commission)),
-	    		    displayPrice(adminCurrencySymbol(),normalPrettyPrice($amount)),
+	    		    Price_Formatter::formatNumber($total_commission),
+	    		    Price_Formatter::formatNumber($amount),
 	    		    $date
 	    		);	    		
 	    			    		
@@ -718,7 +813,7 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 	    		$chk="<input type=\"checkbox\" name=\"row[]\" value=\"$val[ingredients_id]\" class=\"chk_child\" >";   		
 	    		$option="<div class=\"options\">
 	    		<a href=\"$slug/id/$val[ingredients_id]\" >".Yii::t("default","Edit")."</a>
-	    		<a href=\"javascript:;\" class=\"row_del\" rev=\"$val[ingredients_id]\" >".Yii::t("default","Delete")."</a>
+	    		<a href=\"javascript:;\" class=\"delete_item\" data-id=\"$val[ingredients_id]\" >".Yii::t("default","Delete")."</a>
 	    		</div>";	    		
 	    		$date=FormatDateTime($val['date_created']);
 	    		
@@ -749,6 +844,7 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 			} else $params['ingredients_name_trans']=json_encode($this->data['ingredients_name_trans']);
 		}
 		
+		$ingredients_id = 0;
 		$params = FunctionsV3::purifyData($params);
 			
 		$command = Yii::app()->db->createCommand();
@@ -760,14 +856,33 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 			if ($res){
 				$this->code=1;
                 $this->msg=Yii::t("default",'ingredients updated');  
+                $ingredients_id = $this->data['id'];
+                              
 			} else $this->msg=Yii::t("default","ERROR: cannot update");
 		} else {				
 			if ($res=$command->insert('{{ingredients}}',$params)){
 				$this->details=Yii::app()->db->getLastInsertID();	
                 $this->code=1;
                 $this->msg=Yii::t("default",'ingredients added'); 
+                $ingredients_id = $this->details;
             } else $this->msg=Yii::t("default",'ERROR. cannot insert data.');
-		}	    		  
+		}	    
+
+		/*INSERT TRANSLATION*/	    
+		if($this->code==1){				
+			if(isset($this->data['ingredients_name_trans'])){
+				$this->data['ingredients_name_trans']['default'] = isset($this->data['ingredients_name'])?$this->data['ingredients_name']:'';				
+			}	                
+			Item_translation::insertTranslation( 
+			(integer) $ingredients_id ,
+			'ingredients_id',
+			'ingredients_name',
+			'',
+			array(	                  
+			  'ingredients_name'=>isset($this->data['ingredients_name_trans'])?$this->data['ingredients_name_trans']:'',			  
+			),"{{ingredients_translation}}");
+		}		
+		
 	}
 	
 	public function withdrawalSettings()
@@ -1060,11 +1175,7 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 		$and
 		ORDER BY withdrawal_id DESC
 		";
-        
-        if (isset($_GET['debug'])){
-           dump($this->data);
-           dump($stmt);
-        }
+
         
         $_SESSION['kr_export_stmt']=$stmt;
         
@@ -1105,10 +1216,10 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 	    		
 	    		$feed_data['aaData'][]=array(
 	    		  $val['withdrawal_id'],
-	    		  $val['merchant_name'],
-	    		  $method.$bank_info,
-	    		  displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['amount'])),
-	    		  displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['current_balance'])),
+	    		  clearString($val['merchant_name']),
+	    		  clearString($method.$bank_info),
+	    		  Price_Formatter::formatNumber($val['amount']),
+	    		  Price_Formatter::formatNumber($val['current_balance']),
 	    		  "<span class=\"uk-badge withdrawal-status\">".t($val['status'])."</span>",
 	    		  $date_created,
 	    		  $date_to_process,	    		  
@@ -1278,12 +1389,65 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 		$where		
 		$sOrder
 		$sLimit
-		";        		                
+		";        		            
+        
+        if (Item_utility::MultiCurrencyEnabled()){        	
+        	$stmt="
+			SELECT SQL_CALC_FOUND_ROWS a.restaurant_name,
+			(
+			select sum(total_w_tax_ex)as total
+			from 
+			{{view_order_summary}}
+			where
+			merchant_id=a.merchant_id
+			$and
+			) as total_sales,
+			
+			(
+			select sum(total_commission_ex)
+			from
+			{{view_order_summary}}
+			where
+			merchant_id=a.merchant_id
+			$and
+			) as total_commission,
+			
+			(
+			select sum(merchant_earnings_ex)
+			from
+			{{view_order_summary}}
+			where
+			merchant_id=a.merchant_id
+			$and
+			) as total_earnings
+			
+			
+			FROM
+			{{merchant}} a
+			$where		
+			$sOrder
+			$sLimit
+			";     
+        	
+        	if ( $currency = Multicurrency_finance::getDefaultCurrencyDetails()){        		
+        		Price_Formatter::$number_format = array(
+				   'decimals'=>$currency['number_decimal'],
+				   'decimal_separator'=>$currency['decimal_separator'],
+				   'thousand_separator'=>$currency['thousand_separator'],
+				   'position'=>$currency['currency_position'],
+				   'spacer'=>Price_Formatter::getSpacer( $currency['currency_position'] ),
+				   'currency_symbol'=>$currency['currency_symbol'],
+				);
+        	}        
+        	   		  
+        }
+            
         $pos = strpos($stmt,"LIMIT");	    	
 	    $_SESSION['kr_export_stmt'] = substr($stmt,0,$pos);	
-        
+        	    
 		$connection=Yii::app()->db;
-	    $rows=$connection->createCommand($stmt)->queryAll();     	    
+	    $rows=$connection->createCommand($stmt)->queryAll();     
+	    
 	    if (is_array($rows) && count($rows)>=1){
 	    	
 	    	$iTotalRecords=0;
@@ -1297,10 +1461,10 @@ $action="<a href=\"$link\" >".Yii::t("default","Details")."</a>";
 			
 	    	foreach ($rows as $val) {    	     	    			    			    		
 	    		$feed_data['aaData'][]=array(	    		  
-	    		   stripslashes($val['restaurant_name']),
-	    		   displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['total_sales']+0)),
-	    		   displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['total_commission']+0)),
-	    		   displayPrice(adminCurrencySymbol(),normalPrettyPrice($val['total_earnings']+0)),	    		   
+	    		   clearString($val['restaurant_name']),
+	    		   Price_Formatter::formatNumber($val['total_sales']+0),
+	    		   Price_Formatter::formatNumber($val['total_commission']+0),
+	    		   Price_Formatter::formatNumber($val['total_earnings']+0),	    		   
 	    		);
 	    	}
 	    	$this->otableOutput($feed_data);
@@ -2412,9 +2576,11 @@ $this->msg=t("We have sent bank information instruction to your email")." :$merc
 		left join {{client}} c
 		on
 		a.client_id = c.client_id
+		
+		WHERE a.order_id = ".q($order_id)."
 		LIMIT 0,1
-		";		
-		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){			
+		";				
+		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){						
 			$params=array(				
 			  'merchant_id'=>$res['merchant_id'],
 			  'branch_code'=>$this->data['branch_code'],
@@ -2434,7 +2600,7 @@ $this->msg=t("We have sent bank information instruction to your email")." :$merc
 				$this->msg = t("Thank you. Your information has been receive please wait 1 or 2 days to verify your payment.");
 				try {
 					
-					$resp = FunctionsV3::getNotificationTemplate('offline_new_bank_deposit',Yii::app()->language);					
+					$resp = FunctionsV3::getNotificationTemplate('offline_new_bank_deposit',Yii::app()->language);						
 					$email_content = $resp['email_content'];
 					$email_subject = $resp['email_subject'];
 					$sms_content = $resp['sms_content'];
@@ -2457,14 +2623,17 @@ $this->msg=t("We have sent bank information instruction to your email")." :$merc
 										
 					if($resp['sms_enabled']==1 && !empty($res['merchant_phone'])){						
 						Yii::app()->functions->sendSMS($res['merchant_phone'],$sms_content);
-					}	
-					/*SEND PUSH TO MERCHANT APP V2*/
-if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
-	Yii::app()->setImport(array(			
-	  'application.modules.merchantappv2.components.*',
-	));
-	 OrderWrapper::InsertOrderTrigger($order_id,'offline_new_bank_deposit');
-}			
+					}				
+					
+					
+				    /*SEND PUSH TO MERCHANT APP V2*/
+			    	if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
+			    		Yii::app()->setImport(array(			
+						  'application.modules.merchantappv2.components.*',
+					    ));
+			    		 OrderWrapper::InsertOrderTrigger($order_id,'offline_new_bank_deposit');
+			    	}
+					
 					
 				} catch (Exception $e) {
 					$this->msg = $e->getMessage();
@@ -2505,12 +2674,11 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		if ($res=$this->rst($stmt)){
 		   foreach ($res as $val) {				   	    			   	    
 				$action="<div class=\"options\">
-	    		<a href=\"$slug/Do/Add/?id=$val[cuisine_id]\" >".Yii::t("default","Edit")."</a>
-	    		<a href=\"javascript:;\" class=\"row_del\" rev=\"$val[cuisine_id]\" >".Yii::t("default","Delete")."</a>
+	    		<a href=\"$slug/Do/Add/?id=$val[id]\" >".Yii::t("default","Edit")."</a>
+	    		<a href=\"javascript:;\" class=\"row_del\" rev=\"$val[id]\" >".Yii::t("default","Delete")."</a>
 	    		</div>";		   	   
 				
-			   /*$date=Yii::app()->functions->prettyDate($val['date_created']);
-			   $date=Yii::app()->functions->translateDate($date);*/
+			   
 			   $date=FormatDateTime($val['date_created']);
 			   
 			   if (!empty($val['scanphoto'])){
@@ -2587,6 +2755,14 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 				  'mobile_verification_date'=>FunctionsV3::dateNow()
 				);
 				$this->updateData("{{client}}",$params,'client_id',$res['client_id']);
+				
+				
+				FunctionsV3::sendCustomerWelcomeEmail(array(
+				 'first_name'=>isset($res['first_name'])?$res['first_name']:'',
+				 'last_name'=>isset($res['last_name'])?$res['last_name']:'',
+				 'email_address'=>isset($res['email_address'])?$res['email_address']:'',
+				 'contact_phone'=>isset($res['contact_phone'])?$res['contact_phone']:''
+				));		
 				
 				Yii::app()->functions->clientAutoLogin($res['email_address'],$res['password'],$res['password']);
 				
@@ -3253,7 +3429,11 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		           if(!empty($valh['remarks2']) && !empty($valh['remarks_args']) ){
 		           	   $remarks_args = json_decode($valh['remarks_args'],true);
 		           	   if(is_array($remarks_args) && count($remarks_args)>=1){
-		           	      $remarks = Yii::t("driver",$valh['remarks2'],$remarks_args);            	   
+		           	   	  $new_arrgs = array();
+		           	   	  foreach ($remarks_args as $remarks_args_key=>$remarks_args_val) {
+		           	   	  	$new_arrgs[$remarks_args_key]= Yii::t("driver",$remarks_args_val);
+		           	   	  }		           	   	  
+		           	      $remarks = Yii::t("driver",$valh['remarks2'],$new_arrgs);            	   
 		           	   }
 		           }
 		           ?>                                      
@@ -4162,12 +4342,11 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 	    	       }
 	    	    }	    
 	    	    break;       	    	              
-	    	    
+	    	    	    	        
 	    	default:
 	    		break;
 	    }	    
-	    
-	    	    	    	   	    	   
+	    	    	    	    	   	    	   	    
 	    $_SESSION['confirm_order_data']=$params;	    
 	    $this->code=1; $this->msg=t("Please wait while we redirect you");
 	    	    
@@ -4393,7 +4572,7 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 			     stripslashes($val['merchant_name']),			     
 			     FunctionsV3::prettyInvoiceTerms($val['invoice_terms']),			     
 			     FunctionsV3::prettyDate($val['date_from'])." - ".FunctionsV3::prettyDate($val['date_to']),
-			     FunctionsV3::prettyPrice($val['invoice_total']),
+			     Price_Formatter::formatNumber($val['invoice_total']),
 			     $date_created."<span class=\"tag $val[status]\">".t($val['status'])."</span>",
 			     "<span class=\"tag $val[payment_status]\">".t($val['payment_status'])."</span>",
 			     $action
@@ -4434,10 +4613,16 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		if(!empty($sWhere)){
 			$sWhere.=" AND a.status NOT IN ('initial_order')";
 		} else $sWhere.=" WHERE a.status NOT IN ('initial_order')";
-				
+
+		$select = '';
+    	if (Item_utility::MultiCurrencyEnabled()){
+    		$select = Item_utility::queryCurrency();
+    	}					
+		
 		$stmt = "
 			SELECT SQL_CALC_FOUND_ROWS 
-			a.*,
+			order_id,trans_type,payment_type,sub_total,taxable_total,total_w_tax,a.status,
+			a.date_created,admin_viewed,request_from,
 			b.restaurant_name,
 			concat(c.first_name,' ',c.last_name) as client_name,
 			
@@ -4447,6 +4632,8 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 	    	where order_id = a.order_id
 	    	limit 0,1
 	    	) as customer_name
+	    	
+	    	$select
 			
 			FROM {{order}} a
 			LEFT join {{merchant}} b
@@ -4460,14 +4647,13 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 			$sWhere
 			$sOrder
 			$sLimit
-		";		
+		";				
+		
 		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
-			$res = Yii::app()->request->stripSlashes($res);
-						
+			$res = Yii::app()->request->stripSlashes($res);				
 			$iTotalRecords=0;
 			$stmt2="SELECT FOUND_ROWS()";
-			if ( $res2=$this->rst($stmt2)){
-				//dump($res2);
+			if ( $res2=$this->rst($stmt2)){				
 				$iTotalRecords=$res2[0]['FOUND_ROWS()'];
 			}	
 						
@@ -4479,6 +4665,7 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 						
 			foreach ($res as $val) {	
 
+				
 				if(!empty($val['customer_name']) && strlen($val['customer_name'])>1 ){					
 					$val['client_name'] = $val['customer_name'];
 				}
@@ -4494,7 +4681,20 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 			   $new='';
                 if ($val['admin_viewed']<=0){
     				$new=" <div class=\"uk-badge\">".Yii::t("default","NEW")."</div>";
-    			}	    			    			
+    			}	    		
+
+    			if(isset($val['currency_format'])){
+    				$currency_format = explode("|",$val['currency_format']);	    				
+    				Price_Formatter::$number_format = array(
+    				   'decimals'=>isset($currency_format[0])?$currency_format[0]:2, 
+					   'decimal_separator'=>isset($currency_format[1])?$currency_format[1]:'.',
+					   'thousand_separator'=>isset($currency_format[2])?$currency_format[2]:'',
+					   'position'=>isset($currency_format[3])?$currency_format[3]:'left',
+					   'spacer'=>Price_Formatter::getSpacer( isset($currency_format[3])?$currency_format[3]:'left' ),
+					   'currency_symbol'=>isset($currency_format[4])?$currency_format[4]:'',
+    				);
+    			}		
+    			   			
 	    			
 			   $date_created=FunctionsV3::prettyDate($val['date_created']);
 			   $date_created.=" ".FunctionsV3::prettyTime($val['date_created']);
@@ -4505,9 +4705,9 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 			     $item,
 			     t($val['trans_type']),
 			     t($val['payment_type']),
-			     FunctionsV3::prettyPrice($val['sub_total']),
-			     FunctionsV3::prettyPrice($val['taxable_total']),
-			     FunctionsV3::prettyPrice($val['total_w_tax']),
+			     Price_Formatter::formatNumber($val['sub_total']),
+			     Price_Formatter::formatNumber($val['taxable_total']),
+			     Price_Formatter::formatNumber($val['total_w_tax']),
 			     "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>"."<div>$action</div>",
 			     t($val['request_from']),
 			     $date_created
@@ -4588,7 +4788,7 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 			     stripslashes($val['merchant_name'])."<br/>".$new,			     
 			     FunctionsV3::prettyInvoiceTerms($val['invoice_terms']),			     
 			     FunctionsV3::prettyDate($val['date_from'])." - ".FunctionsV3::prettyDate($val['date_to']),
-			     FunctionsV3::prettyPrice($val['invoice_total']),
+			     Price_Formatter::formatNumber($val['invoice_total']),
 			     $date_created."<br/><span class=\"tag $val[payment_status]\">".t($val['payment_status'])."</span>",
 			     $action
 			   );
@@ -4814,6 +5014,9 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 	    Yii::app()->functions->updateOptionAdmin("admin_sofort_lang",
 	    isset($this->data['admin_sofort_lang'])?$this->data['admin_sofort_lang']:'');
 	    
+	    Yii::app()->functions->updateOptionAdmin("admin_sofort_fee",
+	    isset($this->data['admin_sofort_fee'])?$this->data['admin_sofort_fee']:'');
+	    
 	    $this->code=1;
 		$this->msg=Yii::t("default","Settings saved.");
 	}
@@ -4831,6 +5034,9 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     	
     	Yii::app()->functions->updateOption("merchant_sofort_lang",
     	isset($this->data['merchant_sofort_lang'])?$this->data['merchant_sofort_lang']:'',$mtid); 
+    	
+    	Yii::app()->functions->updateOption("merchant_sofort_fee",
+    	isset($this->data['merchant_sofort_fee'])?$this->data['merchant_sofort_fee']:'',$mtid); 
 		
 	    $this->code=1;
 		$this->msg=Yii::t("default","Settings saved.");		
@@ -5299,10 +5505,7 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 	
 	public function requestCancelOrderList()
 	{
-				
-		
-		$DbExt=new DbExt;
-		
+							
 		$and = '';
 		$current_panel = isset($this->data['current_panel'])?$this->data['current_panel']:'';
 		if(!empty($current_panel)){
@@ -5323,8 +5526,14 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 			}
 		}	
 		    	
+		$select = '';
+    	if (Item_utility::MultiCurrencyEnabled()){
+    		$select = Item_utility::queryCurrency();
+    	}			
     	
-    	$stmt="SELECT a.*,
+    	$stmt="SELECT 
+    	order_id,trans_type,payment_type,sub_total,taxable_total,total_w_tax,a.status,
+		a.date_created,admin_viewed,request_from,order_id_token,request_cancel_viewed,
     	(
     	select concat(first_name,' ',last_name)
     	from
@@ -5349,6 +5558,8 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     	order_id=a.order_id
     	) as item
     	
+    	$select
+    	
     	FROM
     	{{order}} a
     	WHERE 1    	
@@ -5356,8 +5567,8 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     	AND status NOT in ('".initialStatus()."')
     	AND request_cancel = '1'
     	ORDER BY date_created DESC	    	
-    	";    	    	
-    	if ( $res=$DbExt->rst($stmt)){    		
+    	";    	    	    	
+    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){    		
     		foreach ($res as $val) {	    			
     			$new='';
     			$action="<a data-id=\"".$val['order_id_token']."\" class=\"order_cancel_review\" href=\"javascript:\">".t("Review Order")."</a>";
@@ -5373,6 +5584,18 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     			  'kr_merchant_lang_id'
     			);
     			
+    			if(isset($val['currency_format'])){
+    				$currency_format = explode("|",$val['currency_format']);	    				
+    				Price_Formatter::$number_format = array(
+    				   'decimals'=>isset($currency_format[0])?$currency_format[0]:2, 
+					   'decimal_separator'=>isset($currency_format[1])?$currency_format[1]:'.',
+					   'thousand_separator'=>isset($currency_format[2])?$currency_format[2]:'',
+					   'position'=>isset($currency_format[3])?$currency_format[3]:'left',
+					   'spacer'=>Price_Formatter::getSpacer( isset($currency_format[3])?$currency_format[3]:'left' ),
+					   'currency_symbol'=>isset($currency_format[4])?$currency_format[4]:'',
+    				);
+    			}		
+    			
     			$feed_data['aaData'][]=array(
     			  $val['order_id'],
     			  ucwords($val['client_name']).$new,
@@ -5380,9 +5603,9 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     			  $item,
     			  t($val['trans_type']),	    			  
     			  FunctionsV3::prettyPaymentType('payment_order',$val['payment_type'],$val['order_id'],$val['trans_type']),
-    			  FunctionsV3::prettyPrice($val['sub_total']),
-    			  FunctionsV3::prettyPrice($val['taxable_total']),
-    			  FunctionsV3::prettyPrice($val['total_w_tax']),	  
+    			  Price_Formatter::formatNumber($val['sub_total']),
+    			  Price_Formatter::formatNumber($val['taxable_total']),
+    			  Price_Formatter::formatNumber($val['total_w_tax']),	  
     			  "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>",
     			  t($val['request_from']),
     			  $date,
@@ -5790,7 +6013,7 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		    				$tpl=Driver::smarty('email',$this->data['email'],$tpl);
 		    				$tpl=Driver::smarty('phone',$this->data['phone'],$tpl);
 		    				$tpl=Driver::smarty('username',$this->data['username'],$tpl);
-		    				$tpl=Driver::smarty('transport_type_id',$this->data['transport_type_id'],$tpl);    				
+		    				$tpl=Driver::smarty('transport_type_id', t($this->data['transport_type_id']) ,$tpl);    				
 		    				Yii::app()->functions->sendEmail(
 		    				  $admin_email,'',t("New driver Signup"),$tpl
 		    				);
@@ -6068,14 +6291,22 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 			if(!empty($sWhere)){
 				$sWhere.=" AND a.status NOT IN ('initial_order')";
 			} else $sWhere.=" AND a.status NOT IN ('initial_order')";
-					
+			
+			$select = '';
+	    	if (Item_utility::MultiCurrencyEnabled()){
+	    		$select = Item_utility::queryCurrency();
+	    	}			
+			
 			$stmt = "
 				SELECT SQL_CALC_FOUND_ROWS 
-				a.*,
+				a.order_id,trans_type,payment_type,sub_total,taxable_total,total_w_tax,a.status,
+			    a.date_created,admin_viewed,request_from,
 				b.restaurant_name,
 				concat(c.first_name,' ',c.last_name) as client_name,
 				
 				concat(d.first_name,' ',d.last_name) as customer_name
+				
+				$select
 				
 				FROM {{order}} a
 				LEFT join {{merchant}} b
@@ -6094,9 +6325,9 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 				$sWhere			
 				$sOrder
 				$sLimit
-			";									
+			";					
 			if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
-				$res = Yii::app()->request->stripSlashes($res);
+				$res = Yii::app()->request->stripSlashes($res);								
 				$iTotalRecords=0;				
 				if($res2 = Yii::app()->db->createCommand("SELECT FOUND_ROWS()")->queryRow()){
 					$iTotalRecords=$res2['FOUND_ROWS()'];
@@ -6121,9 +6352,21 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 	    				$new=" <div class=\"uk-badge\">".Yii::t("default","NEW")."</div>";
 	    			}	    	
 
-	    		   if(!empty($val['customer_name'])){
+	    		   if(!empty( trim($val['customer_name']) )){
   	    		   	   $val['client_name']=$val['customer_name'];
-	    		   }				
+	    		   }	
+	    		   
+	    		   if(isset($val['currency_format'])){
+	    				$currency_format = explode("|",$val['currency_format']);	    				
+	    				Price_Formatter::$number_format = array(
+	    				   'decimals'=>isset($currency_format[0])?$currency_format[0]:2, 
+						   'decimal_separator'=>isset($currency_format[1])?$currency_format[1]:'.',
+						   'thousand_separator'=>isset($currency_format[2])?$currency_format[2]:'',
+						   'position'=>isset($currency_format[3])?$currency_format[3]:'left',
+						   'spacer'=>Price_Formatter::getSpacer( isset($currency_format[3])?$currency_format[3]:'left' ),
+						   'currency_symbol'=>isset($currency_format[4])?$currency_format[4]:'',
+	    				);
+	    			}				
 		    			
 				   $date_created=FunctionsV3::prettyDate($val['date_created']);
 				   $date_created.=" ".FunctionsV3::prettyTime($val['date_created']);
@@ -6134,9 +6377,9 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 				     $item,
 				     t($val['trans_type']),
 				     t($val['payment_type']),
-				     FunctionsV3::prettyPrice($val['sub_total']),
-				     FunctionsV3::prettyPrice($val['taxable_total']),
-				     FunctionsV3::prettyPrice($val['total_w_tax']),
+				     Price_Formatter::formatNumber($val['sub_total']),
+				     Price_Formatter::formatNumber($val['taxable_total']),
+				     Price_Formatter::formatNumber($val['total_w_tax']),
 				     "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>"."<div>$action</div>",
 				     t($val['request_from']),
 				     $date_created
@@ -6471,6 +6714,6 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 	    Yii::app()->functions->updateOption("singleapp_contactus_enabled",
 	    isset($this->data['singleapp_contactus_enabled'])?$this->data['singleapp_contactus_enabled']:''
 	    ,$merchant_id);
-	}
+	}	
 	
 } /*END CLASS*/

@@ -1,13 +1,13 @@
-<?php declare(strict_types=1);
+<?php
 
 /*
  * This file is part of the Monolog package.
- *
- * (c) Jordi Boggiano <j.boggiano@seld.be>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+*
+* (c) Jordi Boggiano <j.boggiano@seld.be>
+*
+* For the full copyright and license information, please view the LICENSE
+* file that was distributed with this source code.
+*/
 
 namespace Monolog\Handler\FingersCrossed;
 
@@ -35,27 +35,20 @@ use Monolog\Logger;
  */
 class ChannelLevelActivationStrategy implements ActivationStrategyInterface
 {
-    /**
-     * @var int
-     */
     private $defaultActionLevel;
-
-    /**
-     * @var array
-     */
     private $channelToActionLevel;
 
     /**
-     * @param int|string $defaultActionLevel   The default action level to be used if the record's category doesn't match any
-     * @param array      $channelToActionLevel An array that maps channel names to action levels.
+     * @param int   $defaultActionLevel   The default action level to be used if the record's category doesn't match any
+     * @param array $channelToActionLevel An array that maps channel names to action levels.
      */
-    public function __construct($defaultActionLevel, array $channelToActionLevel = [])
+    public function __construct($defaultActionLevel, $channelToActionLevel = array())
     {
         $this->defaultActionLevel = Logger::toMonologLevel($defaultActionLevel);
         $this->channelToActionLevel = array_map('Monolog\Logger::toMonologLevel', $channelToActionLevel);
     }
 
-    public function isHandlerActivated(array $record): bool
+    public function isHandlerActivated(array $record)
     {
         if (isset($this->channelToActionLevel[$record['channel']])) {
             return $record['level'] >= $this->channelToActionLevel[$record['channel']];

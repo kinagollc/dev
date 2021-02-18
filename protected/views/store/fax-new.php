@@ -99,7 +99,7 @@ if (!empty($data['client_delivery_address'])){
   <?php if(isset($data['order_change'])):?>
   <?php if ($data['order_change']>0):?>
   <div class="fax_delivery_instruction">
-     <p><span class=""><?php echo t("Change")?></span>: <?php echo FunctionsV3::prettyPrice($data['order_change'])?></p>
+     <p><span class=""><?php echo t("Change")?></span>: <?php echo Price_Formatter::formatNumber($data['order_change'])?></p>
   </div> <!--fax_delivery_instruction-->
   <?php endif;?>
   <?php endif;?>
@@ -122,7 +122,7 @@ if (!empty($data['client_delivery_address'])){
   	$price = $val['discounted_price'];
   }
   $price = $val['qty']*unPrettyPrice($price);
-  $_price = FunctionsV3::prettyPrice($price);
+  $_price = Price_Formatter::formatNumber($price);
   
   $size = '';
   if(isset($val['size_words'])){
@@ -208,7 +208,7 @@ if (!empty($data['client_delivery_address'])){
 	       <div class="mycol col-3 v_center text-right">
 	          <?php 
 	          $addon_total = unPrettyPrice($first_sub_item['price'])*$first_sub_item['qty'];
-	          echo FunctionsV3::prettyPrice($addon_total);?>
+	          echo Price_Formatter::formatNumber($addon_total);?>
 	       </div>	       
 	     </div>  
          <?php else :?>
@@ -230,7 +230,7 @@ if (!empty($data['client_delivery_address'])){
 		     <div class="mytable">
 		       <div class="mycol col-1 v_center ">&nbsp;</div>
 		       <div class="mycol col-2 v_center "><?php echo $subitem_val['addon_name'];?></div>
-		       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($addon_total)?></div>		       
+		       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($addon_total)?></div>		       
 		     </div>  		     
 	     <?php endforeach;?>
       <?php endforeach;?>
@@ -279,7 +279,7 @@ if (!empty($data['client_delivery_address'])){
       <div class="mytable">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Discount")." ".number_format($totalinfo['merchant_discount_amount'],0);?>%</div>
-       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($totalinfo['discounted_amount'])?></div>
+       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($totalinfo['discounted_amount'])?></div>
      </div> 
     <?php endif;?>
     <?php endif;?>
@@ -291,7 +291,7 @@ if (!empty($data['client_delivery_address'])){
       <div class="mytable">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Points Discount");?></div>
-       <div class="mycol col-3 v_center text-right">(<?php echo FunctionsV3::prettyPrice($totalinfo['pts_redeem_amt'])?>)</div>
+       <div class="mycol col-3 v_center text-right">(<?php echo Price_Formatter::formatNumber($totalinfo['pts_redeem_amt'])?>)</div>
      </div> 
     <?php endif;?>
     <?php endif;?>
@@ -305,16 +305,16 @@ if (!empty($data['client_delivery_address'])){
 	       <div class="mycol col-1 v_center "></div>
 	       <div class="mycol col-2 v_center text-right index_right"><?php echo t("Subtotal")?></div>
 	       <?php if($data['calculation_method']==1):?>
-	       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($totalinfo['subtotal']+$totalinfo['voucher_value'])?></div>
+	       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($totalinfo['subtotal']+$totalinfo['voucher_value'])?></div>
 	       <?php else :?>
-	       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($totalinfo['subtotal'])?></div>
+	       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($totalinfo['subtotal'])?></div>
 	       <?php endif;?>
 	     </div> 
       <?php else:?>    
 	     <div class="mytable">
 	       <div class="mycol col-1 v_center "></div>
 	       <div class="mycol col-2 v_center text-right index_right"><?php echo t("Subtotal")?></div>
-	       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($totalinfo['subtotal'])?></div>
+	       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($totalinfo['subtotal'])?></div>
 	     </div> 
 	 <?php endif;?>
      
@@ -327,14 +327,14 @@ if (!empty($data['client_delivery_address'])){
      <div class="mytable">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Less Voucher")?></div>
-       <div class="mycol col-3 v_center text-right">(<?php echo FunctionsV3::prettyPrice($totalinfo['voucher_value'])?>)</div>
+       <div class="mycol col-3 v_center text-right">(<?php echo Price_Formatter::formatNumber($totalinfo['voucher_value'])?>)</div>
      </div> 
      
      
      <div class="mytable">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Sub Total (Less Voucher)")?></div>
-       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($totalinfo['subtotal'])?></div>
+       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($totalinfo['subtotal'])?></div>
      </div> 
      
      <?php endif;?>
@@ -347,7 +347,7 @@ if (!empty($data['client_delivery_address'])){
      <div class="mytable">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Delivery Fee")?></div>
-       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($totalinfo['delivery_charges'])?></div>
+       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($totalinfo['delivery_charges'])?></div>
      </div> 
      <?php endif;?>
     <?php endif;?>
@@ -357,7 +357,7 @@ if (!empty($data['client_delivery_address'])){
      <div class="mytable">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Packaging")?></div>
-       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($totalinfo['merchant_packaging_charge'])?></div>
+       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($totalinfo['merchant_packaging_charge'])?></div>
      </div> 
      <?php endif;?>
     <?php endif;?>
@@ -367,7 +367,7 @@ if (!empty($data['client_delivery_address'])){
      <div class="mytable">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Tax")." ".$totalinfo['tax_amt']?>%</div>
-       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($totalinfo['taxable_total'])?></div>
+       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($totalinfo['taxable_total'])?></div>
      </div> 
      <?php endif;?>
     <?php endif;?>
@@ -377,7 +377,7 @@ if (!empty($data['client_delivery_address'])){
      <div class="mytable">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Tips")." ".$totalinfo['tips_percent']?></div>
-       <div class="mycol col-3 v_center text-right"><?php echo FunctionsV3::prettyPrice($totalinfo['tips'])?></div>
+       <div class="mycol col-3 v_center text-right"><?php echo Price_Formatter::formatNumber($totalinfo['tips'])?></div>
      </div> 
      <?php endif;?>
     <?php endif;?>
@@ -389,7 +389,7 @@ if (!empty($data['client_delivery_address'])){
      <div class="mytable" style="display:none;">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Voucher")?></div>
-       <div class="mycol col-3 v_center text-right">(<?php echo FunctionsV3::prettyPrice($totalinfo['voucher_value'])?>)</div>
+       <div class="mycol col-3 v_center text-right">(<?php echo Price_Formatter::formatNumber($totalinfo['voucher_value'])?>)</div>
      </div>      
      <?php endif;?>
     <?php endif;?>
@@ -402,7 +402,7 @@ if (!empty($data['client_delivery_address'])){
       <div class="mytable" style="display:none;">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Discount")." ".number_format($totalinfo['merchant_discount_amount'],0);?>%</div>
-       <div class="mycol col-3 v_center text-right">(<?php echo FunctionsV3::prettyPrice($totalinfo['discounted_amount'])?>)</div>
+       <div class="mycol col-3 v_center text-right">(<?php echo Price_Formatter::formatNumber($totalinfo['discounted_amount'])?>)</div>
      </div> 
     <?php endif;?>
     <?php endif;?>
@@ -415,7 +415,7 @@ if (!empty($data['client_delivery_address'])){
       <div class="mytable" style="display:none;">
        <div class="mycol col-1 v_center "></div>
        <div class="mycol col-2 v_center text-right index_right"><?php echo t("Points Discount");?></div>
-       <div class="mycol col-3 v_center text-right">(<?php echo FunctionsV3::prettyPrice($data['points_discount'])?>)</div>
+       <div class="mycol col-3 v_center text-right">(<?php echo Price_Formatter::formatNumber($data['points_discount'])?>)</div>
      </div> 
     <?php endif;?>
     <?php endif;?>
@@ -430,8 +430,8 @@ if (!empty($data['client_delivery_address'])){
        	  /*dump($total_discount);
        	  dump($totalinfo['total']);*/
        	  $total_customer_pays = unPrettyPrice($totalinfo['total'])+$total_discount;       	  
-       	  echo FunctionsV3::prettyPrice($total_customer_pays);       
-       } else echo FunctionsV3::prettyPrice($totalinfo['total']);?>       
+       	  echo Price_Formatter::formatNumber($total_customer_pays);       
+       } else echo Price_Formatter::formatNumber($totalinfo['total']);?>       
        </div>
     </div>
     
@@ -447,7 +447,7 @@ if (!empty($data['client_delivery_address'])){
         <?php if ($totalinfo['voucher_value']>0.001):?>      
         <div class="mytable two_col">
           <div class="mycol col-1"><?php echo t("Voucher")?></div>
-          <div class="mycol col-2">(<?php echo FunctionsV3::prettyPrice($totalinfo['voucher_value'])?>)</div>
+          <div class="mycol col-2">(<?php echo Price_Formatter::formatNumber($totalinfo['voucher_value'])?>)</div>
         </div>
         <?php endif;?>
         <?php endif;?>
@@ -458,7 +458,7 @@ if (!empty($data['client_delivery_address'])){
         <?php if ($totalinfo['discounted_amount']>0.001):?>      
         <div class="mytable two_col">
           <div class="mycol col-1"><?php echo t("Discount")." ".number_format($totalinfo['merchant_discount_amount'],0);?>%</div>
-          <div class="mycol col-2">(<?php echo FunctionsV3::prettyPrice($totalinfo['discounted_amount'])?>)</div>
+          <div class="mycol col-2">(<?php echo Price_Formatter::formatNumber($totalinfo['discounted_amount'])?>)</div>
         </div>
         <?php endif;?>
         <?php endif;?>
@@ -470,7 +470,7 @@ if (!empty($data['client_delivery_address'])){
         <?php if ($data['points_discount']>0.001):?>      
         <div class="mytable two_col">
           <div class="mycol col-1"><?php echo t("Points Discount");?></div>
-          <div class="mycol col-2">(<?php echo FunctionsV3::prettyPrice($data['points_discount'])?>)</div>
+          <div class="mycol col-2">(<?php echo Price_Formatter::formatNumber($data['points_discount'])?>)</div>
         </div>
         <?php endif;?>
         <?php endif;?>
@@ -478,7 +478,7 @@ if (!empty($data['client_delivery_address'])){
         
         <div class="mytable two_col">
           <div class="mycol col-1 bold">Customer paid</div>
-          <div class="mycol col-2 bold"><?php echo FunctionsV3::prettyPrice($totalinfo['total'])?></div>
+          <div class="mycol col-2 bold"><?php echo Price_Formatter::formatNumber($totalinfo['total'])?></div>
         </div>
      
 	    <div class="mytable signature_wrap">

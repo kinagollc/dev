@@ -20,6 +20,10 @@ if($opt_contact_delivery==1){
 	}	
 }
 
+/*EXCHANGE RATE*/
+if ( Item_utility::MultiCurrencyEnabled()){
+	$payment_list = Multicurrency_utility::paymentCheckout( $payment_list , Yii::app()->session['currency']);
+}
 ?>
 
 <?php if (is_array($payment_list) && count($payment_list)>=1):?>
@@ -55,7 +59,7 @@ if($opt_contact_delivery==1){
 	         	}	         	
 	         	if($fee>0){
 	         		echo $val= Yii::t("default","Paypal (card fee [fee])",array(
-	         		  '[fee]'=>FunctionsV3::prettyPrice($fee)
+	         		  '[fee]'=>Price_Formatter::formatNumber($fee)
 	         		));
 	         	} else echo $val;
          	    break;
@@ -174,7 +178,7 @@ if($opt_contact_delivery==1){
      		    if($credentials=StripeWrapper::getCredentials($merchant_id)){     				
      				if($credentials['card_fee']>=0.0001){
 	     				echo $val = Yii::t("default","Stripe (card fee [fee])",array(
-		         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+		         		  '[fee]'=>Price_Formatter::formatNumber( (float) $credentials['card_fee'] * $exchange_rate )
 		         		));
      			    } else echo t($val); 
      			} else echo t($val); 
@@ -184,7 +188,7 @@ if($opt_contact_delivery==1){
      		    if($credentials=PaypalWrapper::getCredentials($merchant_id)){     				
      				if($credentials['card_fee']>=0.0001){
 	     				echo $val = Yii::t("default","Paypal V2 (card fee [fee])",array(
-		         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+		         		  '[fee]'=>Price_Formatter::formatNumber( (float) $credentials['card_fee'] * $exchange_rate )
 		         		));
      			    } else echo t($val); 
      			} else echo t($val); 
@@ -214,11 +218,204 @@ if($opt_contact_delivery==1){
      			if($credentials=mercadopagoWrapper::getCredentials($merchant_id)){     				
      				if($credentials['card_fee']>=0.0001){
 	     				echo $val = Yii::t("default","mercadopago V2 (card fee [fee])",array(
-		         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+		         		  '[fee]'=>Price_Formatter::formatNumber( (float) $credentials['card_fee'] * $exchange_rate )
 		         		));
      			    } else echo t($val); 
      			} else echo t($val); 
      			break;		
+     			
+     		case "tap":
+     			if($credentials=TapWrapper::getCredentials($merchant_id)){     				
+     				if($credentials['card_fee']>=0.0001){
+	     				echo $val = Yii::t("default","Tap (card fee [fee])",array(
+		         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+		         		));
+     			    } else echo t($val); 
+     			} else echo t($val); 
+     			break;			
+     			
+     		case "paymongo_card":          		
+     			if($credentials=PaymongoWrapper::getCredentials($merchant_id)){     				
+     				if($credentials['card_fee']>=0.0001){
+     					$cardfee='';
+     					if(isset($credentials['card_percentage'])){
+     					   $cardfee = FunctionsV3::prettyPriceNoCurrency($credentials['card_percentage'])."%";
+     					} 
+     					
+     					$label = "paymongo card";
+     					if($key=="paymongo_gcash"){
+     						$label = "gcash";
+     					} else if ($key=="paymongo_grabpay") {
+     						$label = "grabpay";
+     					}
+     					
+     					$cardfee.= "+".FunctionsV3::prettyPriceNoCurrency($credentials['card_fee']);
+	     				echo $val = Yii::t("default","$label (card fee [fee])",array(
+		         		  '[fee]'=>$cardfee
+		         		));
+     			    } else echo t($val); 
+     			} else echo t($val); 
+     			break;	
+     			
+     			
+     		case "paymongo_gcash": 		
+     		case "paymongo_grabpay":	
+     			if($credentials=PaymongoWrapper::getCredentials($merchant_id)){     				     				
+     				if($credentials['card_fee_gcash']>=0.0001){
+     					$cardfee='';
+     					if(isset($credentials['card_percentage_gcash'])){
+     					   $cardfee = FunctionsV3::prettyPriceNoCurrency($credentials['card_percentage_gcash'])."%";
+     					} 
+     					
+     					$label = "paymongo card";
+     					if($key=="paymongo_gcash"){
+     						$label = "gcash";
+     					} else if ($key=="paymongo_grabpay") {
+     						$label = "grabpay";
+     					}
+     					
+     					$cardfee.= "+".FunctionsV3::prettyPriceNoCurrency($credentials['card_fee_gcash']);
+	     				echo $val = Yii::t("default","$label (card fee [fee])",array(
+		         		  '[fee]'=>$cardfee
+		         		));
+     			    } else echo t($val); 
+     			} else echo t($val); 
+     			break;				
+     			     		
+     			
+     		case "redsys":       		          	             		             		             		
+     			if($credentials=RedsysWrapper::getCredentials($merchant_id)){     			
+     				if($credentials['card_fee']>=0.0001){
+	     				echo $val = Yii::t("default","redsys (card fee [fee])",array(
+		         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+		         		));
+     			    } else echo t($val); 
+     			} else echo t($val); 
+     			break;					
+     			
+ 			case "redsys_bizum":       		          	             		             		             		
+ 			if($credentials=RedsysWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","redsys bizum (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;		
+ 			
+ 			case "xendit":       		          	             		             		             		
+ 			if($credentials=XenditWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","xendit (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
+ 			
+ 			case "culqi":       		          	             		             		             		
+ 			if($credentials=CulqiWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","culqi (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
+     					
+ 			
+ 			case "flutterwave":       		          	             		             		             		
+ 			if($credentials=FlutterwaveWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","flutterwave (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
+ 			
+ 			case "scanpay":       		          	             		             		             		
+ 			if($credentials=ScanpayWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","Scanpay (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
+ 			
+ 			case "billplz":       		          	             		             		             		
+ 			if($credentials=billplzWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","billplz (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
+ 			
+ 			case "toyyibpay":       		          	             		             		             		
+ 			if($credentials=toyyibpayWrapper::getCredentials($merchant_id)){    				
+ 				if($credentials['card_fee']>=0 || $credentials['card_percentage']>0){ 					
+ 					$percentage = isset($credentials['card_percentage'])?(float)$credentials['card_percentage']:0;
+ 					$fee = isset($credentials['card_fee'])?(float)$credentials['card_fee']:0;
+ 					if($percentage>0 && $fee>0){
+ 						echo $val = Yii::t("default","$key (card fee [percentage]% + [fee])",array(
+ 						  '[percentage]'=>FunctionsV3::prettyPriceNoCurrency($percentage),
+		         		  '[fee]'=>FunctionsV3::prettyPriceNoCurrency($fee)
+		         		));
+ 					} elseif ( $percentage>0 && $fee<=0){
+ 						echo $val = Yii::t("default","$key (card fee [percentage]%)",array(
+ 						  '[percentage]'=>FunctionsV3::prettyPriceNoCurrency($percentage)		         		  
+		         		));
+ 					} elseif ( $percentage<=0 && $fee>=0){
+ 						echo $val = Yii::t("default","$key (card fee [fee])",array( 						  
+		         		  '[fee]'=>FunctionsV3::prettyPrice($fee)
+		         		));
+ 					}
+ 			  } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
+ 			
+ 			case "amanpay":       		          	             		             		             		
+ 			if($credentials=amanpayWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","amanpay (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
+ 			
+ 			case "sofort":       		          	             		             		             		
+ 			if($credentials=sofortWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","sofort (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
+ 			
+ 			case "sofort_ideal":       		          	             		             		             		
+ 			if($credentials=sofortWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","sofort ideal (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
+ 			
+ 			case "payhere":       		          	             		             		             		
+ 			if($credentials=payhereWrapper::getCredentials($merchant_id)){     			
+ 				if($credentials['card_fee']>=0.0001){
+     				echo $val = Yii::t("default","payhere (card fee [fee])",array(
+	         		  '[fee]'=>FunctionsV3::prettyPrice($credentials['card_fee'])
+	         		));
+ 			    } else echo t($val); 
+ 			} else echo t($val); 
+ 			break;	
      				
          	default:
          		echo t($val); 

@@ -39,10 +39,10 @@ echo CHtml::hiddenField('mobile_country_code',Yii::app()->functions->getAdminCou
         <div class="col-md-3 "><?php echo t("Price")?></div>
         <div class="col-md-8  bold">
         <?php if ( $data['promo_price']>=1):?>
-           <span class="strike-price"><?php echo FunctionsV3::prettyPrice($data['price'])?></span>
-           <?php echo FunctionsV3::prettyPrice($data['promo_price'])?> 
+           <span class="strike-price"><?php echo Price_Formatter::formatNumber( (float)$data['price']*$exchange_rate )?></span>
+           <?php echo Price_Formatter::formatNumber( (float)$data['promo_price'] * $exchange_rate )?> 
         <?php else :?>
-           <?php echo FunctionsV3::prettyPrice($data['price'])?> 
+           <?php echo Price_Formatter::formatNumber( (float)$data['price'] * $exchange_rate)?> 
         <?php endif;?>
         </div>
       </div>

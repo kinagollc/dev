@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 
 /*
  * This file is part of the Monolog package.
@@ -23,7 +23,7 @@ class ChromePHPFormatter implements FormatterInterface
     /**
      * Translates Monolog log levels to Wildfire levels.
      */
-    private $logLevels = [
+    private $logLevels = array(
         Logger::DEBUG     => 'log',
         Logger::INFO      => 'info',
         Logger::NOTICE    => 'info',
@@ -32,7 +32,7 @@ class ChromePHPFormatter implements FormatterInterface
         Logger::CRITICAL  => 'error',
         Logger::ALERT     => 'error',
         Logger::EMERGENCY => 'error',
-    ];
+    );
 
     /**
      * {@inheritdoc}
@@ -41,12 +41,13 @@ class ChromePHPFormatter implements FormatterInterface
     {
         // Retrieve the line and file if set and remove them from the formatted extra
         $backtrace = 'unknown';
-        if (isset($record['extra']['file'], $record['extra']['line'])) {
+        if (isset($record['extra']['file']) && isset($record['extra']['line'])) {
             $backtrace = $record['extra']['file'].' : '.$record['extra']['line'];
-            unset($record['extra']['file'], $record['extra']['line']);
+            unset($record['extra']['file']);
+            unset($record['extra']['line']);
         }
 
-        $message = ['message' => $record['message']];
+        $message = array('message' => $record['message']);
         if ($record['context']) {
             $message['context'] = $record['context'];
         }
@@ -57,20 +58,17 @@ class ChromePHPFormatter implements FormatterInterface
             $message = reset($message);
         }
 
-        return [
+        return array(
             $record['channel'],
             $message,
             $backtrace,
             $this->logLevels[$record['level']],
-        ];
+        );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function formatBatch(array $records)
     {
-        $formatted = [];
+        $formatted = array();
 
         foreach ($records as $record) {
             $formatted[] = $this->format($record);

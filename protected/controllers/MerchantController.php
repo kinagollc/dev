@@ -109,6 +109,9 @@ class MerchantController extends CController
 		    }	    
 		}
 	    
+		$used_currency = FunctionsV3::getCurrencyCode();
+	    Price_Formatter::init( $used_currency );
+	    
 	    return true;	    
     }	
         	
@@ -239,6 +242,10 @@ class MerchantController extends CController
 	{	    
 		$this->crumbsTitle=Yii::t("default","Category");
 		
+		FunctionsV3::registerScript(array(
+		  "var ajax_merchant_action='deleteCategory';"
+		),'ajax_merchant_action');
+		
 	    if (isset($_GET['Do'])){
 			if ( $_GET['Do']=="Add"){
 				$this->render('category_add');
@@ -252,6 +259,10 @@ class MerchantController extends CController
 	{
 				
 		$this->crumbsTitle=Yii::t("default","Addon Category");
+				
+        FunctionsV3::registerScript(array(
+		  "var ajax_merchant_action='deleteAddonCategory';"
+		),'ajax_merchant_action');
 		
 		if (isset($_GET['Do'])){
 			if ( $_GET['Do']=="Add"){
@@ -266,6 +277,10 @@ class MerchantController extends CController
 	{		
 		$this->crumbsTitle=Yii::t("default","Addon Item");
 		$mtid=Yii::app()->functions->getMerchantID();
+		
+		FunctionsV3::registerScript(array(
+		  "var ajax_merchant_action='deleteAddonItem';"
+		),'ajax_merchant_action');
 		
 		if (isset($_GET['Do'])){
 			if ( $_GET['Do']=="Add"){
@@ -290,6 +305,10 @@ class MerchantController extends CController
 	public function actionSize()
 	{
 		$this->crumbsTitle=Yii::t("default","Size");
+				
+        FunctionsV3::registerScript(array(
+		  "var ajax_merchant_action='deleteSize';"
+		),'ajax_merchant_action');
 		
 		if (isset($_GET['Do'])){
 			if ( $_GET['Do']=="Add"){
@@ -304,6 +323,10 @@ class MerchantController extends CController
 	{			
 		$this->crumbsTitle=Yii::t("default","Cooking Reference");
 		
+		FunctionsV3::registerScript(array(
+		  "var ajax_merchant_action='deleteCookingRef';"
+		),'ajax_merchant_action');
+		
 		if (isset($_GET['Do'])){
 			if ( $_GET['Do']=="Add"){
 				$this->render('cooking-ref-add');			
@@ -317,6 +340,10 @@ class MerchantController extends CController
 	{
 		$this->crumbsTitle=Yii::t("default","Food Item");
 		$mtid=Yii::app()->functions->getMerchantID();
+		
+		FunctionsV3::registerScript(array(
+		  "var ajax_merchant_action='deleteFoodItem';"
+		),'ajax_merchant_action');
 				
 		if (isset($_GET['Do'])){
 			if ( $_GET['Do']=="Add"){
@@ -980,13 +1007,16 @@ class MerchantController extends CController
 		if ( $res=$DbExt->rst($stmt)){										
 			$_SESSION['kr_merchant_user']=json_encode($res);
 			
-			$session_token=Yii::app()->functions->generateRandomKey().md5($_SERVER['REMOTE_ADDR']);				
-			 $params=array(
-			  'session_token'=>$session_token,
-			  //'last_login'=>FunctionsV3::dateNow()
-			 );
-			 $DbExt->updateData("{{merchant}}",$params,'merchant_id',$res[0]['merchant_id']);
-			 
+			if(empty($res[0]['session_token'])){
+				$session_token=Yii::app()->functions->generateRandomKey().md5($_SERVER['REMOTE_ADDR']);				
+				$params=array(
+				  'session_token'=>$session_token,			
+				);
+				$DbExt->updateData("{{merchant}}",$params,'merchant_id',$res[0]['merchant_id']);
+			} else {
+				$session_token = $res[0]['session_token'];
+			}
+						
 			 $_SESSION['kr_merchant_user_session']=$session_token;
 			 $_SESSION['kr_merchant_user_type']='admin';
 			
@@ -1056,7 +1086,7 @@ class MerchantController extends CController
 		$merchant_id =Yii::app()->functions->getMerchantID();
 		$balance_month = Yii::app()->functions->getMerchantBalanceThisMonth($merchant_id);	
 		$total_sale = Yii::app()->functions->getMerchantTotalSales($merchant_id);		
-		
+				
 		$this->crumbsTitle=Yii::t("default","Earnings");		
 		$this->render('earnings',array(
 		 'merchant_type'=>FunctionsV3::getMerchantTypeBySession(),
@@ -1070,6 +1100,11 @@ class MerchantController extends CController
 	public function actionIngredients()
 	{
 		$this->crumbsTitle=Yii::t("default","Ingredients");		
+		
+		FunctionsV3::registerScript(array(
+		  "var ajax_merchant_action='deleteIngredients';"
+		),'ajax_merchant_action');
+		
 		if (isset($_GET['Do'])){
 			if ($_GET['Do']=="Add"){
 				$this->crumbsTitle=Yii::t("default","Ingredients Add");		
@@ -2178,7 +2213,7 @@ header('Location: '.Yii::app()->request->baseUrl."/merchant/smsReceipt/id/".Yii:
 	public function actionallorder()
 	{
 		$merchant_id = Yii::app()->functions->getMerchantID();
-		$this->crumbsTitle = t("Banner Settings");
+		$this->crumbsTitle = t("All orders");
 		$this->render('all-order-list',array(
 		  'merchant_id'=>$merchant_id		  
 		));

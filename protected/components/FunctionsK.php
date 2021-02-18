@@ -316,10 +316,12 @@ class FunctionsK extends DbExt
     	switch (strtolower($unit)){
     		case "miles":    
     		case "mi":	
+    		case "m":
     			$unit='mi';
     			break;
     		case "kilometers":		
     		case "km":		
+    		case "k":
     		    $unit='km';
     			break;
     		case "ft":	

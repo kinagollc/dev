@@ -27,8 +27,17 @@ $client_info='';
 
 if (isset($is_guest_checkout)){
 	$continue=true;	
-} else {	
-	$client_info = Yii::app()->functions->getClientInfo(Yii::app()->functions->getClientId());
+} else {		
+	$client_info = Yii::app()->functions->getClientInfo(Yii::app()->functions->getClientId());	
+	if(!$search_by_location){
+		if($default_address = FunctionsV3::getAddressBookDefault($client_id)){
+			$client_info['street'] = $default_address['street'];
+			$client_info['city'] = $default_address['city'];
+			$client_info['state'] = $default_address['state'];		
+			$client_info['zipcode'] = $default_address['zipcode'];
+			$client_info['location_name'] = $default_address['location_name'];
+		}	
+	}
 	if (isset($s['kr_search_address'])){	
 		$temp=explode(",",$s['kr_search_address']);		
 		if (is_array($temp) && count($temp)>=2){
@@ -566,6 +575,7 @@ Yii::app()->functions->getOptionAdmin("admin_currency_position"));
      <div class="top25">
      <?php      
 	 $this->renderPartial('/front/payment-list',array(
+	   'exchange_rate'=>$exchange_rate,
 	   'merchant_id'=>$merchant_id,
 	   'payment_list'=>FunctionsV3::getMerchantPaymentListNew($merchant_id),
 	   'transaction_type'=>$s['kr_delivery_options']['delivery_type'],	   
@@ -668,23 +678,24 @@ Yii::app()->functions->getOptionAdmin("admin_currency_position"));
 	         } elseif ( $s['kr_delivery_options']['delivery_type']=="dinein"){
 	         	  $minimum_order=getOption($merchant_id,'merchant_minimum_order_dinein');
 	         	  $maximum_order=getOption($merchant_id,'merchant_maximum_order_dinein');
-	         }	         	         
+	         }	        
+	         $minimum_order = (float)$minimum_order * $exchange_rate;
+	         $maximum_order = (float)$maximum_order * $exchange_rate;	         
 	         ?>
 	         
 	         <?php 
 	         if (!empty($minimum_order)){
 	         	echo CHtml::hiddenField('minimum_order',unPrettyPrice($minimum_order));
-	            echo CHtml::hiddenField('minimum_order_pretty',baseCurrency().prettyFormat($minimum_order));
+	            echo CHtml::hiddenField('minimum_order_pretty', Price_Formatter::formatNumber($minimum_order) );
 	            ?>
-	            <p class="small center"><?php echo t("Subtotal must exceed")?> 
-                 <?php //echo baseCurrency().prettyFormat($minimum_order,$merchant_id)?>
-                 <?php echo FunctionsV3::prettyPrice($minimum_order)?>
+	            <p class="small center"><?php echo t("Subtotal must exceed")?>                 
+                 <?php echo Price_Formatter::formatNumber($minimum_order)?>
                 </p>      
 	            <?php
 	         }
 	         if($maximum_order>0){
 	         	echo CHtml::hiddenField('maximum_order',unPrettyPrice($maximum_order));
-	         	echo CHtml::hiddenField('maximum_order_pretty',baseCurrency().prettyFormat($maximum_order));
+	         	echo CHtml::hiddenField('maximum_order_pretty', Price_Formatter::formatNumber($maximum_order) );
 	         }
 	         ?>
 	         	         

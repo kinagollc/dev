@@ -119,7 +119,7 @@ if (isset($_GET['id'])){
 	 
 	 
 	 <div class="uk-form-row">
-		  <label class="uk-form-label"><?php echo Yii::t("default","Satus")?></label>
+		  <label class="uk-form-label"><?php echo Yii::t("default","Status")?></label>
 		  <?php echo CHtml::dropDownList('status',isset($data['status'])?$data['status']:'',
 		  (array)bookingStatus(),array(
 		    'class'=>'booking_status uk-form-width-large'

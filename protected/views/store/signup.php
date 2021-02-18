@@ -234,7 +234,8 @@ if($captcha_customer_login==2 || $captcha_customer_signup==2){
 		     <?php echo CHtml::textField('contact_phone','',
                 array('class'=>'grey-fields mobile_inputs',
                 'placeholder'=>t("Mobile"),
-               'required'=>true
+               'required'=>true,
+               'data-validation-length'=>"max12"
                ))?>
 		     </div>
 		  </div> <!--row-->	  

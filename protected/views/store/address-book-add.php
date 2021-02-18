@@ -53,7 +53,7 @@
        
        <div class="uk-form-row">                  
           <?php echo CHtml::textField('zipcode',
-          isset($data['state'])?$data['zipcode']:''
+          isset($data['zipcode'])?$data['zipcode']:''
           ,array(
            'class'=>'uk-width-1-1',
            'placeholder'=>Yii::t("default","Zip code"),

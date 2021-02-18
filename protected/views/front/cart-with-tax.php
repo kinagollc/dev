@@ -32,11 +32,11 @@ foreach ($data['item'] as $row => $item):
       
       <?php if ( $item['discount']>0):?>
         <p>
-        <span class="normal-price"><?php echo FunctionsV3::prettyPrice($item['normal_price'])?></span>
-        <span class="sale-price"><?php echo FunctionsV3::prettyPrice($item['discounted_price'])?></span>
+        <span class="normal-price"><?php echo Price_Formatter::formatNumber($item['normal_price'])?></span>
+        <span class="sale-price"><?php echo Price_Formatter::formatNumber($item['discounted_price'])?></span>
         </p> 
       <?php else :?>
-        <p><?php echo FunctionsV3::prettyPrice($price)?></p>
+        <p><?php echo Price_Formatter::formatNumber($price)?></p>
       <?php endif;?>
       
       <?php if(!empty($item['cooking_ref'])):?>
@@ -80,7 +80,7 @@ foreach ($data['item'] as $row => $item):
     <?php endif;?>
   </div>
   
-  <div class="col-xs-3 text-right" ><?php echo FunctionsV3::prettyPrice($item['qty']*$price)?></div>
+  <div class="col-xs-3 text-right" ><?php echo Price_Formatter::formatNumber($item['qty']*$price)?></div>
 </div> <!--row-->
 
 	<!--SUB ITEM-->
@@ -104,7 +104,7 @@ foreach ($data['item'] as $row => $item):
 	             <?php 
 	             $addon_name=qTranslate($sub_item2['addon_name'],'sub_item_name',$sub_item2['sub_item_name_trans']);
 	             echo $sub_item2['addon_qty']."x ". 
-	             FunctionsV3::prettyPrice($sub_item2['addon_price']) ." ". $addon_name;
+	             Price_Formatter::formatNumber($sub_item2['addon_price']) ." ". $addon_name;
 	             
 	             $sms_details.=$sub_item2['addon_qty']." x ".$addon_name;
 	             $sms_details.=" ".standardPrettyFormat($sub_item2['addon_price']*$sub_item2['addon_qty']);
@@ -112,7 +112,7 @@ foreach ($data['item'] as $row => $item):
 	             ?>
 	           </div>
 	           <div class="col-xs-3 text-right">
-	             <?php echo FunctionsV3::prettyPrice( $sub_item2['addon_price']*$sub_item2['addon_qty'] );?>
+	             <?php echo Price_Formatter::formatNumber( $sub_item2['addon_price']*$sub_item2['addon_qty'] );?>
 	             <?php $total_food+=$sub_item2['addon_price']*$sub_item2['addon_qty']; ?>
 	             <?php 
 	             
@@ -196,7 +196,7 @@ $data_total['taxable_total']=$data_total['total']-$data_total['subtotal'];
 <div class="row" id="new-cart">
   <div class="col-xs-9 txt-indent" ><?php echo t("Delivery Fee")?></div>
   <div class="col-xs-3 text-right">
-    <?php echo FunctionsV3::prettyPrice($data_total['delivery_charges'])?>
+    <?php echo Price_Formatter::formatNumber($data_total['delivery_charges'])?>
   </div>
 </div> <!--row-->
 <?php endif;?>
@@ -209,7 +209,7 @@ if ($data_total['card_fee']>0):
 <div class="row" id="new-cart">
   <div class="col-xs-9 txt-indent" ><?php echo t("Card Fee")?></div>
   <div class="col-xs-3 text-right">
-    <?php echo FunctionsV3::prettyPrice($data_total['card_fee'])?>
+    <?php echo Price_Formatter::formatNumber($data_total['card_fee'])?>
   </div>
 </div> <!--row-->
 <?php 
@@ -221,7 +221,7 @@ endif;
 <div class="row" id="new-cart">
   <div class="col-xs-9 txt-indent" ><?php echo t("Packaging")?></div>
   <div class="col-xs-3 text-right">
-    <?php echo FunctionsV3::prettyPrice($data_total['merchant_packaging_charge'])?>
+    <?php echo Price_Formatter::formatNumber($data_total['merchant_packaging_charge'])?>
   </div>
 </div> <!--row-->
 <?php endif;?>
@@ -231,7 +231,7 @@ endif;
 <div class="row" id="new-cart">
   <div class="col-xs-9 txt-indent" ><?php echo t("Tip")." ".$data_total['cart_tip_percentage']?>%</div>
   <div class="col-xs-3 text-right">
-    <?php echo FunctionsV3::prettyPrice($data_total['tips'])?>
+    <?php echo Price_Formatter::formatNumber($data_total['tips'])?>
   </div>
 </div> <!--row-->
 <?php endif;?>
@@ -241,7 +241,7 @@ endif;
 <div class="row" id="new-cart">
   <div class="col-xs-9 txt-indent" ><?php echo t("Discount")." ".$data_total['merchant_discount_amount']?>%</div>
   <div class="col-xs-3 text-right">
-    (<?php echo FunctionsV3::prettyPrice($data_total['discounted_amount'])?>)
+    (<?php echo Price_Formatter::formatNumber($data_total['discounted_amount'])?>)
   </div>
 </div> <!--row-->
 <?php endif;?>
@@ -251,7 +251,7 @@ endif;
 <div class="row" id="new-cart">
   <div class="col-xs-9 txt-indent" ><?php echo t("Points Discount")?></div>
   <div class="col-xs-3 text-right">
-    (<?php echo FunctionsV3::prettyPrice($data_total['pts_redeem_amt'])?>)
+    (<?php echo Price_Formatter::formatNumber($data_total['pts_redeem_amt'])?>)
   </div>
 </div> <!--row-->
 <?php endif;?>
@@ -268,7 +268,7 @@ endif;
     ?>
   </div>
   <div class="col-xs-3 text-right">
-    (<?php echo FunctionsV3::prettyPrice($data_total['less_voucher'])?>)
+    (<?php echo Price_Formatter::formatNumber($data_total['less_voucher'])?>)
   </div>
 </div> <!--row-->
 <?php endif;?>
@@ -278,7 +278,7 @@ endif;
 <div class="row" id="new-cart">
   <div class="col-xs-9 txt-indent" ><?php echo t("Sub Total")?></div>
   <div class="col-xs-3 text-right">
-    <?php echo FunctionsV3::prettyPrice($data_total['subtotal'])?>
+    <?php echo Price_Formatter::formatNumber($data_total['subtotal'])?>
   </div>
 </div> <!--row-->
 <?php endif;?>
@@ -287,7 +287,7 @@ endif;
 <div class="row" id="new-cart">
   <div class="col-xs-9 txt-indent" ><?php echo t("Tax")." ".$data_total['tax_amt']?>%</div>
   <div class="col-xs-3 text-right">
-    <?php echo FunctionsV3::prettyPrice($data_total['taxable_total'])?>
+    <?php echo Price_Formatter::formatNumber($data_total['taxable_total'])?>
   </div>
 </div> <!--row-->
 <?php endif;?>
@@ -296,7 +296,7 @@ endif;
 <div class="row" id="new-cart" style="border-bottom:0;">
   <div class="col-xs-9 txt-indent" ><b><?php echo t("Total")?></b></div>
   <div class="col-xs-3 text-right">
-    <b><?php echo FunctionsV3::prettyPrice($data_total['total'])?></b>
+    <b><?php echo Price_Formatter::formatNumber($data_total['total'])?></b>
   </div>
 </div> <!--row-->
 <?php endif;?>

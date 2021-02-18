@@ -5,10 +5,20 @@
  */
 class UpdateController extends CController
 {
+	
+	public function beforeAction($action)
+	{		
+		if(!Yii::app()->functions->isAdminLogin()){		   
+		   //Yii::app()->end();		
+		}				
+		return true;
+	}
+	
+	
 	public function actionIndex()
 	{
 		$prefix=Yii::app()->db->tablePrefix;		
-		$table_prefix=$prefix;
+		$table_prefix=$prefix; $loger=array();
 		
 		$DbExt=new DbExt;		
 		
@@ -1468,7 +1478,8 @@ echo "(Done)<br/>";
 		   'payment_customer_id'=>"varchar(255) NOT NULL DEFAULT ''",
 		   'social_id'=>"varchar(255) NOT NULL DEFAULT ''",
 		   'verify_code_requested'=>$date_default,
-		   'single_app_merchant_id'=>"int(14) NOT NULL DEFAULT '0'"
+		   'single_app_merchant_id'=>"int(14) NOT NULL DEFAULT '0'",
+		   'payment_customer_type'=>"varchar(255) NOT NULL DEFAULT 'sandbox'",
 		);
 		$this->alterTable('client',$new_field);
 				
@@ -1527,6 +1538,8 @@ echo "(Done)<br/>";
 		   'dinein_special_instruction'=>"varchar(255) NOT NULL DEFAULT ''",
 		   'dinein_table_number'=>"varchar(50) NOT NULL DEFAULT ''",
 		   'opt_contact_delivery'=>"int(1) NOT NULL DEFAULT '0'",
+		   'estimated_time'=>"int(14) NOT NULL DEFAULT '0'",
+		   'estimated_date_time'=>$date_default
 		);
 		$this->alterTable('order_delivery_address',$new_field);
 		
@@ -1600,6 +1613,358 @@ echo "(Done)<br/>";
 		";
 		$DbExt->qry($stmt);
 		/*END 5.4*/
+		
+		
+		/*START 5.4.3*/				
+		$new_field=array( 		  		   
+		  'single_app_keys'=>"varchar(255) NOT NULL DEFAULT ''",
+		  'pin'=>"int(4) NOT NULL DEFAULT '0'",
+		  'close_store'=>"int(14) NOT NULL DEFAULT '0'"		  
+		);
+		$this->alterTable('merchant',$new_field);
+		
+		$new_field=array( 		  		   
+		  'item_token'=>"varchar(50) NOT NULL DEFAULT ''",
+		  'with_size'=>"int(1) NOT NULL DEFAULT '0'",
+		  'track_stock'=>"int(1) NOT NULL DEFAULT '1'",
+		  'supplier_id'=>"int(14) NOT NULL DEFAULT '0'",
+		);
+		$this->alterTable('item',$new_field);
+		
+		$new_field=array( 		  		
+		  'description'=>"varchar(255) NOT NULL DEFAULT '' AFTER currency_symbol",   
+		  'as_default'=>"int(1) NOT NULL DEFAULT '0'",
+		  'is_hidden'=>"int(1) NOT NULL DEFAULT '0'",
+		  'currency_position'=>"varchar(100) NOT NULL DEFAULT 'left'",
+		  'exchange_rate'=>"float(14,4) NOT NULL DEFAULT '0'",
+		  'exchange_rate_fee'=>"float(14,4) NOT NULL DEFAULT '0'",
+		  'number_decimal'=>"int(14) NOT NULL DEFAULT '2'",
+		  'decimal_separator'=>"varchar(5) NOT NULL DEFAULT '.'",
+		  'thousand_separator'=>"varchar(5) NOT NULL DEFAULT ''",
+		);
+		$this->alterTable('currency',$new_field);
+		
+		$new_field=array( 		  		   
+		  'used_currency'=>"varchar(5) NOT NULL DEFAULT ''",
+		  'base_currency'=>"varchar(5) NOT NULL DEFAULT ''",
+		  'exchange_rate'=>"float(14,4) NOT NULL DEFAULT '1'"		  
+		);
+		$this->alterTable('order_delivery_address',$new_field);
+		
+		if(!Yii::app()->db->schema->getTable("{{subcategory_item_relationships}}")){		
+		 Yii::app()->db->createCommand()->createTable(
+	      "{{subcategory_item_relationships}}",
+	      array(
+	        'id'=>'pk',
+            'sub_item_id'=>"integer(14) NOT NULL DEFAULT '0'",
+            'subcat_id'=>"integer(14) NOT NULL DEFAULT '0'",    
+	      ),
+		 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+		}
+		
+		$this->addIndex("subcategory_item_relationships","sub_item_id");
+		$this->addIndex("subcategory_item_relationships","subcat_id");
+		
+		if(!Yii::app()->db->schema->getTable("{{item_relationship_size}}")){		
+		 Yii::app()->db->createCommand()->createTable(
+	      "{{item_relationship_size}}",
+	      array(
+	         'item_size_id'=>'pk',
+		     'merchant_id'=>"integer(14) NOT NULL DEFAULT '0'",
+		     'item_token'=>"string NOT NULL DEFAULT ''",    
+		     'item_id'=>"integer(14) NOT NULL DEFAULT '0'",
+		     'size_id'=>"integer(14) NOT NULL DEFAULT '0'",
+		     'price'=>"float(14,4) NOT NULL DEFAULT '0'",
+		     'cost_price'=>"float(14,4) NOT NULL DEFAULT '0'",
+		     'sku'=>"string NOT NULL DEFAULT ''",    
+		     'available'=>"integer(1) NOT NULL DEFAULT '1'",
+		     'low_stock'=>"float(14,2) NOT NULL DEFAULT '0'",
+		     'created_at'=>"varchar(50) NOT NULL DEFAULT ''", 
+		     'updated_at'=>"varchar(50) NOT NULL DEFAULT ''"
+	      ),
+		 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+		 
+		 $this->addIndex("item_relationship_size","merchant_id");
+		 $this->addIndex("item_relationship_size","item_token");
+		 $this->addIndex("item_relationship_size","item_id");
+		 $this->addIndex("item_relationship_size","size_id");
+		
+		}				
+		
+		if(!Yii::app()->db->schema->getTable("{{item_relationship_category}}")){		
+		 Yii::app()->db->createCommand()->createTable(
+	      "{{item_relationship_category}}",
+	      array(
+	        'id'=>'pk',
+		    'merchant_id'=>"integer(14) NOT NULL DEFAULT '0'",
+		    'item_id'=>"integer(14) NOT NULL DEFAULT '0'", 
+		    'cat_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	      ),
+		 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+		 
+		  $this->addIndex("item_relationship_category","merchant_id");
+		  $this->addIndex("item_relationship_category","item_id");
+		  $this->addIndex("item_relationship_category","cat_id");
+		 
+		}
+				
+		
+		if(!Yii::app()->db->schema->getTable("{{item_relationship_subcategory}}")){
+		 Yii::app()->db->createCommand()->createTable(
+	      "{{item_relationship_subcategory}}",
+	      array(
+	        'id'=>'pk',
+            'merchant_id'=>"integer(14) NOT NULL DEFAULT '0'",
+            'item_id'=>"integer(14) NOT NULL DEFAULT '0'", 
+            'subcat_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	      ),
+		 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+		}
+		
+		$this->addIndex("item_relationship_subcategory","merchant_id");
+		$this->addIndex("item_relationship_subcategory","item_id");
+		$this->addIndex("item_relationship_subcategory","subcat_id");
+		
+		/*TRANSLATION TABLE*/
+		if(!Yii::app()->db->schema->getTable("{{category_translation}}")){		
+			 Yii::app()->db->createCommand()->createTable(
+		      "{{category_translation}}",
+		      array(
+		        'id'=>'pk',
+	            'cat_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	            'language'=>"varchar(100) NOT NULL DEFAULT ''",    
+	            'category_name'=>"varchar(255) NOT NULL DEFAULT ''",    
+	            'category_description'=>"text",    	            
+		      ),
+			 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+			 
+			 $this->addIndex("category_translation","cat_id");
+		     $this->addIndex("category_translation","language");
+		}
+				
+		
+		if(!Yii::app()->db->schema->getTable("{{size_translation}}")){		
+			 Yii::app()->db->createCommand()->createTable(
+		      "{{size_translation}}",
+		      array(
+		        'id'=>'pk',
+	            'size_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	            'language'=>"varchar(100) NOT NULL DEFAULT ''",    
+	            'size_name'=>"varchar(255) NOT NULL DEFAULT ''"	            
+		      ),
+			 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+			 
+			 $this->addIndex("size_translation","size_id");
+		     $this->addIndex("size_translation","language");
+		}
+				
+		
+		if(!Yii::app()->db->schema->getTable("{{subcategory_translation}}")){		
+			 Yii::app()->db->createCommand()->createTable(
+		      "{{subcategory_translation}}",
+		      array(
+		        'id'=>'pk',
+	            'subcat_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	            'language'=>"varchar(100) NOT NULL DEFAULT ''",    
+	            'subcategory_name'=>"varchar(255) NOT NULL DEFAULT ''",
+	            'subcategory_description'=>"text",    	         
+		      ),
+			 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+			 
+			 $this->addIndex("subcategory_translation","subcat_id");
+		     $this->addIndex("subcategory_translation","language");
+		}
+						
+		if(!Yii::app()->db->schema->getTable("{{subcategory_item_translation}}")){		
+			 Yii::app()->db->createCommand()->createTable(
+		      "{{subcategory_item_translation}}",
+		      array(
+		        'id'=>'pk',
+	            'sub_item_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	            'language'=>"varchar(100) NOT NULL DEFAULT ''",    
+	            'sub_item_name'=>"varchar(255) NOT NULL DEFAULT ''",
+	            'item_description'=>"text",    	         
+		      ),
+			 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+			 
+			 $this->addIndex("subcategory_item_translation","sub_item_id");
+		     $this->addIndex("subcategory_item_translation","language");
+		}
+				
+		
+		if(!Yii::app()->db->schema->getTable("{{ingredients_translation}}")){		
+			 Yii::app()->db->createCommand()->createTable(
+		      "{{ingredients_translation}}",
+		      array(
+		        'id'=>'pk',
+	            'ingredients_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	            'language'=>"varchar(100) NOT NULL DEFAULT ''",    
+	            'ingredients_name'=>"varchar(255) NOT NULL DEFAULT ''"	            
+		      ),
+			 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+			 
+			 $this->addIndex("ingredients_translation","ingredients_id");
+		     $this->addIndex("ingredients_translation","language");
+		}
+						
+		if(!Yii::app()->db->schema->getTable("{{cooking_ref_translation}}")){		
+			 Yii::app()->db->createCommand()->createTable(
+		      "{{cooking_ref_translation}}",
+		      array(
+		        'id'=>'pk',
+	            'cook_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	            'language'=>"varchar(100) NOT NULL DEFAULT ''",    
+	            'cooking_name'=>"varchar(255) NOT NULL DEFAULT ''"	            
+		      ),
+			 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+			 
+			 $this->addIndex("cooking_ref_translation","cook_id");
+		     $this->addIndex("cooking_ref_translation","language");
+		}
+						
+		if(!Yii::app()->db->schema->getTable("{{item_translation}}")){		
+			 Yii::app()->db->createCommand()->createTable(
+		      "{{item_translation}}",
+		      array(
+		        'id'=>'pk',
+	            'item_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	            'language'=>"varchar(100) NOT NULL DEFAULT ''",    
+	            'item_name'=>"varchar(255) NOT NULL DEFAULT ''",
+	            'item_description'=>"text"
+		      ),
+			 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+			 
+			 $this->addIndex("item_translation","item_id");
+		     $this->addIndex("item_translation","language");
+		     $this->addIndex("item_translation","item_name");
+   		
+		}
+		
+		if(!Yii::app()->db->schema->getTable("{{cuisine_translation}}")){		
+			 Yii::app()->db->createCommand()->createTable(
+		      "{{cuisine_translation}}",
+		      array(
+		        'id'=>'pk',
+	            'cuisine_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	            'language'=>"varchar(100) NOT NULL DEFAULT ''",    
+	            'cuisine_name'=>"varchar(255) NOT NULL DEFAULT ''"	            
+		      ),
+			 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+			 
+			 $this->addIndex("cuisine_translation","cuisine_id");
+		     $this->addIndex("cuisine_translation","language");
+		     $this->addIndex("cuisine_translation","cuisine_name");
+   		
+		}
+				
+		/*END TRANSLATION TABLE*/
+		
+		$stmt="
+		create OR REPLACE VIEW {{view_item}} as
+		select 
+		a.item_id,
+		a.item_token,
+		a.merchant_id,
+		a.item_name,
+		a.item_name_trans,
+		a.item_description,
+		a.item_description_trans,
+		a.status,
+		a.with_size,
+		a.supplier_id,
+		a.photo,
+		a.discount,
+		a.not_available,
+		a.cooking_ref,
+		a.ingredients,
+		a.spicydish,
+		a.dish,
+		a.sequence as item_sequence,
+		IFNULL(b.item_size_id,'') as item_size_id,
+		IFNULL(b.item_token,'') as item_size_token,
+		IFNULL(b.size_id,0) as size_id,
+		IFNULL(c.size_name,'') as size_name,
+		IFNULL(c.size_name_trans,'') as size_name_trans,
+		IFNULL(b.price,0) as price,
+		IFNULL(b.cost_price,0) as cost_price,
+		IFNULL(b.sku,'') as sku,
+		a.track_stock,
+		IFNULL(b.available,0) as available,
+		IFNULL(b.low_stock,0) as low_stock
+		
+		from {{item}}  a
+		left join {{item_relationship_size}} b
+		on
+		a.item_id = b.item_id
+		
+		left join {{size}} c
+		on
+		b.size_id = c.size_id
+		";		
+		if (Yii::app()->db->createCommand($stmt)->query()){
+			$loger[] = "Create table {{view_item}} done";
+		} else $loger[] = "Create table {{view_item}} failed";
+
+		
+		$stmt="
+		create OR REPLACE VIEW {{view_item_cat}} as
+		select 
+		a.cat_id,
+		c.category_name,
+		c.category_description,
+		c.category_name_trans,
+		c.category_description_trans,
+		c.sequence as category_sequence,
+		b.*
+		from {{item_relationship_category}} a
+		left join {{view_item}} b
+		on 
+		a.item_id = b.item_id
+		
+		left join {{category}} c
+		on 
+		a.cat_id = c.cat_id
+		
+		where b.item_id >0
+		";		
+		if (Yii::app()->db->createCommand($stmt)->query()){
+			$loger[] = "Create table {{view_item_cat}} done";
+		} else $loger[] = "Create table {{view_item_cat}} failed";		
+		
+		$stmt="
+		create OR REPLACE VIEW {{view_rs_category}} as
+		select 
+		a.id,
+		a.merchant_id,
+		a.item_id,
+		a.cat_id,
+		b.category_name,
+		b.category_description,
+		b.category_name_trans,
+		b.category_description_trans,
+		b.photo,
+		b.status,
+		b.sequence,
+		c.not_available
+		from {{item_relationship_category}} a
+		left join {{category}} b
+		on 
+		a.cat_id = b.cat_id
+		
+		left join {{item}} c
+		on 
+		a.item_id = c.item_id
+		
+		where c.item_id IN (
+		  select item_id from {{item}}
+		  where 
+		  item_id = c.item_id
+		)
+";		
+		if (Yii::app()->db->createCommand($stmt)->query()){
+			$loger[] = "Create table {{view_rs_category}} done";
+		} else $loger[] = "Create table {{view_rs_category}} failed";
+		/*END 5.4.3*/
 		
 		/*ADD INDEX*/
 		/*MERCHANT TABLE*/
@@ -1869,13 +2234,13 @@ echo "(Done)<br/>";
 		
 		/*VIEW TABLES*/				
 		$stmt="
-		create OR REPLACE VIEW ".$prefix."view_ratings as
+		create OR REPLACE VIEW {{view_ratings}} as
 		select 
 		merchant_id,
 		COUNT(*) AS review_count,
 		SUM(rating)/COUNT(*) AS ratings
 		from
-		".$prefix."review
+		{{review}}
 		where
 		status in ('publish','published')
 		group by merchant_id
@@ -1887,15 +2252,15 @@ echo "(Done)<br/>";
 		
 		
 		$stmt="
-		create OR REPLACE VIEW ".$prefix."view_merchant as
+		create OR REPLACE VIEW {{view_merchant}} as
 		select a.*,		
 		IFNULL(f.ratings,0) as ratings,
 		IFNULL(f.review_count,0) as review_count,
 		IFNULL(f.review_count,0) as ratings_votes
 		
-		from ".$prefix."merchant a
+		from {{merchant}} a
 		
-		left join ".$prefix."view_ratings f
+		left join {{view_ratings}} f
 		ON 
 		a.merchant_id = f.merchant_id 		
 		";
@@ -1905,16 +2270,16 @@ echo "(Done)<br/>";
 		
 		
 		$stmt="
-		create OR REPLACE VIEW ".$table_prefix."view_order_details as
+		create OR REPLACE VIEW {{view_order_details}} as
 		
 		select a.* ,
 		b.merchant_id,
 		b.status,
 		b.date_created
 		
-		from ".$table_prefix."order_details a
+		from {{order_details}} a
 		
-		left join ".$table_prefix."order b
+		left join {{order}} b
 		on
 		a.order_id = b.order_id
 		";
@@ -1924,7 +2289,7 @@ echo "(Done)<br/>";
 		
 		
 		$stmt="
-		CREATE OR REPLACE VIEW ".$prefix."view_location_rate AS
+		CREATE OR REPLACE VIEW {{view_location_rate}} AS
 		SELECT 
 		a.rate_id,
 		a.merchant_id,
@@ -1944,21 +2309,21 @@ echo "(Done)<br/>";
 		a.ip_address
 		
 		FROM
-		".$prefix."location_rate a
+		{{location_rate}} a
 		
-		left join ".$prefix."location_countries b
+		left join {{location_countries}} b
 		on
 		a.country_id=b.country_id	   
 		
-		left join ".$prefix."location_states c
+		left join {{location_states}} c
 		on
 		a.state_id = c.state_id
 		
-		left join ".$prefix."location_cities d
+		left join {{location_cities}} d
 		on
 		a.city_id = d.city_id
 		
-		left join ".$prefix."location_area e
+		left join {{location_area}} e
 		on
 		a.area_id = e.area_id
 		";
@@ -1970,7 +2335,7 @@ echo "(Done)<br/>";
 		
 		/*5.4 view*/
 		$stmt="
-		CREATE OR REPLACE VIEW ".$prefix."view_cuisine_merchant as
+		CREATE OR REPLACE VIEW {{view_cuisine_merchant}} as
 		select 
 		a.merchant_id,
 		a.cuisine_id,
@@ -1980,12 +2345,12 @@ echo "(Done)<br/>";
 		b.featured_image,
 		c.restaurant_name
 		
-		from ".$prefix."cuisine_merchant a
-		left join ".$prefix."cuisine b
+		from {{cuisine_merchant}} a
+		left join {{cuisine}} b
 		on
 		a.cuisine_id = b.cuisine_id	
 		
-		left join ".$prefix."merchant c
+		left join {{merchant}} c
 		on
 		a.merchant_id = c.merchant_id
 		
@@ -1997,9 +2362,112 @@ echo "(Done)<br/>";
 		echo "(Done)<br/>";				
 		
 		/*END 5.4 view*/
+		
+		
+		/*5.4.3*/
+		$stmt="
+		create OR REPLACE VIEW {{view_order}} as
+		SELECT 
+		a.order_id,
+		a.order_id_token,
+		a.client_id,
+		concat(b.first_name,' ',b.last_name) as customer_name,
+		concat(c.first_name,' ',c.last_name) as profile_customer_name,
+		b.first_name,
+		b.last_name,
+		b.contact_email,
+		b.contact_phone,
+		c.contact_phone as profile_contact_phone,
+		b.dinein_number_of_guest,
+		b.dinein_special_instruction,
+		b.dinein_table_number,
+		b.opt_contact_delivery,
+		c.payment_customer_id ,
+		c.payment_customer_type,
+		a.merchant_id,
+		d.restaurant_name,
+		a.trans_type,
+		a.payment_type,
+		a.total_w_tax as total_amount,
+		a.delivery_charge,
+		a.status,
+		a.delivery_date,
+		a.delivery_time,
+		a.delivery_asap,
+		a.delivery_instruction,
+		a.date_created,
+		a.request_cancel
+		
+		FROM  {{order}} a
+		
+		LEFT JOIN {{order_delivery_address}} b
+		ON
+		a.order_id = b.order_id
+		
+		LEFT JOIN {{client}} c
+		ON
+		a.client_id = c.client_id
+		
+		LEFT JOIN {{merchant}} d
+		ON
+		a.merchant_id = d.merchant_id";
+		if (Yii::app()->db->createCommand($stmt)->query()){
+			$loger[] = "Create table {{view_order}} done";
+		} else $loger[] = "Create table {{view_order}} failed";
+		
+		
+		$stmt="		
+		create OR REPLACE VIEW {{view_order_summary}} as
+		select
+		a.order_id,
+		a.merchant_id,
+		a.payment_type,
+		a.trans_type,
+		a.commision_ontop,
+		a.percent_commision,		
+		status,
+		a.sub_total,
+		total_w_tax,
+		total_commission,
+		merchant_earnings,
+		b.used_currency,
+		b.base_currency,
+		b.exchange_rate,		
+		
+		IFNULL((sub_total/b.exchange_rate),0) as sub_total_ex,
+		
+		IFNULL((total_w_tax/b.exchange_rate),0) as total_w_tax_ex,
+		
+		IFNULL((total_commission/b.exchange_rate),0) as total_commission_ex,
+		
+		IFNULL((merchant_earnings/b.exchange_rate),0) as merchant_earnings_ex,
+		
+		a.date_created
+		
+		from {{order}} a
+		left join {{order_delivery_address}} b
+		on
+		a.order_id = b.order_id
+		";
+		
+		if (Yii::app()->db->createCommand($stmt)->query()){
+			$loger[] = "Create table {{view_order_summary}} done";
+		} else $loger[] = "Create table {{view_order_summary}} failed";
+		
+		dump($loger);
+		
+		/*5.4.3*/
 		        
 		echo "<br/>";
 		echo "FINISH UPDATE(s)";
+		
+		?>
+		<br/><br/>
+		<a href="<?php echo Yii::app()->createUrl("/admin")?>">
+		 <?php echo t("Update done click here to go back")?>
+		</a>
+		<?php
+		
 	}	
 	
 	public function setIncrement($table='', $field_name='')

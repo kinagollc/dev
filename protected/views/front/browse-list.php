@@ -17,6 +17,8 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	$show_delivery_info=true;
 }
 
+$rates = Yii::app()->session['exchange_rate'];
+$exchange_rate = isset($rates['exchange_rate'])? (float) $rates['exchange_rate']:1;
 
 if(!$search_by_location){
 	try {
@@ -109,6 +111,16 @@ if(!$search_by_location){
               <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
               </p>                
               
+              <?php if(!empty($val['contact_phone'])):?>
+              <p>
+              <?php 
+              echo Yii::t("default","Contact number : [contact_phone]",array(
+               '[contact_phone]'=>$val['contact_phone']
+              ));
+              ?>
+              </p>                
+              <?php endif;?>
+              
              <p>
 	        <?php 	        
 	        if($show_delivery_info){	
@@ -141,14 +153,14 @@ if(!$search_by_location){
 	        <?php 	        
 	        if($show_delivery_info){
 		        if ($delivery_fee>0){
-		             echo t("Delivery Fee").": ".FunctionsV3::prettyPrice($delivery_fee);
+		             echo t("Delivery Fee").": ".Price_Formatter::formatNumber( ((float)$delivery_fee*$exchange_rate)  );
 		        } else echo  t("Delivery Fee").": ".t("Free Delivery");
 	        }
 	        ?>
 	        </p>
 	        
 	        <?php if($show_delivery_info):?>	         
-	          <p><?php echo t("Minimum Order").": ".FunctionsV3::prettyPrice($min_fees)?></p>	         
+	          <p><?php echo t("Minimum Order").": ".Price_Formatter::formatNumber( ((float)$min_fees*$exchange_rate) )?></p>	         
 	        <?php endif;?>
                                          		      
 		       <?php if(method_exists('FunctionsV3','getOffersByMerchantNew')):?>
@@ -195,7 +207,7 @@ if(!$search_by_location){
 <?php             
 if (isset($cuisine_page)){		
 	$slug = isset($_GET['slug'])?$_GET['slug']:'';
-	$page_link=Yii::app()->createUrl('/cuisine/'.$slug);
+	$page_link=Yii::app()->createUrl('/cuisine/'.$slug."/?");
 } else $page_link=Yii::app()->createUrl('store/browse/?tab='.$tabs);
 
  echo CHtml::hiddenField('current_page_url',$page_link);

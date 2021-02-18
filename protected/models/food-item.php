@@ -36,6 +36,10 @@ $show_subcategory_description=false;
 
 /*inventory*/
 $inv_enabled = FunctionsV3::inventoryEnabled($mtid);
+
+$rates = Yii::app()->session['exchange_rate'];
+$exchange_rate = isset($rates['exchange_rate'])? (float) $rates['exchange_rate']:1;
+Price_Formatter::init( Yii::app()->session['currency']  );
 ?>
 
 <form class="frm-fooditem" id="frm-fooditem" method="POST" onsubmit="return false;">
@@ -131,7 +135,9 @@ if ($data['two_flavors']==2){
     
     <?php if (is_array($data['prices']) && count($data['prices'])>=1):?>  
       <?php foreach ($data['prices'] as $price): //dump($price);?>
-          <?php $price['price']=Yii::app()->functions->unPrettyPrice($price['price'])?>
+          <?php 
+             $price['price']=Yii::app()->functions->unPrettyPrice($price['price']);             
+          ?>
           <div class="col-md-5 ">
              <?php if ( !empty($price['size'])):?>                 
                  <?php 
@@ -156,17 +162,16 @@ if ($data['two_flavors']==2){
              <?php endif;?>
              
              <?php 
-             /*if ($apply_tax==1 && $tax>0){
-                 $price['price']=$price['price'] + ($price['price']*$tax);
-             }*/
+             $new_price = ((float)$price['price']*$exchange_rate);
+             $new_price_discount = ( (float) $price['price']- (float) $data['discount']) * $exchange_rate ;
              ?>
                           
              <?php if (isset($price['price'])):?>  
                 <?php if (is_numeric($data['discount'])):?>
-                    <span class="line-tru"><?php echo FunctionsV3::prettyPrice($price['price'])?></span>
-                    <span class="text-danger"><?php echo FunctionsV3::prettyPrice($price['price']-$data['discount'])?></span>
+                    <span class="line-tru"><?php echo Price_Formatter::formatNumber($new_price)?></span>
+                    <span class="text-danger"><?php echo Price_Formatter::formatNumber($new_price_discount)?></span>
                 <?php else :?>
-                    <?php echo FunctionsV3::prettyPrice($price['price'])?>
+                    <?php echo Price_Formatter::formatNumber( $new_price )?>
                  <?php endif;?>
              <?php endif;?>
              
@@ -492,7 +497,7 @@ if ($data['two_flavors']==2){
             ?>
             <div class="col-md-3 col-xs-3 border text-right into-row">
             <span class="hide-food-price">
-            <?php echo !empty($val_addon['price'])? FunctionsV3::prettyPrice($val_addon['price']) :"-";?>
+            <?php echo !empty($val_addon['price'])? Price_Formatter::formatNumber( ((float)$val_addon['price'])*$exchange_rate  ) :"-";?>
             </span>
             </div> <!--col-->
         </div> <!--row-->        

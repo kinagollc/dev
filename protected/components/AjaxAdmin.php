@@ -562,7 +562,15 @@ if (!class_exists('AjaxAdmin'))
 			$query = "DElETE FROM $tbl WHERE $whereid=". Yii::app()->db->quoteValue($this->data['row_id']) ." "; 
 			if (Yii::app()->db->createCommand($query)->query()){
 			     $this->msg=Yii::t("default","Successfully deleted.");
-                 $this->code=1;	        
+                 $this->code=1;	      
+                 
+
+                 /*DELETE TRANSLATION DATA*/                
+                 Item_translation::deleteTranslation(
+                   isset($this->data['row_id']) ? $this->data['row_id'] : 0,
+                   isset($this->data['whereid']) ? $this->data['whereid'] : '',
+                   isset($this->data['tbl']) ? $this->data['tbl'] : ''
+                 );
                  
                  if ($this->data['tbl']=="merchant"){
                  	$stmt_del="DELETE  FROM {{option}}
@@ -757,7 +765,7 @@ if (!class_exists('AjaxAdmin'))
     	    		$chk="<input type=\"checkbox\" name=\"row[]\" value=\"$val[cat_id]\" class=\"chk_child\" >";   		
     	    		$option="<div class=\"options\">
     	    		<a href=\"$slug/id/$val[cat_id]\" >".Yii::t("default","Edit")."</a>
-    	    		<a href=\"javascript:;\" class=\"row_del\" rev=\"$val[cat_id]\" >".Yii::t("default","Delete")."</a>
+    	    		<a href=\"javascript:;\" class=\"delete_item\" data-id=\"$val[cat_id]\" >".Yii::t("default","Delete")."</a>
     	    		</div>";
     	    		    	    		
     	    		$date=FormatDateTime($val['date_created']);
@@ -810,6 +818,7 @@ if (!class_exists('AjaxAdmin'))
 
 			
 			$params = FunctionsV3::purifyData($params);
+			$cat_id = 0;
 			
 			$command = Yii::app()->db->createCommand();
 			if (isset($this->data['id']) && is_numeric($this->data['id'])){	
@@ -826,7 +835,8 @@ if (!class_exists('AjaxAdmin'))
 				}	
 							
 				unset($params['date_created']);
-				$params['date_modified']=FunctionsV3::dateNow();				
+				$params['date_modified']=FunctionsV3::dateNow();	
+										
 				$res = $command->update('{{category}}' , $params , 
 				'cat_id=:cat_id' , array(':cat_id'=> addslashes($this->data['id']) ));
 				if ($res){
@@ -836,16 +846,39 @@ if (!class_exists('AjaxAdmin'))
 	                /*DELETE IMAGE*/
 	                if(!empty($filename_to_delete)){
 	                	FunctionsV3::deleteUploadedFile($filename_to_delete);
-	                }				
+	                }					                	              
+	                
+	                $cat_id = (integer) $this->data['id'];
 	                
 				} else $this->msg=Yii::t("default","ERROR: cannot update");
 			} else {				
 				if ($res=$command->insert('{{category}}',$params)){
-					$this->details=Yii::app()->db->getLastInsertID();	                
+					$this->details = Yii::app()->db->getLastInsertID();	 
+					$cat_id = (integer) $this->details;
+				
 	                $this->code=1;
 	                $this->msg=Yii::t("default",'Category added.');  	                
 	            } else $this->msg=Yii::t("default",'ERROR. cannot insert data.');
 			}
+			
+			
+			/*INSERT TRANSLATION*/	    
+			if($this->code==1){				
+				if(isset($this->data['category_name_trans'])){
+					$this->data['category_name_trans']['default'] = isset($this->data['category_name'])?$this->data['category_name']:'';
+					$this->data['category_description_trans']['default'] = isset($this->data['category_description'])?$this->data['category_description']:'';
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $cat_id ,
+				'cat_id',
+				'category_name',
+				'category_description',
+				array(	                  
+				  'category_name'=>isset($this->data['category_name_trans'])?$this->data['category_name_trans']:'',
+				  'category_description'=>isset($this->data['category_description_trans'])?$this->data['category_description_trans']:'',
+				),"{{category_translation}}");
+			}		
+			
 		}
 	    
 	    public function AddOnCategoryList()
@@ -888,7 +921,7 @@ if (!class_exists('AjaxAdmin'))
     	    		$chk="<input type=\"checkbox\" name=\"row[]\" value=\"$val[subcat_id]\" class=\"chk_child\" >";   		
     	    		$option="<div class=\"options\">
     	    		<a href=\"$slug/id/$val[subcat_id]\" >".Yii::t("default","Edit")."</a>
-    	    		<a href=\"javascript:;\" class=\"row_del\" rev=\"$val[subcat_id]\" >".Yii::t("default","Delete")."</a>
+    	    		<a href=\"javascript:;\" class=\"delete_item\" data-id=\"$val[subcat_id]\" >".Yii::t("default","Delete")."</a>
     	    		</div>";    	    		
     	    		$date=FormatDateTime($val['date_created']);    	    		
     	    		
@@ -927,6 +960,7 @@ if (!class_exists('AjaxAdmin'))
 			}		
 			
 			$params = FunctionsV3::purifyData($params);
+			$subcat_id = 0;
 			
 			$command = Yii::app()->db->createCommand();
 			if (isset($this->data['id']) && is_numeric($this->data['id'])){				
@@ -936,15 +970,37 @@ if (!class_exists('AjaxAdmin'))
 				'subcat_id=:subcat_id' , array(':subcat_id'=>addslashes($this->data['id'])));
 				if ($res){
 					$this->code=1;
-	                $this->msg=Yii::t("default",'SubCategory updated.');  
+	                $this->msg=Yii::t("default",'SubCategory updated.');  	                	               
+
+	                $subcat_id = (integer) $this->data['id'];
+	                
 				} else $this->msg=Yii::t("default","ERROR: cannot update");
 			} else {				
 				if ($res=$command->insert('{{subcategory}}',$params)){
 					$this->details=Yii::app()->db->getLastInsertID();	
 	                $this->code=1;
-	                $this->msg=Yii::t("default",'SubCategory added.');  	                
+	                $this->msg=Yii::t("default",'SubCategory added.');  	
+	                $subcat_id = (integer) $this->details;
 	            } else $this->msg=Yii::t("default",'ERROR. cannot insert data.');
 			}
+			
+			/*INSERT TRANSLATION*/	    
+			if($this->code==1){				
+				if(isset($this->data['subcategory_name_trans'])){
+					$this->data['subcategory_name_trans']['default'] = isset($this->data['subcategory_name'])?$this->data['subcategory_name']:'';
+					$this->data['subcategory_description_trans']['default'] = isset($this->data['subcategory_description'])?$this->data['subcategory_description']:'';
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $subcat_id ,
+				'subcat_id',
+				'subcategory_name',
+				'subcategory_description',
+				array(	                  
+				  'subcategory_name'=>isset($this->data['subcategory_name_trans'])?$this->data['subcategory_name_trans']:'',
+				  'subcategory_description'=>isset($this->data['subcategory_description_trans'])?$this->data['subcategory_description_trans']:'',
+				),"{{subcategory_translation}}");
+			}		
+			
 	    }
 	    
 	    public function AddOnItemList()
@@ -994,7 +1050,7 @@ if (!class_exists('AjaxAdmin'))
     	    		$chk="<input type=\"checkbox\" name=\"row[]\" value=\"$val[sub_item_id]\" class=\"chk_child\" >";   		
     	    		$option="<div class=\"options\">
     	    		<a href=\"$slug/id/$val[sub_item_id]\" >".Yii::t("default","Edit")."</a>
-    	    		<a href=\"javascript:;\" class=\"row_del\" rev=\"$val[sub_item_id]\" >".Yii::t("default","Delete")."</a>
+    	    		<a href=\"javascript:;\" class=\"delete_item\" data-id=\"$val[sub_item_id]\" >".Yii::t("default","Delete")."</a>
     	    		</div>";    	    		
     	    		$date=FormatDateTime($val['date_created']);
     	    		if (!empty($val['category'])){
@@ -1013,7 +1069,7 @@ if (!class_exists('AjaxAdmin'))
     	    		} else $photo='';
     	    		
     	    		    	    		
-    	    		$price=yii::app()->functions->getCurrencyCode().prettyFormat($val['price']);		
+    	    		$price=Price_Formatter::formatNumber($val['price']);		
     	    		
     	    		$feed_data['aaData'][]=array(
     	    		  $chk,$val['sub_item_name'].$option,$val['item_description'],
@@ -1062,9 +1118,12 @@ if (!class_exists('AjaxAdmin'))
 			}	    
 			
 			$params = FunctionsV3::purifyData($params);
+			$sub_item_id = 0;
 			
 			$command = Yii::app()->db->createCommand();
 			if (isset($this->data['id']) && is_numeric($this->data['id'])){		
+				
+				$sub_item_id = (integer) $this->data['id'];
 				
 				$filename_to_delete='';
 				if ($temp_res=FunctionsV3::getAddonItem($this->data['id'])){
@@ -1092,12 +1151,39 @@ if (!class_exists('AjaxAdmin'))
 				} else $this->msg=Yii::t("default","ERROR: cannot update");
 			} else {				
 				if ($res=$command->insert('{{subcategory_item}}',$params)){
-					$item_id=Yii::app()->db->getLastInsertID();
+					$sub_item_id=Yii::app()->db->getLastInsertID();
 	                $this->code=1;
 	                $this->msg=Yii::t("default",'AddOn Item added.');  	                
-	                $this->details=$item_id;
+	                $this->details=$sub_item_id;	                	              	          	                
+	                
 	            } else $this->msg=Yii::t("default",'ERROR. cannot insert data.');
 			}
+			
+			/*INSERT SUBCAT RELATIONSHIP*/
+			if($this->code==1){				   
+			   ItemClass::insertSubcategoryItemRelationship(
+			     $sub_item_id,
+			     isset($this->data['category'])?(array)$this->data['category']:array()
+			   );
+			}	
+			
+			/*INSERT TRANSLATION*/	    
+			if($this->code==1){				
+				if(isset($this->data['sub_item_name_trans'])){
+					$this->data['sub_item_name_trans']['default'] = isset($this->data['sub_item_name'])?$this->data['sub_item_name']:'';
+					$this->data['item_description_trans']['default'] = isset($this->data['item_description'])?$this->data['item_description']:'';
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $sub_item_id ,
+				'sub_item_id',
+				'sub_item_name',
+				'item_description',
+				array(	                  
+				  'sub_item_name'=>isset($this->data['sub_item_name_trans'])?$this->data['sub_item_name_trans']:'',
+				  'item_description'=>isset($this->data['item_description_trans'])?$this->data['item_description_trans']:'',
+				),"{{subcategory_item_translation}}");
+			}		
+			
 	    }
 	     
 	    public function SizeList()
@@ -1141,7 +1227,7 @@ if (!class_exists('AjaxAdmin'))
     	    		$chk="<input type=\"checkbox\" name=\"row[]\" value=\"$val[subcat_id]\" class=\"chk_child\" >";   		
     	    		$option="<div class=\"options\">
     	    		<a href=\"$slug/id/$val[size_id]\" >".Yii::t("default","Edit")."</a>
-    	    		<a href=\"javascript:;\" class=\"row_del\" rev=\"$val[size_id]\" >".Yii::t("default","Delete")."</a>
+    	    		<a href=\"javascript:;\" class=\"delete_item\" data-id=\"$val[size_id]\" >".Yii::t("default","Delete")."</a>
     	    		</div>";
     	    		
     	    		/*$date=date('M d,Y G:i:s',strtotime($val['date_created']));  
@@ -1175,6 +1261,8 @@ if (!class_exists('AjaxAdmin'))
 				} else $params['size_name_trans']=json_encode($this->data['size_name_trans']);				
 			}	    
 			
+			$size_id = 0;
+			
 			$command = Yii::app()->db->createCommand();
 			if (isset($this->data['id']) && is_numeric($this->data['id'])){				
 				unset($params['date_created']);
@@ -1184,14 +1272,37 @@ if (!class_exists('AjaxAdmin'))
 				if ($res){
 					$this->code=1;
 	                $this->msg=Yii::t("default",'Size updated.');  
+	              
+	                $size_id = (integer) $this->data['id'];
+	                
 				} else $this->msg=Yii::t("default","ERROR: cannot update");
 			} else {				
 				if ($res=$command->insert('{{size}}',$params)){
 					$this->details=Yii::app()->db->getLastInsertID();	
 	                $this->code=1;
-	                $this->msg=Yii::t("default",'Size added.');  	                
+	                $this->msg=Yii::t("default",'Size added.');  	  
+
+	                $size_id = (integer) $this->details;
+	                	                              
 	            } else $this->msg=Yii::t("default",'ERROR. cannot insert data.');
-			}	    	
+			}	
+
+						
+			/*INSERT TRANSLATION*/	    
+			if($this->code==1){				
+				if(isset($this->data['size_name_trans'])){
+					$this->data['size_name_trans']['default'] = isset($this->data['size_name'])?$this->data['size_name']:'';					
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $size_id ,
+				'size_id',
+				'size_name',
+				'',
+				array(	                  
+				  'size_name'=>isset($this->data['size_name_trans'])?$this->data['size_name_trans']:'',				  
+				),"{{size_translation}}");
+			}		 	
+			
 	    }		
 	    
 	    public function CookingRefList()
@@ -1235,7 +1346,7 @@ if (!class_exists('AjaxAdmin'))
     	    		$chk="<input type=\"checkbox\" name=\"row[]\" value=\"$val[cook_id]\" class=\"chk_child\" >";   		
     	    		$option="<div class=\"options\">
     	    		<a href=\"$slug/id/$val[cook_id]\" >".Yii::t("default","Edit")."</a>
-    	    		<a href=\"javascript:;\" class=\"row_del\" rev=\"$val[cook_id]\" >".Yii::t("default","Delete")."</a>
+    	    		<a href=\"javascript:;\" class=\"delete_item\" data-id=\"$val[cook_id]\" >".Yii::t("default","Delete")."</a>
     	    		</div>";
     	    		    	    		
     	    		$date=FormatDateTime($val['date_created']);    	    		
@@ -1267,9 +1378,11 @@ if (!class_exists('AjaxAdmin'))
 			}	    
 					
 			$params = FunctionsV3::purifyData($params);
+			$cook_id = 0;
 			
 			$command = Yii::app()->db->createCommand();
 			if (isset($this->data['id']) && is_numeric($this->data['id'])){				
+				$cook_id = (integer) $this->data['id'];
 				unset($params['date_created']);
 				$params['date_modified']=FunctionsV3::dateNow();				
 				$res = $command->update('{{cooking_ref}}' , $params , 
@@ -1283,8 +1396,28 @@ if (!class_exists('AjaxAdmin'))
 					$this->details=Yii::app()->db->getLastInsertID();	
 	                $this->code=1;
 	                $this->msg=Yii::t("default",'Cooking Ref. added.');  	                
+	                
+	                $cook_id = (integer) $this->details;
+	                
 	            } else $this->msg=Yii::t("default",'ERROR. cannot insert data.');
 			}	    		    	
+			
+			/*INSERT TRANSLATION*/	    
+			if($this->code==1){				
+				if(isset($this->data['cooking_name'])){
+					$this->data['cooking_name_trans']['default'] = isset($this->data['cooking_name'])?$this->data['cooking_name']:'';					
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $cook_id ,
+				'cook_id',
+				'cooking_name',
+				'',		
+				array(	                  
+				  'cooking_name'=>isset($this->data['cooking_name_trans'])?$this->data['cooking_name_trans']:'',				  
+				),"{{cooking_ref_translation}}");
+			}		
+			
+			
 	    }
 	    
 	    public function FoodItemAdd()
@@ -1335,6 +1468,7 @@ if (!class_exists('AjaxAdmin'))
 			  'gallery_photo'=>isset($this->data['gallery_photo'])?json_encode($this->data['gallery_photo']):"",
 			  'packaging_fee'=>isset($this->data['packaging_fee'])?$this->data['packaging_fee']:0,
 			  'packaging_incremental'=>isset($this->data['packaging_incremental'])?$this->data['packaging_incremental']:0,
+			  'item_token'=>ItemClass::generateFoodToken()
 			);			
 			
 			if(!is_numeric($params['packaging_fee'])){
@@ -1367,14 +1501,23 @@ if (!class_exists('AjaxAdmin'))
 			}
 						
 			$params = FunctionsV3::purifyData($params);
+			$item_id = 0;
+						
 			
 			$command = Yii::app()->db->createCommand();
 			if (isset($this->data['id']) && is_numeric($this->data['id'])){		
 				
 				$file_to_delete=array();
+				$item_id = (integer) $this->data['id'];
 				
 				if($old_data=Yii::app()->functions->getFoodItem($this->data['id'])){
-					//dump($old_data);
+					
+					if(isset($old_data['item_token'])){
+					   if(!empty($old_data['item_token'])){
+					   	  unset($params['item_token']);
+					   }					
+					}				
+					
 					$gallery_photo=json_decode($old_data['gallery_photo'],true);
 					
 					if(!isset($this->data['gallery_photo'])){
@@ -1416,14 +1559,77 @@ if (!class_exists('AjaxAdmin'))
 	                   	}	
 	                }
 	                
+	                ItemClass::insertItemRelationship(
+		                Yii::app()->functions->getMerchantID(),
+		                (integer)$this->data['id'],
+		                isset($this->data['category'])?(array)$this->data['category']:''
+	                );
+	                
+	                ItemClass::insertItemRelationshipSubcategory(
+		                Yii::app()->functions->getMerchantID(),
+		                (integer)$this->data['id'],
+		                isset($this->data['sub_item_id'])?(array)$this->data['sub_item_id']:''
+	                );
+	                
+	                ItemClass::insertItemRelatinship(
+	                  Yii::app()->functions->getMerchantID(),
+		              (integer)$this->data['id'],
+		              array(
+		               'size'=>isset($this->data['size'])?(array)$this->data['size']:'',
+		               'price'=>isset($this->data['price'])?(array)$this->data['price']:''
+		              )		              
+	                );
+	                									
 				} else $this->msg=Yii::t("default","ERROR: cannot update");
 			} else {								
 				if ($res=$command->insert('{{item}}',$params)){
-					$this->details=Yii::app()->db->getLastInsertID();	
+					$item_id = Yii::app()->db->getLastInsertID();
+					$this->details = $item_id;
 	                $this->code=1;
-	                $this->msg=Yii::t("default",'Item added.');  	                
+	                $this->msg=Yii::t("default",'Item added.');  	       
+	                
+	                
+	                ItemClass::insertItemRelationship(
+		                Yii::app()->functions->getMerchantID(),
+		                (integer)$item_id,
+		                isset($this->data['category'])?(array)$this->data['category']:''
+	                );
+	                
+	                ItemClass::insertItemRelationshipSubcategory(
+		                Yii::app()->functions->getMerchantID(),
+		                (integer)$item_id,
+		                isset($this->data['sub_item_id'])?(array)$this->data['sub_item_id']:''
+	                );
+	                
+	                ItemClass::insertItemRelatinship(
+	                  Yii::app()->functions->getMerchantID(),
+		              (integer)$item_id,
+		              array(
+		               'size'=>isset($this->data['size'])?(array)$this->data['size']:'',
+		               'price'=>isset($this->data['price'])?(array)$this->data['price']:''
+		              )		              
+	                );
+	                         
 	            } else $this->msg=Yii::t("default",'ERROR. cannot insert data.');
 			}	    		    	
+			
+			/*INSERT TRANSLATION*/	    
+			if($this->code==1){				
+				if(isset($this->data['item_name_trans'])){
+					$this->data['item_name_trans']['default'] = isset($this->data['item_name'])?$this->data['item_name']:'';
+					$this->data['item_description_trans']['default'] = isset($this->data['item_description'])?$this->data['item_description']:'';
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $item_id ,
+				'item_id',
+				'item_name',
+				'item_description',
+				array(	                  
+				  'item_name'=>isset($this->data['item_name_trans'])?$this->data['item_name_trans']:'',
+				  'item_description'=>isset($this->data['item_description_trans'])?$this->data['item_description_trans']:'',
+				),"{{item_translation}}");
+			}		
+			
 	    }
 	    
 	    public function FoodItemList()
@@ -1485,7 +1691,7 @@ if (!class_exists('AjaxAdmin'))
     	    		if ( is_array($price) && count($price)>=1){
     	    			foreach ($price as $key_price=>$val_price) {    	    		
     	    				if (array_key_exists($key_price,(array)$size_list)){    	    					    	    				
-    	    					$price_list.=getCurrencyCode().prettyFormat($val_price)." ".ucwords($size_list[$key_price]). "<br/>";
+    	    					$price_list.= Price_Formatter::formatNumber($val_price)." ".ucwords($size_list[$key_price]). "<br/>";
     	    				}    	    		
     	    			}
     	    		}    	    	
@@ -1493,7 +1699,7 @@ if (!class_exists('AjaxAdmin'))
     	    		$chk="<input type=\"checkbox\" name=\"row[]\" value=\"$val[item_id]\" class=\"chk_child\" >";   		
     	    		$option="<div class=\"options\">
     	    		<a href=\"$slug/id/$val[item_id]\" >".Yii::t("default","Edit")."</a>
-    	    		<a href=\"javascript:;\" class=\"row_del\" rev=\"$val[item_id]\" >".Yii::t("default","Delete")."</a>
+    	    		<a href=\"javascript:;\" class=\"delete_item\" data-id=\"$val[item_id]\" >".Yii::t("default","Delete")."</a>
     	    		</div>";
     	    		    	    		
     	    		$date=FormatDateTime($val['date_created']);
@@ -1655,6 +1861,7 @@ if (!class_exists('AjaxAdmin'))
 	    	  'delivery_estimation'=>isset($this->data['merchant_delivery_estimation'])?$this->data['merchant_delivery_estimation']:'',	    	  
 	    	  'distance_unit'=>isset($this->data['merchant_distance_type'])?$this->data['merchant_distance_type']:'',
 	    	  'delivery_distance_covered'=>isset($this->data['merchant_delivery_miles'])?(float)$this->data['merchant_delivery_miles']:0,
+	    	  'close_store'=>isset($this->data['merchant_close_store'])?1:0
 	    	);	    	
 	    	//dump($params);
 	    	$db=new DbExt();
@@ -1899,6 +2106,34 @@ if (!class_exists('AjaxAdmin'))
 	    	
 	    	Yii::app()->functions->updateOption("website_merchant_time_picker_interval",
 	    	isset($this->data['website_merchant_time_picker_interval'])?$this->data['website_merchant_time_picker_interval']:''
+	    	,$merchant_id);  
+	    	
+	    	Yii::app()->functions->updateOption("tracking_estimation_delivery1",
+	    	isset($this->data['tracking_estimation_delivery1'])?(integer)$this->data['tracking_estimation_delivery1']:0
+	    	,$merchant_id);  
+	    	
+	    	Yii::app()->functions->updateOption("tracking_estimation_delivery2",
+	    	isset($this->data['tracking_estimation_delivery2'])?(integer)$this->data['tracking_estimation_delivery2']:0
+	    	,$merchant_id);  
+	    	
+	    	Yii::app()->functions->updateOption("tracking_estimation_pickup1",
+	    	isset($this->data['tracking_estimation_pickup1'])?(integer)$this->data['tracking_estimation_pickup1']:0
+	    	,$merchant_id);  
+	    	
+	    	Yii::app()->functions->updateOption("tracking_estimation_pickup2",
+	    	isset($this->data['tracking_estimation_pickup2'])?(integer)$this->data['tracking_estimation_pickup2']:0
+	    	,$merchant_id);  
+	    	
+	    	Yii::app()->functions->updateOption("tracking_estimation_dinein1",
+	    	isset($this->data['tracking_estimation_dinein1'])?(integer)$this->data['tracking_estimation_dinein1']:0
+	    	,$merchant_id);  
+	    	
+	    	Yii::app()->functions->updateOption("tracking_estimation_dinein2",
+	    	isset($this->data['tracking_estimation_dinein2'])?(integer)$this->data['tracking_estimation_dinein2']:0
+	    	,$merchant_id);  
+	    	
+	    	Yii::app()->functions->updateOption("merchant_menu_lazyload",
+	    	isset($this->data['merchant_menu_lazyload'])?(integer)$this->data['merchant_menu_lazyload']:0
 	    	,$merchant_id);  
 	    	
 	    	$this->code=1;
@@ -2327,18 +2562,18 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    		    	
 	    	if ( $website_disabled_cart_validation!=2):
 	    	
-	    	//dump($this->data);
-	    	$h_item_id = isset($this->data['item_id'])?$this->data['item_id']:'';
+	    	
+	    	$h_item_id = isset($this->data['item_id'])?(integer)$this->data['item_id']:'';
 	    	$h_price = isset($this->data['price'])?$this->data['price']:'';
 	    	$h_discount = isset($this->data['discount'])?$this->data['discount']:'';
-
-	    	    	
+	    	    	    
 	    	if(!is_numeric($h_item_id)){
 	    		$this->msg=t("Failed. item id is invalid");
 	    	    return ;
 	    	}
-	    		    	    	
-	    	if($food_info=Yii::app()->functions->getFoodItem($h_item_id)){
+	    		    	    		    
+	    	$original_price = 0;	    
+	    	if($food_info=Yii::app()->functions->getFoodItem($h_item_id)){	    		
 	    		if ( $food_info['merchant_id']==$this->data['merchant_id']){
 	    			
 	    			$item_discount = $food_info['discount'];
@@ -2748,9 +2983,22 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 		    	    }
 		    	}
 	    	}
+	    	
+	    	/*MULTI CURRENCY*/
+	    	$rates = array();
+	    	$currency_use = Yii::app()->session['currency'];
+	    	if (Item_utility::MultiCurrencyEnabled()){
+	    		$rates = Multicurrency_finance::getExchangeRate( $currency_use );	    			    		
+	    	} else {
+	    		$rates = Item_utility::defaultExchangeRate( $currency_use );
+	    	} 
+	    	Price_Formatter::init( Yii::app()->session['currency'] );
+	    		    	
+	    	$this->data = array_merge( (array) $this->data, (array) $rates);	    	
 	    		    	    
 	    	/*dump($this->data);
 	    	dump($_SESSION['kr_item']);*/
+	    	    	
 	    	
 	    	Yii::app()->functions->displayOrderHTML($this->data, isset($_SESSION['kr_item'])?$_SESSION['kr_item']:'' );
 	    	$this->code=Yii::app()->functions->code;
@@ -3324,7 +3572,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			}	    
 						
 			if ( $transaction_type=="delivery"){
-				if(empty($accurate_address_lng) || empty($accurate_address_lng)){
+				if(empty($accurate_address_lat) || empty($accurate_address_lng)){
 					$this->msg=t("Please select location on tne map");
 		    		return ;
 				}	    			
@@ -3508,7 +3756,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	if (is_array($order_item) && count($order_item)>=1){	
 	    		
 	    		/** card fee condition */
-	    		$card_fee='';
+	    		$card_fee=''; $card_percentage=0;
 	    		switch ($this->data['payment_opt'])
 	    		{
 	    			case "pyp":	    				
@@ -3587,16 +3835,37 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 		    	       }
 		    	    }	    
 		    	    break;   
-		    	    		    	      
+		    	    		    	    	    	       	    	
+	    	              
 	    			default:	    				
 	    				break;	
 	    		}	    	
 	    			    			    		
-	    		if ( !empty($card_fee) && $card_fee>=0.0001){	    			
+	    		/*if ( !empty($card_fee) && $card_fee>=0.0001){	    			
 	    			$this->data['card_fee']=$card_fee;	    			
+	    		}*/
+	    		
+	    		if ( !empty($card_fee) && $card_fee>=0.0001){	  	    			
+	    			$this->data['card_fee']=$card_fee;			    			
 	    		}
+	    		if($card_percentage>0){
+    				$this->data['card_percentage']=$card_percentage;	
+    			}	    		
 	    		/** end card fee */
-	    			    			    		
+	    		
+	    		/*MULTI CURRENCY*/
+		    	$rates = array(); $multi_currency_enabled = false;
+		    	$currency_use = Yii::app()->session['currency'];
+		    	if ($multi_currency_enabled = Item_utility::MultiCurrencyEnabled()){
+		    		$rates = Multicurrency_finance::getExchangeRate( $currency_use );	    			    		
+		    	} else {
+		    		$rates = Item_utility::defaultExchangeRate( $currency_use );
+		    	} 
+		    	
+		    	Price_Formatter::init( Yii::app()->session['currency'] );
+		    		    	
+		    	$this->data = array_merge( (array) $this->data, (array) $rates);	   
+		    	    
 	    		Yii::app()->functions->displayOrderHTML($this->data,$_SESSION['kr_item']);
 	    		if ( Yii::app()->functions->code==1){
 	    			
@@ -3610,8 +3879,14 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 				    	}	    
 			    	}
 			    						    	
-                    $raw=Yii::app()->functions->details['raw'];	                      
-	    				    			
+                    $raw=Yii::app()->functions->details['raw'];	   
+                    
+                    $exchange_rate = isset($rates['exchange_rate'])? (float) $rates['exchange_rate']:1;
+                                                            
+                    if($multi_currency_enabled && $exchange_rate!=1){                            
+                       $order_item = Cart_utility::reFormat($order_item,$exchange_rate);                       
+                    }
+                                        	    			
 	    			if (is_array($raw) && count($raw)>=1){	    				
 	    				$params=array(
 	    				  'merchant_id'=>$this->data['merchant_id'],
@@ -3663,13 +3938,13 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
     					$has_voucher=false;
                         if (isset($_SESSION['voucher_code'])){		         	
 				         	if (is_array($_SESSION['voucher_code'])){					         		
-			         			$params['voucher_amount']=$_SESSION['voucher_code']['amount'];
+			         			$params['voucher_amount']= (float)$_SESSION['voucher_code']['amount']  * $exchange_rate;
 			         			$params['voucher_code']=$_SESSION['voucher_code']['voucher_name'];
 			         			$params['voucher_type']=$_SESSION['voucher_code']['voucher_type'];
 			         			$has_voucher=true;
 				         	}		         
 			            }    		
-			            			          
+			            			            						            
 			            
 						/** add tips */			            
 						$params['cart_tip_percentage']=$raw['total']['cart_tip_percentage'];
@@ -3715,10 +3990,15 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			            }			            
 			            
 			            /** card fee */
-			            if ( !empty($card_fee) && $card_fee>=0.1){	    				    			        
+			            /*if ( !empty($card_fee) && $card_fee>=0.1){	    				    			        
 	    			        $params['card_fee']=$card_fee;
-	    		        }
-	    		        	    		        	    		        	    		       
+	    		        }*/			            
+			            if(isset($raw['total']['card_fee'])){
+			            	if($raw['total']['card_fee']>0){
+			            		$params['card_fee'] = (float) $raw['total']['card_fee'];
+			            	}			            
+			            }
+			            			            	    		        	    		        	    		      
 	    		        /*if has address book selected*/
 	    		        if ( isset($this->data['address_book_id'])){
 	    		        	if ($address_book=Yii::app()->functions->getAddressBookByID($this->data['address_book_id'])){
@@ -3739,10 +4019,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    		        /*POINTS PROGRAM*/   	    		        
 	    		        if (FunctionsV3::hasModuleAddon("pointsprogram")){
 		    		        if (isset($_SESSION['pts_redeem_amt'])){
-		    		        	$params['points_discount']=$_SESSION['pts_redeem_amt'];
+		    		        	$params['points_discount'] = (float)$_SESSION['pts_redeem_amt'] * $exchange_rate;
 		    		        }
-	    		        }
-	    		        
+	    		        }	    		        	    		       
 	    		        	    		        
 	    		        $params['order_id_token']=FunctionsV3::generateOrderToken();
 	    		        $params['dinein_number_of_guest']=isset($this->data['dinein_number_of_guest'])?$this->data['dinein_number_of_guest']:'';
@@ -3781,8 +4060,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    		        }
 
 	    		        $params['distance'] = isset($_SESSION['shipping_distance'])?$_SESSION['shipping_distance']:0;
-	    		        
-	    		        
+	    		        	    		       	    		        
 	    				if ( $this->insertData("{{order}}",$params)){
 		    				$order_id=Yii::app()->db->getLastInsertID();
 		    				
@@ -3860,6 +4138,10 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 						    $params_address['date_created'] = FunctionsV3::dateNow();
 						    $params_address['ip_address'] = $_SERVER['REMOTE_ADDR'];
 						    $params_address['formatted_address']='';
+						    						    
+                            $params_address['used_currency'] = isset($rates['used_currency'])?$rates['used_currency']:'';
+	    		            $params_address['base_currency'] = isset($rates['base_currency'])?$rates['base_currency']:'';
+	    		            $params_address['exchange_rate'] = isset($rates['exchange_rate'])?(float)$rates['exchange_rate']:0;
 		    		        
 		    		        Yii::app()->db->createCommand()->insert("{{order_delivery_address}}",$params_address);
 		    				
@@ -3940,11 +4222,11 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 				    					if(is_array($val['sub_item']) && count($val['sub_item'])>=1){
 				    						foreach ($val['sub_item'] as $sub_item_data) {
 				    							Yii::app()->db->createCommand()->insert("{{order_details_addon}}",array(
-				    							  'order_id'=>$order_id,
-				    							  'subcat_id'=>$sub_item_data['subcat_id'],
-				    							  'sub_item_id'=>$sub_item_data['sub_item_id'],
-				    							  'addon_price'=>$sub_item_data['addon_price'],
-				    							  'addon_qty'=>$sub_item_data['addon_qty'],
+				    							  'order_id'=>(integer)$order_id,
+				    							  'subcat_id'=>(integer)$sub_item_data['subcat_id'],
+				    							  'sub_item_id'=>(integer)$sub_item_data['sub_item_id'],
+				    							  'addon_price'=>(float)$sub_item_data['addon_price'],
+				    							  'addon_qty'=>(float)$sub_item_data['addon_qty'],
 				    							));
 				    						}
 				    					}		    				
@@ -4516,6 +4798,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    
 	    public function addToOrder()
 	    {	    	
+	    	$err = '';
 	    	if (isset($this->data['order_id'])){
 	    		if ( $res=Yii::app()->functions->getOrder($this->data['order_id'])){	    
 	    			
@@ -4546,13 +4829,60 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    				$json_details=(array)$json_details;
 	    			}	    		
 	    			
+	    			//dump($json_details);
+	    				    				    			
 	    			if(is_array($json_details) && count($json_details)>=1){
-	    			   foreach ($json_details as $key=>$val) {	    			   		
-	    			   		if ($item_details = Yii::app()->functions->getFoodItem($val['item_id'])){	    			   			
+	    			   foreach ($json_details as $key=>$val) {	    	
+	    			   			   			    		    			   	    
+	    			   	    /*GET ITEM PRICE*/
+	    			   	    $with_size = array(); $size_id = 0;	    			   	    
+	    			   	    if (preg_match("/|/i", $val['price'] )) {
+	    			   	    	$with_size = explode("|",$val['price']);	    			   	    	
+	    			   	    	if(is_array($with_size) && count($with_size)>=1){
+	    			   	    		$size_id = isset($with_size[2])? $with_size[2] :0 ;
+	    			   	    	}	    			   	    
+	    			   	    }	    		
+	    			   	    	    			   	    	    			   	   
+	    			   		if ($item_details = Item_menu::getItemPrice( $val['item_id'], $size_id)){	    			   						   				    			   		
 	    			   			if($item_details['not_available']==2){
 	    			   				unset($json_details[$key]);
+	    			   			} else {
+	    			   				$json_details[$key]['discount'] = (float) $item_details['discount'];
+	    			   				if($item_details['size_id']>0){
+	    			   				  $json_details[$key]['price'] = (float) $item_details['price']."|".$item_details['size_name']."|".$item_details['size_id'];
+	    			   				} else {	    			   			
+	    			   				   $json_details[$key]['price'] = (float) $item_details['price'];	    			   			    
+	    			   				}
 	    			   			}	    			   		
+	    			   		} else unset($json_details[$key]);   			   
+	    			   		
+	    			   		/*END ITEM PRICE*/
+	    			   		
+	    			   		/*GET ADDON PRICE*/
+	    			   		$sub_item_id = 0;
+	    			   		if ( is_array($val['sub_item']) && count($val['sub_item'])>=1 ){	    			   			
+	    			   			foreach ($val['sub_item'] as $subitem_key=>$subitem_val) {
+	    			   				foreach ($subitem_val as $subitem_key2=>$subitem_val2) {	    			   				    
+	    			   				    $subitem = !empty($subitem_val2)?explode("|",$subitem_val2):false;	    			   				    
+	    			   				    if(is_array($subitem) && count($subitem)>=1){
+	    			   				    	$sub_item_id = isset($subitem[0])? (integer) $subitem[0] : 0;
+	    			   				    	if ( $new_price = Item_menu::getAddonPrice($sub_item_id) ){	    			   				    		
+	    			   				    		$new_addon_price  = '';
+	    			   				    		$new_addon_price.= isset($subitem[0])?$subitem[0]:'';
+	    			   				    		$new_addon_price.="|";
+	    			   				    		$new_addon_price.=$new_price;
+	    			   				    		$new_addon_price.="|";
+	    			   				    		$new_addon_price.= isset($subitem[2])?$subitem[2]:'';
+	    			   				    		$new_addon_price.="|";
+	    			   				    		$new_addon_price.= isset($subitem[3])?$subitem[3]:'';
+	    			   				    		$json_details[$key]['sub_item'][$subitem_key][$subitem_key2] = $new_addon_price;
+	    			   				    	}
+	    			   				    }	    			   				
+	    			   			    }
+	    			   			}
 	    			   		}	    			   
+	    			   		/*END ADDON PRICE*/
+	    			   		
 	    			   	}	
 	    			}
 	    			
@@ -4576,6 +4906,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			                return ;
 						}
 					}	    			
+										
 	    				    				    	
 	    			$_SESSION['kr_merchant_slug']=$res['restaurant_slug'];
 	    			$_SESSION['kr_merchant_id']=$res['merchant_id'];
@@ -4661,7 +4992,16 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	}	    	    	
 	    		    	
 	    	$merchant_id=Yii::app()->functions->getMerchantID();	    
-	    	$stmt="SELECT SQL_CALC_FOUND_ROWS a.*,
+	    	
+	    	$select = '';
+	    	if (Item_utility::MultiCurrencyEnabled()){
+	    		$select = Item_utility::queryCurrency();
+	    	}		
+	    	
+	    	$stmt="SELECT SQL_CALC_FOUND_ROWS 
+	    	order_id,trans_type,payment_type,sub_total,taxable_total,total_w_tax,a.status,
+			a.date_created,admin_viewed,request_from,			
+	    	
 	    	(
 	    	select concat(first_name,' ',last_name)
 	    	from
@@ -4693,6 +5033,8 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	order_id=a.order_id
 	    	) as item
 	    	
+	    	$select
+	    	
 	    	FROM
 	    	{{order}} a
 	    	WHERE
@@ -4704,10 +5046,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	";	    		    	
 	    	$pos = strpos($stmt,"LIMIT");	    	
 	    	$_SESSION['kr_export_stmt'] = substr($stmt,0,$pos);	    				
-	    		    		    	
+	    		    		    		    	
 	    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
-	    		$res = Yii::app()->request->stripSlashes($res);
-	    		
+	    		$res = Yii::app()->request->stripSlashes($res);	    		
 	    		$iTotalRecords=0;
 				$stmt2="SELECT FOUND_ROWS()";
 				if($res2 = Yii::app()->db->createCommand($stmt2)->queryRow()){
@@ -4725,10 +5066,22 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			$action.="<a data-id=\"".$val['order_id']."\" class=\"view-order-history\" href=\"javascript:\">".Yii::t("default","History")."</a>";
 	    				    			
 	    			$date=FormatDateTime($val['date_created']);
-	    			
-	    			if(!empty($val['customer_name'])){
+	    				    			
+	    			if(!empty( trim($val['customer_name']) )){
   	    		   	   $val['client_name']=$val['customer_name'];
 	    		    }							
+	    			
+	    		    if(isset($val['currency_format'])){
+	    				$currency_format = explode("|",$val['currency_format']);	    				
+	    				Price_Formatter::$number_format = array(
+	    				   'decimals'=>isset($currency_format[0])?$currency_format[0]:2, 
+						   'decimal_separator'=>isset($currency_format[1])?$currency_format[1]:'.',
+						   'thousand_separator'=>isset($currency_format[2])?$currency_format[2]:'',
+						   'position'=>isset($currency_format[3])?$currency_format[3]:'left',
+						   'spacer'=>Price_Formatter::getSpacer( isset($currency_format[3])?$currency_format[3]:'left' ),
+						   'currency_symbol'=>isset($currency_format[4])?$currency_format[4]:'',
+	    				);
+	    			}		
 	    			
 	    			$feed_data['aaData'][]=array(
 	    			  $val['order_id'],
@@ -4737,9 +5090,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			  $val['item'],
 	    			  t($val['trans_type']),	    			  
 	    			  FunctionsV3::prettyPaymentType('payment_order',$val['payment_type'],$val['order_id'],$val['trans_type']),
-	    			  prettyFormat($val['sub_total'],$merchant_id),
-	    			  prettyFormat($val['taxable_total'],$merchant_id),
-	    			  prettyFormat($val['total_w_tax'],$merchant_id),
+	    			  Price_Formatter::formatNumber($val['sub_total']),
+	    			  Price_Formatter::formatNumber($val['taxable_total'],$merchant_id),
+	    			  Price_Formatter::formatNumber($val['total_w_tax'],$merchant_id),
 	    			  "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>",
 	    			  t($val['request_from']),
 	    			  $date,
@@ -5038,11 +5391,40 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			$sOrder
 			$sLimit
 	    	";	   	    	
+	    	
+	    	if (Item_utility::MultiCurrencyEnabled() && Yii::app()->db->schema->getTable("{{view_item_cat}}") ){
+	    		$stmt="SELECT SQL_CALC_FOUND_ROWS SUM(a.qty) as total_qty,
+		    	a.item_id,a.item_name,a.size,
+		    	
+		    	IFNULL((
+		    	  select price - discount
+		    	  from {{view_item_cat}}
+		    	  where
+		    	  item_id = a.item_id
+		    	  and 
+		    	  size_id = a.size_id
+		    	  and 
+		    	  cat_id = a.cat_id
+		    	  limit 0,1
+		    	),0) as discounted_price
+		    	
+		    	FROM
+		    	{{view_order_details}} a	 
+		    	WHERE
+		    	merchant_id= ".FunctionsV3::q($merchant_id)."
+		    	AND status NOT IN ('".initialStatus()."')
+		        $and
+		    	GROUP BY item_id,size	    	
+				$sOrder
+				$sLimit
+		    	";	   	    	
+	    	}	    	
+	    	
 	    	$pos = strpos($stmt,"LIMIT");	    	
 	    	$_SESSION['kr_export_stmt'] = substr($stmt,0,$pos);	
 	    		    	
-	    	if ($res=$DbExt->rst($stmt)){
-	    		
+	    		    	
+	    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){	    		
 	    		$iTotalRecords=0;
 				$stmt2="SELECT FOUND_ROWS()";
 				if ( $res2=$this->rst($stmt2)){
@@ -5058,9 +5440,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			   $val['item_id'],
 	    			   $val['item_name'],
 	    			   $val['size'],
-	    			   prettyFormat($val['discounted_price'],$merchant_id),
+	    			   Price_Formatter::formatNumber($val['discounted_price']),
 	    			   $val['total_qty'],
-	    			   prettyFormat($val['discounted_price']*$val['total_qty'],$merchant_id)
+	    			   Price_Formatter::formatNumber( (float) $val['discounted_price']* (float) $val['total_qty'])
 	    		    );
 	    		}
 	    		$this->otableOutput($feed_data);
@@ -5138,9 +5520,18 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    }
 	    
         public function recentOrder()
-	    {	    		    	    		    	
+	    {	    		    	    		    
+	    	
+	    	$select = '';
+	    	if (Item_utility::MultiCurrencyEnabled()){
+	    		$select = Item_utility::queryCurrency();
+	    	}		
+	    		
 	    	$merchant_id=Yii::app()->functions->getMerchantID();	    
-	    	$stmt="SELECT a.*,
+	    	$stmt="SELECT 
+	    	order_id,trans_type,payment_type,sub_total,taxable_total,total_w_tax,a.status,
+			a.date_created,admin_viewed,request_from,viewed,		
+			
 	    	(
 	    	select concat(first_name,' ',last_name)
 	    	from
@@ -5172,6 +5563,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			limit 0,1
 	    	) as customer_name
 			
+	    	$select
 	    	
 	    	FROM
 	    	{{order}} a
@@ -5181,11 +5573,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	AND status NOT in ('".initialStatus()."')
 	    	AND request_cancel = '2'
 	    	ORDER BY date_created DESC	    	
-	    	";
-	    	
+	    	";	    	
 	    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
-	    	    $res = Yii::app()->request->stripSlashes($res);
-	    	    
+	    	    $res = Yii::app()->request->stripSlashes($res);	    	    
 	    		foreach ($res as $val) {	    			
 	    			$new='';
 	    			$action="<a data-id=\"".$val['order_id']."\" class=\"edit-order\" href=\"javascript:\">".Yii::t("default","Edit")."</a>";
@@ -5208,6 +5598,17 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    				$val['client_name'] = $val['customer_name'];
 	    			}	    		
 	    			
+	    			if(isset($val['currency_format'])){
+	    				$currency_format = explode("|",$val['currency_format']);	    				
+	    				Price_Formatter::$number_format = array(
+	    				   'decimals'=>isset($currency_format[0])?$currency_format[0]:2, 
+						   'decimal_separator'=>isset($currency_format[1])?$currency_format[1]:'.',
+						   'thousand_separator'=>isset($currency_format[2])?$currency_format[2]:'',
+						   'position'=>isset($currency_format[3])?$currency_format[3]:'left',
+						   'spacer'=>Price_Formatter::getSpacer( isset($currency_format[3])?$currency_format[3]:'left' ),
+						   'currency_symbol'=>isset($currency_format[4])?$currency_format[4]:'',
+	    				);
+	    			}	
 	    			
 	    			$feed_data['aaData'][]=array(
 	    			  $val['order_id'],
@@ -5216,9 +5617,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			  $item,
 	    			  t($val['trans_type']),	    			  
 	    			  FunctionsV3::prettyPaymentType('payment_order',$val['payment_type'],$val['order_id'],$val['trans_type']),
-	    			  prettyFormat($val['sub_total'],$merchant_id),
-	    			  prettyFormat($val['taxable_total'],$merchant_id),
-	    			  prettyFormat($val['total_w_tax'],$merchant_id),	    			  
+	    			  Price_Formatter::formatNumber($val['sub_total']),
+	    			  Price_Formatter::formatNumber($val['taxable_total']),
+	    			  Price_Formatter::formatNumber($val['total_w_tax']),
 	    			  "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>",
 	    			  t($val['request_from']),
 	    			  $date,
@@ -5248,18 +5649,13 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	$db_ext=new DbExt();
 	    	if (!empty($_SESSION['kr_export_stmt'])){
 	    		$stmt= $_SESSION['kr_export_stmt'];
-	    		
-	    		if (preg_match("/limit/i", $stmt)) {
-	    		    $pos=strpos($stmt,"LIMIT");
-	    		    $stmt=substr($stmt,0,$pos);	 	    
-	    		}		
-	    		
+	    			    			    		
 	    		switch ($this->data['rpt']) {
 	    			case 'sales-report':
 	    				if ($res=$db_ext->rst($stmt)){		    					
 	    					$csvdata=array();
     	    	            $datas=array();  
-    	    	            foreach ($res as $val) {	    			    			
+    	    	            foreach ($res as $val) {	      	    	            	
 				    			$item='';				    			
 				    			$date=date('m-d-Y G:i:s',strtotime($val['date_created']));    	    		
 			    	    		$latestdata[]=array(    	    		  
@@ -5269,7 +5665,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			    	    		  $val['trans_type'],
 			    	    		  $val['payment_type'],
 			    	    		  prettyFormat($val['sub_total'],$merchant_id),
-			    	    		  prettyFormat($val['tax'],$merchant_id),
+			    	    		  prettyFormat($val['taxable_total'],$merchant_id),
 			    	    		  prettyFormat($val['total_w_tax'],$merchant_id),
 			    	    		  $val['status'],
 			    	    		  $date
@@ -5877,8 +6273,8 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 					  $val['package_id'],
 					  $val['title'].$action,
 					  '<span class="concat-text">'.$val['description'].'</span>',
-					  Yii::app()->functions->standardPrettyFormat($val['price']),
-					  Yii::app()->functions->standardPrettyFormat($val['promo_price']),
+					  Price_Formatter::formatNumber($val['price']),
+					  Price_Formatter::formatNumber($val['promo_price']),
 					  $val['expiration'],
 					  $ListlimitedPost[$val['unlimited_post']],
 					  $val['sell_limit']>=1?$val['sell_limit']:'',
@@ -6350,7 +6746,10 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	
 	    	Yii::app()->functions->updateOptionAdmin("restrict_order_by_status",
 	    	isset($this->data['restrict_order_by_status'])?json_encode($this->data['restrict_order_by_status']):'');
-	    		    	
+
+	    	Yii::app()->functions->updateOptionAdmin("admin_menu_lazyload",
+	    	isset($this->data['admin_menu_lazyload'])?(integer)$this->data['admin_menu_lazyload']:'');    	
+	    	
 	    	$this->code=1;
 	    	$this->msg=Yii::t("default","Setting saved");
 		}
@@ -7040,7 +7439,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			  $val['contact_phone']." / ".$val['contact_email'],
 	    			  $val['street']." ".$val['city']." ".$val['state']." ".$val['country_code']." ".$val['post_code'],
 	    			  ucwords($val['package_name']),	    			  
-	    			  $date."<br/>".ucwords($val['status']),
+	    			  $date."<br/>".t($val['status']),
 	    			  $action
 	    			);	    			
 	    		}
@@ -7145,7 +7544,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			  $val['id'],
 	    			  $val['merchant_name'],
 	    			  $val['package_name'],
-	    			  $val['price']>=1?Yii::app()->functions->standardPrettyFormat($val['price']):"",
+	    			  $val['price']>=1?Price_Formatter::formatNumber($val['price']):"",
 	    			  $payment_type,
 	    			  "<span class=\"".$val['status']."\">".t($val['status'])."</span>",
 	    			  $date,	    			  
@@ -7196,8 +7595,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			  $val['id'],
 	    			  $val['merchant_name'],
 	    			  $val['package_name'],
-	    			  $val['price']>=1?Yii::app()->functions->standardPrettyFormat($val['price']):"",
-	    			  //strtoupper($val['payment_type']),
+	    			  $val['price']>=1?Price_Formatter::formatNumber($val['price']):"",	    			  
 	    			  FunctionsV3::prettyPaymentType('package_trans',$val['payment_type'],$val['id']),
 	    			  "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>",
 	    			  Yii::app()->functions->FormatDateTime($val['date_created'],true),	    			  
@@ -7396,11 +7794,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    		      $val['merchant_id'],
 	    		      stripslashes($val['restaurant_name']),
 	    		      $val['package_name'],
-	    		      Yii::app()->functions->standardPrettyFormat($val['package_price']),
-	    		      //strtoupper($val['payment_type']),
+	    		      Price_Formatter::formatNumber($val['package_price']),	    		      
 	    		      FunctionsV3::prettyPaymentType('package_trans',$val['payment_type'],$val['package_trans_id']),
-	    		      "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>",
-	    		      //Yii::app()->functions->prettyDate($val['date_created'],true),
+	    		      "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>",	    		      
 	    		      Yii::app()->functions->FormatDateTime($val['date_created'],true),
 	    		      $action
 	    		   );	
@@ -7662,6 +8058,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 		public function addCuisine()
 		{			
 			$p = new CHtmlPurifier();
+			$cuisine_id = isset($this->data['id'])? (integer) $this->data['id']:0;
 			
 		    $Validator=new Validator;
 			$req=array(
@@ -7687,7 +8084,8 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			   if (empty($this->data['id'])){	
 			   	    $params['slug'] = FunctionsV3::createSlug('cuisine',$params['cuisine_name']);
 			    	if ( $this->insertData("{{cuisine}}",$params)){
-			    		    $this->details=Yii::app()->db->getLastInsertID();
+			    		    $cuisine_id =Yii::app()->db->getLastInsertID();
+			    		    $this->details = $cuisine_id;
 				    		$this->code=1;
 				    		$this->msg=Yii::t("default","Successful");				    		
 				    	}
@@ -7702,6 +8100,23 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 					} else $this->msg=Yii::t("default","ERROR: cannot update");
 			    }	
 			} else $this->msg=$Validator->getErrorAsHTML();		
+			
+			
+			/*INSERT TRANSLATION*/	    
+		    if($this->code==1){				
+				if(isset($this->data['cuisine_name_trans'])){
+					$this->data['cuisine_name_trans']['default'] = isset($this->data['cuisine_name'])?$this->data['cuisine_name']:'';				
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $cuisine_id ,
+				'cuisine_id',
+				'cuisine_name',
+				'',
+				array(	                  
+				  'cuisine_name'=>isset($this->data['cuisine_name_trans'])?$this->data['cuisine_name_trans']:'',			  
+				),"{{cuisine_translation}}");
+			}		
+			
 		}	
 		
 		public function merchantSetReady()
@@ -8590,7 +9005,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 				} else $params['meta_keywords_trans']=json_encode($this->data['meta_keywords_trans']);				
 			} else $params['meta_keywords_trans']='';
 	    	
-	    	$params = FunctionsV3::purifyData($params);	    	    	
+	    	//$params = FunctionsV3::purifyData($params);	    	    	
 	    	
 	    	if (empty($this->data['id'])){	
 	    		$params['slug_name']=strtolower(Yii::app()->functions->customPageCreateSlug($this->data['page_name']));	    	
@@ -9258,6 +9673,17 @@ $country=array_key_exists($val['country_code'],(array)$country_list)?$country_li
 	    	
 	    	Yii::app()->functions->updateOptionAdmin("gramma_use_curl",
 	    	isset($this->data['gramma_use_curl'])?$this->data['gramma_use_curl']:'');
+	    	
+	    	
+	    	/*saudisms*/
+	    	Yii::app()->functions->updateOptionAdmin("saudisms_username",
+	    	isset($this->data['saudisms_username'])?$this->data['saudisms_username']:'');
+	    	
+	    	Yii::app()->functions->updateOptionAdmin("saudisms_password",
+	    	isset($this->data['saudisms_password'])?$this->data['saudisms_password']:'');
+	    	
+	    	Yii::app()->functions->updateOptionAdmin("saudisms_sender",
+	    	isset($this->data['saudisms_sender'])?$this->data['saudisms_sender']:'');
 	    	
 	    	$this->code=1;
 	    	$this->msg=Yii::t("default","Settings saved.");
@@ -10982,26 +11408,26 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 	    	if ( !empty($order_status_id)){	    		
 	    		$and.= " AND status IN ($order_status_id)";
 	    	}	    	    	
-	    	
-	    		  
-	    	$select_name = '';
-	    	try {
-	    	   $fields_check = array('first_name'=>"");
-	    	   NotificationWrapper::checkFields("order_delivery_address",$fields_check);
-	    	   $select_name=",
-	    	    (
-		    	select concat(first_name,' ',last_name)
-		    	from {{order_delivery_address}}
-		    	where order_id = a.order_id
-		    	) as customer_name
-	    	   ";	    	   
-	    	} catch (Exception $e) {
-	    		//
+	    		    	
+	    	$select = '';
+	    	if (Item_utility::MultiCurrencyEnabled()){
+	    		$select = Item_utility::queryCurrency();
 	    	}		
-	    	
 	    	 	    		   
 	    	$merchant_id=Yii::app()->functions->getMerchantID();	    
-	    	$stmt="SELECT a.*,
+	    	$stmt="SELECT 
+	    	a.order_id,
+	    	a.trans_type,
+	    	a.payment_type,
+	    	a.status,
+	    	a.merchant_id,
+	    	a.date_created,
+	    	a.admin_viewed,
+	    	a.sub_total,
+	    	a.total_w_tax,
+	    	a.taxable_total,
+	    	a.request_from,
+	    		    	
 	    	(
 	    	select concat(first_name,' ',last_name)
 	    	from
@@ -11024,9 +11450,15 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 	    	{{merchant}}
 	    	where
 	    	merchant_id=a.merchant_id
-	    	) as merchant_name
+	    	) as merchant_name,
 	    	
-	    	$select_name
+	    	(
+	    	select concat(first_name,' ',last_name)
+	    	from {{order_delivery_address}}
+	    	where order_id = a.order_id
+	    	) as customer_name
+	    	
+	    	$select
 	    	
 	    	FROM
 	    	{{order}} a	    	
@@ -11038,9 +11470,9 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 	    	ORDER BY order_id DESC
 	    	LIMIT 0,100
 	    	";
-	    		    		    		    	    	    	
+	    		    		    		    			    	
 	    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
-	    		$res = Yii::app()->request->stripSlashes($res);	    		
+	    		$res = Yii::app()->request->stripSlashes($res);	   	    		
 	    		foreach ($res as $val) {	
 	    			
 	    			$merchant_id=$val['merchant_id'];
@@ -11069,6 +11501,19 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
                     if ($val['admin_viewed']<=0){
 	    				$new=" <div class=\"uk-badge\">".Yii::t("default","NEW")."</div>";
 	    			}	    			    			
+
+	    			   				    			
+	    			if(isset($val['currency_format'])){
+	    				$currency_format = explode("|",$val['currency_format']);	    				
+	    				Price_Formatter::$number_format = array(
+	    				   'decimals'=>isset($currency_format[0])?$currency_format[0]:2, 
+						   'decimal_separator'=>isset($currency_format[1])?$currency_format[1]:'.',
+						   'thousand_separator'=>isset($currency_format[2])?$currency_format[2]:'',
+						   'position'=>isset($currency_format[3])?$currency_format[3]:'left',
+						   'spacer'=>Price_Formatter::getSpacer( isset($currency_format[3])?$currency_format[3]:'left' ),
+						   'currency_symbol'=>isset($currency_format[4])?$currency_format[4]:'',
+	    				);
+	    			}
 	    			
 	    			$feed_data['aaData'][]=array(
 	    			  $val['order_id'],
@@ -11080,11 +11525,10 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 	    			  $val['payment_type'],
 	    			  $val['order_id'],
 	    			  $val['trans_type']
-	    			  ),
-	    			  
-	    			  prettyFormat($val['sub_total'],$merchant_id),
-	    			  prettyFormat($val['taxable_total'],$merchant_id),
-	    			  prettyFormat($val['total_w_tax'],$merchant_id),	    			  
+	    			  ),	    			  
+	    			  Price_Formatter::formatNumber($val['sub_total']),
+	    			  Price_Formatter::formatNumber($val['taxable_total']),
+	    			  Price_Formatter::formatNumber($val['total_w_tax']),	    			  
 	    			  "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>"."<div>$action</div>",
 	    			  t($val['request_from']),
 	    			  $date,	    			  
@@ -11148,12 +11592,27 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 	    	   $where_merchant = " AND a.merchant_id=".FunctionsV3::q($merchant_id)." ";
 	    	}
 	    	
+	    	/*$select = '';
+	    	try {	    		
+	    		$fields_check = array('used_currency'=>"");
+	    		NotificationWrapper::checkFields("order_delivery_address",$fields_check);
+	    		$select = ",d.used_currency";	    		
+	    	} catch (Exception $e) {
+	    		//
+	    	}*/
+
+	    	$select = '';
+	    	if (Item_utility::MultiCurrencyEnabled()){
+	    		$select = Item_utility::queryCurrency();
+	    	}	    	
+	    	
 	    	$stmt="SELECT SQL_CALC_FOUND_ROWS a.*,
 	    	concat(b.first_name,' ',b.last_name) as client_name,
 	    	c.restaurant_name ,
 	    	
 	    	d.contact_phone,
 	    	concat(d.first_name,' ',d.last_name) as customer_name
+	    	$select
 	    	
 	    	FROM
 	    	{{order}} a
@@ -11177,12 +11636,12 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 			$sOrder
 			$sLimit
 	    	";
-	    	//dump($stmt);
 	    		    		    	
 	    	$pos = strpos($stmt,"LIMIT");	    	
 	    	$_SESSION['kr_export_stmt'] = substr($stmt,0,$pos);	  	    	
-	    		    		    	
-	    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
+	    		    		    		    	
+	    	
+	    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){	    		
 	    		$res = Yii::app()->request->stripSlashes($res);
 	    		$iTotalRecords=0;
 				$stmt2="SELECT FOUND_ROWS()";
@@ -11202,9 +11661,22 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 	    			
 	    			$item=FunctionsV3::translateFoodItemByOrderId($val['order_id']);
 	    			
-	    			if(!empty($val['customer_name'])){
+	    			if(!empty( trim($val['customer_name']) )){
 	    				$val['client_name'] = $val['customer_name'];
 	    			}	    		
+	    			
+	    			if(isset($val['currency_format'])){
+    				$currency_format = explode("|",$val['currency_format']);	    				
+	    				Price_Formatter::$number_format = array(
+	    				   'decimals'=>isset($currency_format[0])?$currency_format[0]:2, 
+						   'decimal_separator'=>isset($currency_format[1])?$currency_format[1]:'.',
+						   'thousand_separator'=>isset($currency_format[2])?$currency_format[2]:'',
+						   'position'=>isset($currency_format[3])?$currency_format[3]:'left',
+						   'spacer'=>Price_Formatter::getSpacer( isset($currency_format[3])?$currency_format[3]:'left' ),
+						   'currency_symbol'=>isset($currency_format[4])?$currency_format[4]:'',
+	    				);
+	    			}		
+	    			
 	    			
 	    			$feed_data['aaData'][]=array(
 	    			  $val['order_id'],
@@ -11214,9 +11686,9 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 	    			  $item,
 	    			  t($val['trans_type']),	    			  
 	    			  FunctionsV3::prettyPaymentType('payment_order',$val['payment_type'],$val['order_id'],$val['trans_type']),
-	    			  prettyFormat($val['sub_total'],$merchant_id),
-	    			  prettyFormat($val['taxable_total'],$merchant_id),
-	    			  prettyFormat($val['total_w_tax'],$merchant_id),	    			  
+	    			  Price_Formatter::formatNumber($val['sub_total']),
+	    			  Price_Formatter::formatNumber($val['taxable_total']),
+	    			  Price_Formatter::formatNumber($val['total_w_tax']),	  
 	    			  "<span class=\"tag ".$val['status']."\">".t($val['status'])."</span>",
 	    			  t($val['request_from']),
 	    			  $date	    			  
@@ -11289,6 +11761,27 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 			{{bank_deposit}} a
 			ORDER BY id DESC
 			";
+			
+			$stmt="SELECT 
+			a.*,
+			b.merchant_id as new_merchant_id,
+			IFNULL(c.restaurant_name,'') as merchant_name
+			
+			FROM
+			{{bank_deposit}} a
+			left join {{order}} b		
+			ON
+			a.order_id = b.order_id		
+									
+			left join {{merchant}} c
+			ON 
+			b.merchant_id = c.merchant_id
+
+					
+			ORDER BY id DESC
+			";
+		
+			
 			if ($res=$this->rst($stmt)){
 			   foreach ($res as $val) {				   	    			   	    
 					/*$action="<div class=\"options\">
@@ -11651,7 +12144,7 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 			   	      $val['id'],
 			   	      $val['payment_name'].$action,
 			   	      '<img src="'.uploadURL()."/".$val['payment_logo'].'" class="uk-thumbnail uk-thumbnail-mini" >',
-			   	      $date."<br/>".$val['status']
+			   	      $date."<br/>".t($val['status'])
 			   	   );			       
 			   }
 			   $this->otableOutput($feed_data);

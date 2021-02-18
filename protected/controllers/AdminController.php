@@ -60,7 +60,7 @@ class AdminController extends CController
 	    		Yii::app()->end();
 	    	}
 	    }
-	    	    	    	    
+	       
 	    return true;	    
     }
 	
@@ -187,9 +187,9 @@ class AdminController extends CController
 			$this->render('login');
 		} else {						
 			
-			if(FunctionsV3::checkNewDb()){					
+			/*if(FunctionsV3::checkNewDb()){					
 			   $this->needs_db_update = true;
-			}
+			}*/
 				
 			$this->crumbsTitle=Yii::t("default","Dashboard");		
 			$this->render('dashboard');			
@@ -205,8 +205,14 @@ class AdminController extends CController
 			$aa_access=Yii::app()->functions->AAccess();
 			if (in_array('dashboard',(array)$aa_access)){
 				
-				if(FunctionsV3::checkNewDb()){					
+				/*if(FunctionsV3::checkNewDb()){					
 					$this->needs_db_update = true;
+				}*/
+				
+				/*CHECK FOR UPDATE DATABASE*/
+			    if(FunctionsV3::checkNewDb()){				
+				    $this->redirect(Yii::app()->createUrl('/update'));
+					Yii::app()->end();
 				}
 								
 				$this->crumbsTitle=Yii::t("default","Dashboard");		
@@ -726,6 +732,33 @@ class AdminController extends CController
 		       'push'=>false, 
 		       'email_tag'=>'customer_name,order_id,restaurant_name,sitename,siteurl', 
 		       'sms_tag'=>'customer_name,order_id,restaurant_name,sitename,siteurl', 
+		     ),
+		     
+		     'food_is_done_to_driver'=>array(
+		       'email'=>false,
+		       'sms'=>false,		       
+		       'push'=>true, 
+		       'email_tag'=>'', 
+		       'sms_tag'=>'', 
+		       'push_tag'=>'task_id,order_id,customer_name,notes,delivery_date,delivery_address,driver_name', 
+		     ),
+		     
+		     'auto_order_update'=>array(
+		       'email'=>false,
+		       'sms'=>false,		       
+		       'push'=>true, 
+		       'email_tag'=>'', 
+		       'sms_tag'=>'', 
+		       'push_tag'=>'task_id,order_id', 
+		     ),
+		     
+		     'driver_update_to_merchant'=>array(
+		       'email'=>false,
+		       'sms'=>false,		       
+		       'push'=>true, 
+		       'email_tag'=>'', 
+		       'sms_tag'=>'', 
+		       'push_tag'=>'task_id,order_id', 
 		     )
 		     
 		  ),
@@ -1130,6 +1163,7 @@ class AdminController extends CController
 	
 	public function actionsofort()
 	{
+		$this->crumbsTitle=t("sofort payments");
 		$this->render('sofort-settings');
 	}
 	
@@ -1592,5 +1626,193 @@ class AdminController extends CController
 		));
 	}
 	
+	public function actionupdate_item()
+	{		
+		$paginate = ItemClass::paginate();
+		if(!$total = NotificationWrapper::getItemToMigrate()){
+			$total = 0;
+		} 
+		
+		$total_item = ceil($total/$paginate);
+		
+		FunctionsV3::registerScript(array(
+		  "var total_item=$total_item;",
+		));
+		
+		$logger='';
+		if($total_item>0){
+			$cs = Yii::app()->getClientScript(); 
+			$cs->registerScript(
+			  'migrateItem',
+			  "migrateItem();",
+			  CClientScript::POS_END
+			);		
+		} else {
+			$logger = t("No records to process");
+		}
+		
+		$this->crumbsTitle=t("Update item");
+		$this->render('update_table',array(
+		  'logger'=>$logger
+		));
+	}
+	
+	public function actionupdate_category()
+	{		
+		
+		if(!Yii::app()->functions->multipleField()){
+			$this->crumbsTitle=t("Update Category Translation");
+			$this->render('error',array(
+			  'msg'=> t("Multi field translation is not enabled")
+			));
+			return ;
+		}
+		
+		$paginate = ItemClass::paginate();
+		if(!$total = Item_migration::getCategory()){
+			$total = 0;
+		} 
+				
+		$total_item = ceil($total/$paginate);
+		
+		FunctionsV3::registerScript(array(
+		  "var total_item=$total_item;",
+		));
+		
+		$logger='';
+		if($total_item>0){
+			$cs = Yii::app()->getClientScript(); 
+			$cs->registerScript(
+			  'migrateItem',
+			  "Migrate_items('category');",
+			  CClientScript::POS_END
+			);		
+		} else {
+			$logger = t("No records to process");
+		}
+		
+		$this->crumbsTitle=t("Update Category Translation");
+		$this->render('update_table',array(
+		  'logger'=>$logger
+		));
+	}
+	
+	public function actionupdate_itemtrans()
+	{		
+		
+		if(!Yii::app()->functions->multipleField()){
+			$this->crumbsTitle=t("Update Item Translation");
+			$this->render('error',array(
+			  'msg'=> t("Multi field translation is not enabled")
+			));
+			return ;
+		}
+		
+		$paginate = ItemClass::paginate();
+		if(!$total = Item_migration::getItem()){
+			$total = 0;
+		} 		
+				
+		$total_item = ceil($total/$paginate);
+		
+		FunctionsV3::registerScript(array(
+		  "var total_item=$total_item;",
+		));
+		
+		$logger='';
+		if($total_item>0){
+			$cs = Yii::app()->getClientScript(); 
+			$cs->registerScript(
+			  'migrateItem',
+			  "Migrate_items('item_translation');",
+			  CClientScript::POS_END
+			);		
+		} else {
+			$logger = t("No records to process");
+		}
+		
+		$this->crumbsTitle=t("Update Item Translation");
+		$this->render('update_table',array(
+		  'logger'=>$logger
+		));
+	}
+	
+	public function actionmigration_status()
+	{
+		$this->crumbsTitle=t("Migration status");
+		$items = Item_migration::getItemToMigrate();		
+		$subaddon_item = Item_migration::getSubItem();	
+		$translation_category = Item_migration::GetTranslation("category","category_translation","cat_id");			
+		$sizetranslation = Item_migration::GetTranslation("size","size_translation","size_id");			
+		$subcategory_translation = Item_migration::GetTranslation("subcategory","subcategory_translation","subcat_id");			
+		$subcategory_item_translation = Item_migration::GetTranslation("subcategory_item","subcategory_item_translation","sub_item_id");			
+		$ingredients_translation = Item_migration::GetTranslation("ingredients","ingredients_translation","ingredients_id");			
+		$cooking_ref_translation = Item_migration::GetTranslation("cooking_ref","cooking_ref_translation","cook_id");			
+		$item_translation = Item_migration::GetTranslation("item","item_translation","item_id");			
+		$cuisine_translation = Item_migration::GetTranslation("cuisine","cuisine_translation","cuisine_id");			
+		
+		$data = array();
+		$data[] = array(
+		  'title'=>"Items to migrate",
+		  'id'=>'items',
+		  'total'=>$items,		  
+		);
+		$data[] = array(
+		  'title'=>"Subaddon item",
+		  'id'=>'subcategoryitem',
+		  'total'=>$subaddon_item,		  
+		);
+
+		if ( Yii::app()->functions->multipleField()){	
+			$data[] = array(
+			  'title'=>"Category translation",
+			  'id'=>'translationcategory',
+			  'total'=>$translation_category,		  
+			);
+			$data[] = array(
+			  'title'=>"Size translation",
+			  'id'=>'sizetranslation',
+			  'total'=>$sizetranslation,		  
+			);
+			$data[] = array(
+			  'title'=>"Subcategory translation",
+			  'id'=>'subcategorytranslation',
+			  'total'=>$subcategory_translation,		  
+			);
+			$data[] = array(
+			  'title'=>"Subcategory item translation",
+			  'id'=>'subcategory_item_translation',
+			  'total'=>$subcategory_item_translation,		  
+			);
+			$data[] = array(
+			  'title'=>"Ingredients translation",
+			  'id'=>'ingredients_translation',
+			  'total'=>$ingredients_translation,		  
+			);
+			$data[] = array(
+			  'title'=>"Cooking Reference translation",
+			  'id'=>'cooking_ref_translation',
+			  'total'=>$cooking_ref_translation,		  
+			);
+			$data[] = array(
+			  'title'=>"Item translation",
+			  'id'=>'item_translation',
+			  'total'=>$item_translation,		  
+			);
+			$data[] = array(
+			  'title'=>"Cuisine translation",
+			  'id'=>'cuisine_translation',
+			  'total'=>$cuisine_translation,		  
+			);
+		}
+		
+		$this->render("migration_status",array(
+		  'data'=>$data
+		));
+	}
+	
+	/*CUSTOM WORK*/
+		
+		
 } 
 /*END CONTROLLER*/

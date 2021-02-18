@@ -673,7 +673,7 @@ function form_submit(formid)
         			   	   case "payulatam":        			   	   
         			   	   case "paypal_v2":
         			   	   case "mercadopago":
-        			   	   case "mollie":
+        			   	   case "mollie":        			   	   
         			   	   window.location.href=data.details;
         			   	   showPreloader(true);
         			   	   break;
@@ -864,7 +864,13 @@ jQuery(document).ready(function() {
     			if ( $("#disabled_website_ordering").val()=="yes"){    				 		
     				return;
     			}    	    			
-	    		single_food_item_add(id, $(this).data("price"), $(this).data("size") , $(this).data("category_id"),  $(this).data("size_id") , $(this).data("discount") );	
+    			
+    			$item_size_token = '';
+    			if ((typeof  $(this).data("item_size_token") !== "undefined") && ( $(this).data("item_size_token") !== null)) {
+    				$item_size_token = $(this).data("item_size_token");
+    			}
+    			
+	    		single_food_item_add(id, $(this).data("price"), $(this).data("size") , $(this).data("category_id"),  $(this).data("size_id") , $(this).data("discount"), $item_size_token );	
 	    		return;
     		}
     	}
@@ -1099,7 +1105,8 @@ jQuery(document).ready(function() {
 	   	  	  }   	     	  	  
 	   	  	  if (isNaN(minimum)){
 	   	  	  	  minimum=0;
-	   	  	  }   	     	  	  
+	   	  	  }   	     	  	
+	   	  	  dump(minimum + "=>" + subtotal )  ;
 	   	  	  if ( minimum>subtotal){   	  	  	
 	              uk_msg(js_lang.trans_5+" "+ $("#minimum_order_pretty").val());
 	   	  	  	  return;
@@ -1147,7 +1154,8 @@ jQuery(document).ready(function() {
    	  	   case "delivery":
    	  	   
    	  	   if ( $("#is_ok_delivered").val()==2){	   	  	 	   	  	 
-	   	  	   if(!empty(distance_error)){
+	   	  	   //if(!empty(distance_error)){
+	   	  	   if ((typeof  distance_error !== "undefined") && ( distance_error !== null)) {
 	   	  	   	   uk_msg(distance_error);	   
 	   	  	   } else {
 	   	  	   	   uk_msg(js_lang.trans_15+" "+$("#merchant_delivery_miles").val() + " "+$("#unit_distance").val());   	  
@@ -1993,6 +2001,9 @@ function load_item_cart()
 			
 	params+="&current_page="+ current_page;
 	params+="&card_fee="+ card_fee;
+	if ((typeof  card_percentage !== "undefined") && ( card_percentage !== null)) {
+		params+="&card_percentage="+ card_percentage;
+	}
 	
 	params+= addValidationRequest();
 	
@@ -2547,7 +2558,11 @@ function fb_register(object)
         		}	
         		            		    	
         		if ( $("#single_page").exists() ){
-        			window.location.href=home_url;
+        			if ((typeof  data.details.redirect !== "undefined") && ( data.details.redirect !== null)) {
+        				window.location.href=data.details.redirect;
+        			} else {
+        			    window.location.href=home_url;
+        			}
         		}		
         		
         		close_fb();
@@ -2752,7 +2767,7 @@ jQuery(document).ready(function() {
 	
 		
 	/*auto get geolocation*/
-	if ( $(".forms-search").exists() ) {
+	if ( $(".forms-search,#frm_address").exists() ) {
 		if (navigator.geolocation) {
 		   if ( $("#disabled_share_location").val()==""){	
 		   	  dump('detect current location');
@@ -2816,11 +2831,13 @@ jQuery(document).ready(function() {
     		if ( $("#customer_ask_address").val()!=2){
     			    			
     			var delivery_type=$("#delivery_type").val();    			
-    			if(delivery_type=="delivery"){    		
-    				if(search_by_location!=1){	
-	    		       var params="action=enterAddress&currentController=store&tbl=enterAddress";
-	    	           open_fancy_box2(params);   
-    				} 		    	
+    			if(delivery_type=="delivery"){    	
+    				if ((typeof  search_by_location !== "undefined") && ( search_by_location !== null)) {	
+	    				if(search_by_location!=1){	
+		    		       var params="action=enterAddress&currentController=store&tbl=enterAddress";
+		    	           open_fancy_box2(params);   
+	    				} 		    	
+    				}
     			}
     		}	
     	}
@@ -3363,7 +3380,7 @@ function plotMerchantLocationNew(s)
 	}
 }
 
-function single_food_item_add(item_id,price,size,category_id, size_id , discount)
+function single_food_item_add(item_id,price,size,category_id, size_id , discount, item_size_token)
 {
 	/*dump("item_id:"+item_id);
 	dump("price:"+price);
@@ -3391,6 +3408,8 @@ function single_food_item_add(item_id,price,size,category_id, size_id , discount
 	
 	params+="&csrf_token="+csrf_token;
 	params+="&auto_add_cart=1";
+	
+	params+="&item_size_token=" + item_size_token;
 	
 	params+= addValidationRequest();
 		

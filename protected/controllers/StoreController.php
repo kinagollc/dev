@@ -33,7 +33,7 @@ class StoreController extends CController
 			    Yii::app()->clientScript->registerCss('compress-css',$compress_css);*/
 				ScriptManager::RegisterAllJSFile($config);
 			    ScriptManager::registerAllCSSFiles($config);
-			} else {
+			} else {				
 			    ScriptManager::RegisterAllJSFile($config);
 			    ScriptManager::registerAllCSSFiles($config);
 			}
@@ -91,7 +91,11 @@ class StoreController extends CController
 				       font-size:13px;
 				     }
 				');
-			}
+			}						
+			
+			/* INIT EXCHANGE RATE*/
+			Item_utility::InitMultiCurrency();
+			
 			return true;
 		}
 		return false;
@@ -393,7 +397,7 @@ class StoreController extends CController
 			$_GET['do']=$_GET['Do'];
 		}	
 		
-		//dump($_GET);
+		$exchange_rate = Item_utility::getRates();
 		
 		if (isset($_GET['do'])){
 			switch ($_GET['do']) {
@@ -404,7 +408,8 @@ class StoreController extends CController
 					  'terms_merchant'=>getOptionA('website_terms_merchant'),
 					  'terms_merchant_url'=>getOptionA('website_terms_merchant_url'),
 					  'package_list'=>Yii::app()->functions->getPackagesList(),
-					  'kapcha_enabled'=>getOptionA('captcha_merchant_signup')
+					  'kapcha_enabled'=>getOptionA('captcha_merchant_signup'),
+					  'exchange_rate'=>$exchange_rate
 					));		
 					break;
 				case "step3":
@@ -422,16 +427,21 @@ class StoreController extends CController
 					 $this->render('merchant-signup-step3',array(
 					    'merchant'=>Yii::app()->functions->getMerchantByToken($_GET['token']),
 					    'package_id'=>$package_id,
-					    'renew'=>$renew					    
+					    'renew'=>$renew,
+					    'exchange_rate'=>$exchange_rate
 					 ));		
 					break;
 				case "step3a":
 					 $this->render('merchant-signup-step3a');		
 					break;	
-				case "step3b":					    
+				case "step3b":					
+				    $currency = getOptionA('admin_currency_set');
+				    Price_Formatter::init( $currency );    
 					if (isset($_GET['gateway'])){
 						if ($_GET['gateway']=="mcd"){
-							$this->render('mercado-init');
+							$this->render('mercado-init',array(
+							 'exchange_rate'=>$exchange_rate
+							));
 						} elseif ( $_GET['gateway']=="pyl" ){
 							$this->render('payline-init2');
 						} elseif ( $_GET['gateway']=="ide" ){
@@ -441,9 +451,13 @@ class StoreController extends CController
 						} elseif ( $_GET['gateway']=="pys" ){							
 							$this->render('paysera-init');	
 						} elseif ( $_GET['gateway']=="rzr" ){							
-							$this->render('rzr-init-merchant');		
-						} else {
-							$this->render($_GET['gateway'].'-init');	
+							$this->render('rzr-init-merchant',array(
+							  'exchange_rate'=>$exchange_rate
+							));		
+						} else {														
+							$this->render($_GET['gateway'].'-init', array(
+							  'exchange_rate'=>$exchange_rate
+							));	
 						}
 					} else $this->render('merchant-signup-step3b');
 					break;		
@@ -502,10 +516,11 @@ class StoreController extends CController
 					  'data'=>Yii::app()->functions->getMerchantByToken($_GET['token'])
 					));		
 					break;			
-				default:
+				default:					
 					$this->render('merchant-signup',array(
-					    'list'=>Yii::app()->functions->getPackagesList(),
-		               'limited_post'=>Yii::app()->functions->ListlimitedPost()
+					   'list'=>Yii::app()->functions->getPackagesList(),
+		               'limited_post'=>Yii::app()->functions->ListlimitedPost(),		               
+		               'exchange_rate'=>$exchange_rate
 					));		
 					break;
 			}
@@ -516,7 +531,8 @@ class StoreController extends CController
 			} else {
 				$this->render('merchant-signup',array(
 			      'list'=>Yii::app()->functions->getPackagesList(),
-			      'limited_post'=>Yii::app()->functions->ListlimitedPost()
+			      'limited_post'=>Yii::app()->functions->ListlimitedPost(),
+			      'exchange_rate'=>$exchange_rate
 			    ));						
 			}
 		}
@@ -805,8 +821,11 @@ class StoreController extends CController
 			$_SESSION['client_location']=$res['client'];						
 			Cookie::setCookie('client_location', json_encode($res['client']) );
 			
+			$exchange_rate = Item_utility::getRates();
+			
 			$this->render('search-results',array(
 			  'data'=>$res,
+			  'exchange_rate'=>$exchange_rate,
 			  'filter_delivery_type'=>$filter_delivery_type,
 			  'filter_cuisine'=>$filter_cuisine,
 			  'filter_minimum'=>$filter_minimum,
@@ -837,6 +856,7 @@ class StoreController extends CController
 				  'current_page_url'=>isset($current_page_url)?$current_page_url:'',
 				  'fc'=>getOptionA('theme_filter_colapse'),
 				  'enabled_search_map'=>getOptionA('enabled_search_map'),
+				  'search_by_location'=>FunctionsV3::isSearchByLocation()
 			   ));
 			} else $this->render('search-results-nodata');							
 		}	
@@ -882,6 +902,8 @@ class StoreController extends CController
 		}	
 				
 		$res=FunctionsV3::getMerchantBySlug($page_slug);
+		
+		 $_SESSION['google_http_refferer']=websiteUrl()."/menu/$page_slug";	
 		
 		if (is_array($res) && count($res)>=1){
 			if ( $current_merchant !=$res['merchant_id']){							 
@@ -1044,6 +1066,11 @@ class StoreController extends CController
 				
 				$merchant_opt_contact_delivery = getOption($merchant_id,'merchant_opt_contact_delivery');
 				
+				$exchange_rate = Item_utility::getRates();
+				
+				$minimum_order_dinein = (float)$minimum_order_dinein * $exchange_rate;
+				$maximum_order_dinein = (float)$maximum_order_dinein * $exchange_rate;
+				
 				FunctionsV3::registerScript(array(
 				 "var dinein_minimum='$minimum_order_dinein';",
 				 "var dinein_max='$maximum_order_dinein';",
@@ -1065,10 +1092,37 @@ class StoreController extends CController
                       "var inv_loader='".CJavaScript::quote( t("loading") )."...';",
                     ),'inventory_script');
                 } 
-
-												
+                
+                $menu_lazyload = getOptionA('admin_menu_lazyload'); $lazy_use_mobile = false;                
+                $admin_menu_allowed_merchant = getOptionA('admin_menu_allowed_merchant');
+                if($admin_menu_allowed_merchant==2){
+                	$menu_lazyload = getOption($merchant_id,'merchant_menu_lazyload');
+                }	
+                                
+                if($menu_lazyload==1){
+                	FunctionsV3::registerJS(array(
+                	 Yii::app()->baseUrl."/assets/vendor/infinite-scroll.pkgd.min.js",
+                	 Yii::app()->baseUrl."/assets/js/tpl_menu.js"
+                	));
+                	                	
+                	$detect = new Mobile_Detect;
+                	if ( $detect->isMobile() ){
+                		$lazy_use_mobile = true;
+                	}                
+                	
+                	FunctionsV3::registerScript(array(
+					  "var menu_lazyload='".CJavaScript::quote($menu_lazyload)."';",
+					  "var lazy_use_mobile='".CJavaScript::quote($lazy_use_mobile)."';",
+					),'menu_lazyload');
+	
+                }			
+                                                           
+		    			    									
 				$this->render('menu' ,array(
 				   'data'=>$res,
+				   'exchange_rate'=>$exchange_rate,
+				   'menu_lazyload'=>$menu_lazyload,
+				   'lazy_use_mobile'=>$lazy_use_mobile,
 				   'merchant_id'=>$merchant_id,				   
 				   'distance'=>$distance,
 				   'distance_pretty'=>$distance_pretty,
@@ -1259,7 +1313,10 @@ class StoreController extends CController
 			);			
 		}
 		
+		$exchange_rate = Item_utility::getRates();	
+				
 		$this->render('payment-option',array(		  
+		  'exchange_rate'=>$exchange_rate,
 		  'address_book'=>Yii::app()->functions->showAddressBook(),
 		  'search_by_location'=>$search_by_location,	
 		  'client_id'=>$client_id,
@@ -1337,9 +1394,9 @@ class StoreController extends CController
 		     'avatar'=>FunctionsV3::getAvatar( Yii::app()->functions->getClientId() ),
 		     'booking_disabled'=>getOptionA('merchant_tbl_book_disabled'),
 		   ));
-		} else $this->render('404-page',array(
-		   'header'=>true
-		));
+		} else {
+		   $this->redirect( Yii::app()->createUrl("store/signup") );	
+		}	
 	}
 	
 
@@ -2582,30 +2639,22 @@ class StoreController extends CController
 		
 	public function actionrzrinit()
 	{				
-		$amount_to_pay=0; $error=''; $credentials='';
-        $payment_description=Yii::t("default",'Payment to merchant')." ";
-        $merchant_name='';
-
-		if ( $data=Yii::app()->functions->getOrder($_GET['id'])){	
-			$merchant_id=isset($data['merchant_id'])?$data['merchant_id']:'';	
-			$payment_description.=isset($data['merchant_name'])?clearString($data['merchant_name']):'';	
-									
-			$amount_to_pay = normalPrettyPrice($data['total_w_tax']);
-			
-		    $this->render('rzr-init',array(
+		require_once 'buy.php';
+		if (empty($error)){
+			 $amount = $amount_to_pay*100;
+			 $this->render('rzr-init',array(
 			   'data'=>$data,
 			   'error'=>$error,
 			   'amount_to_pay'=>$amount_to_pay,
-			   'amount'=>str_replace(",",'',$amount_to_pay)*100,
+			   'amount'=>$amount,
 			   'payment_description'=>$payment_description,
 			   'credentials'=>FunctionsV3::razorPaymentCredentials($data['merchant_id'])
 			));
-		
 		} else {
 			$this->render('error',array(
 			  'message'=>t("Sorry but we cannot find what your are looking for.")
 			));
-		}				
+		}	
 	}
 	
 	public function actionrzrverify()
@@ -2739,9 +2788,8 @@ class StoreController extends CController
 			WHERE
 			order_id=".Yii::app()->functions->q($data['id'])."
 			";
-			if ($res=$db_ext->rst($stmt)){
-				//dump($res); die();
-				if ( $res[0]['date_modified']=="0000-00-00 00:00:00" || $res[0]['date_modified']=="" ){
+			if ($res=$db_ext->rst($stmt)){				
+				if ( $res[0]['status']!="accepted"){
 				if ( $res[0]['activation_token']==$data['token']){
 					$params=array(
 					 'status'=>"accepted",
@@ -2752,21 +2800,10 @@ class StoreController extends CController
 					);				
 					if ($res[0]['status']=="paid"){
 						unset($params['status']);
-					}	
+					}					
 					if ( $db_ext->updateData("{{order}}",$params,'order_id',$data['id'])){
 						$msg=t("Order Status change to received, Thank you!");
-												
-						/** Mobile save logs for push notification */
-						/*if (FunctionsV3::hasModuleAddon("mobileapp")){							
-							$new_data['order_id']=$data['id'];
-							$new_data['status']='accepted';
-							
-					    	Yii::app()->setImport(array(			
-							  'application.modules.mobileapp.components.*',
-						    ));
-					    	AddonMobileApp::savedOrderPushNotification($new_data);	
-						}*/						
-						
+																		
                         /*SEND NOTIFICATIONS TO CUSTOMER*/	    		
                         $order_id=$data['id'];		
 	    				FunctionsV3::notifyCustomerOrderStatusChange(
@@ -2828,7 +2865,7 @@ class StoreController extends CController
 			order_id=".Yii::app()->functions->q($data['id'])."
 			";
 			if ($res=$db_ext->rst($stmt)){
-				if ( $res[0]['date_modified']=="0000-00-00 00:00:00" || $res[0]['date_modified']=="" ){
+				if ( $res[0]['status']!="decline"){
 				if ( $res[0]['activation_token']==$data['token']){
 					$params=array(
 					 'status'=>"decline",
@@ -2843,17 +2880,7 @@ class StoreController extends CController
 					if ( $db_ext->updateData("{{order}}",$params,'order_id',$data['id'])){
 						$msg=t("Order Status change to decline");
 						
-						/** Mobile save logs for push notification */
-						/*if (FunctionsV3::hasModuleAddon("mobileapp")){							
-							$new_data['order_id']=$data['id'];
-							$new_data['status']='accepted';
-							
-					    	Yii::app()->setImport(array(			
-							  'application.modules.mobileapp.components.*',
-						    ));
-					    	AddonMobileApp::savedOrderPushNotification($new_data);	
-						}*/
-				    							
+												
                         /*SEND NOTIFICATIONS TO CUSTOMER*/	    				
                         $order_id = $data['id'];
 	    				FunctionsV3::notifyCustomerOrderStatusChange(
@@ -2908,8 +2935,8 @@ class StoreController extends CController
 				 "var dinein_max='$maximum_order_dinein';",
 				  CClientScript::POS_HEAD
 				);
-				echo CHtml::hiddenField('minimum_order_dinein',FunctionsV3::prettyPrice($minimum_order_dinein));
-                echo CHtml::hiddenField('maximum_order_dinein',FunctionsV3::prettyPrice($maximum_order_dinein));
+				echo CHtml::hiddenField('minimum_order_dinein',Price_Formatter::formatNumber($minimum_order_dinein));
+                echo CHtml::hiddenField('maximum_order_dinein',Price_Formatter::formatNumber($maximum_order_dinein));
 			
 			    $distance_type='';
 		    	$distance='';
@@ -3209,21 +3236,12 @@ class StoreController extends CController
 	}
 	
 	public function actionvoginit()
-	{
-				
-		$amount_to_pay=0; $error=''; $credentials='';
-        $payment_description=Yii::t("default",'Payment to merchant')." ";
-        $merchant_name='';
-
-		if ( $data=Yii::app()->functions->getOrder($_GET['id'])){	
-			$merchant_id=isset($data['merchant_id'])?$data['merchant_id']:'';	
-			$payment_description.=isset($data['merchant_name'])?clearString($data['merchant_name']):'';	
-						
-			$amount_to_pay = $data['total_w_tax']; $error='';
-			
-			$credentials  = FunctionsV3::GetVogueCredentials($merchant_id);			
-						
-			if( $credentials){
+	{				
+		require_once 'buy.php';
+		if (empty($error)){
+			 $credentials  = FunctionsV3::GetVogueCredentials($merchant_id);
+			 
+			 if( $credentials){
 				if(isset($_GET['failed'])){	
 					if(isset($_POST['transaction_id'])){
 						$is_demo=false;				    
@@ -3240,21 +3258,21 @@ class StoreController extends CController
 					}
 				}
 			} else $error = t("invalid credentails");
-						
-		    $this->render('vog-merchant-init',array(
+									
+			$this->render('vog-merchant-init',array(
 			   'data'=>$data,
 			   'error'=>$error,
-			   'amount_to_pay'=>$amount_to_pay,
-			   'amount'=>str_replace(",",'',$amount_to_pay)*100,
+			   'amount_to_pay'=>$amount_to_pay,			   
 			   'payment_description'=>$payment_description,
-			   'credentials'=>$credentials
+			   'credentials'=>$credentials,
+			   'currency_used'=>$currency_code
 			));
-		
+			
 		} else {
 			$this->render('error',array(
 			  'message'=>t("Sorry but we cannot find what your are looking for.")
 			));
-		}				
+		}	
 	}
 	
 	public function actionvognotify()
@@ -3543,30 +3561,11 @@ class StoreController extends CController
 	/*STRIPE*/	
 	public function actionstripeInit()
 	{
-		$amount_to_pay=0; $error=''; $credentials='';
-        $payment_description='';
-        $merchant_name=''; $error = '';
-        
-        if ( $data=Yii::app()->functions->getOrder($_GET['id'])){                	
-        	$merchant_id=isset($data['merchant_id'])?$data['merchant_id']:'';	
-	        $client_id = $data['client_id'];       
-	        $order_id = $data['order_id']; 	
-	        	        
-        	if ($credentials = StripeWrapper::getCredentials($merchant_id)){        	    
-	        	$merchant_name =isset($data['merchant_name'])?clearString($data['merchant_name']):'';
-				$payment_description = Yii::t("default","Payment to merchant [merchant_name]. Order ID#[order]",array(
-				  '[merchant_name]'=>$merchant_name,
-				  '[order]'=>$_GET['id']
-				));
+		require_once('buy.php');
+		
+		if(empty($error)){
+			if ($credentials = StripeWrapper::getCredentials($merchant_id)){
 				
-				$description = Yii::t("default","Purchase Order ID# [order_id]",array(
-				  '[order_id]'=>$_GET['id']
-				));
-				
-				$amount_to_pay = Yii::app()->functions->normalPrettyPrice($data['total_w_tax']);
-				$reference_id = $data['order_id_token'];
-				$amount_to_pay = unPrettyPrice($amount_to_pay)*100;				
-								
 				try {
 					
 					$client_email='';
@@ -3575,6 +3574,7 @@ class StoreController extends CController
 					}
 					
 					$trans_type='order';	
+					$amount_to_pay = Price_Formatter::convertToRaw($amount_to_pay)*100;
 					
 					$params = array(
 					   'customer_email' => trim($client_email),					   
@@ -3585,7 +3585,7 @@ class StoreController extends CController
 					       'name'=>$payment_description,
 						     'description'=>$description,						     
 						     'amount'=>$amount_to_pay,
-						     'currency'=>FunctionsV3::getCurrencyCode(),
+						     'currency'=>$currency_code,
 						     'quantity'=>1
 					     )
 					   ),					   
@@ -3593,7 +3593,8 @@ class StoreController extends CController
 					   'cancel_url'=>websiteUrl()."/paymentoption",
 					   //'locale'=>'es'
 					);			
-										
+					
+					
 					$resp  =  StripeWrapper::createSession($credentials['secret_key'],$params);					
 					$stripe_session=$resp['id'];
 					$payment_intent=$resp['payment_intent'];
@@ -3628,11 +3629,11 @@ class StoreController extends CController
 					 "var payment_reference_id='$reference_id';",
 					  CClientScript::POS_HEAD
 					);		
-					
+															
 					$this->render('stripe_buy',array(
 					  'payment_description'=>$payment_description,
-					  'fee'=>$credentials['card_fee'],
-					  'amount'=>$amount_to_pay,					  
+					  'fee'=> (float)$order_card_fee,
+					  'amount'=>(float)$amount_to_pay  
 					));
 					
 				} catch (Exception $e) {
@@ -3640,12 +3641,11 @@ class StoreController extends CController
 					  '[error]'=>$e->getMessage()
 					));
 				}        	
-        	} else $error=t("invalid payment credentials");        	        				
-        } else $error = t("Sorry but we cannot find what your are looking for.");
-        
-        $back_url = Yii::app()->createUrl('/store/confirmorder');
-        
-        if(!empty($error)){
+				
+			} else $error=t("invalid payment credentials");        	        				
+		}
+		
+		if(!empty($error)){
         	$error.='<p style="margin-top:20px;"><a href="'.$back_url.'" />'.t("back").'</a></p>';
 	        $this->render('error',array(
 			  'message'=>$error
@@ -4193,11 +4193,8 @@ class StoreController extends CController
 			                    )
 			                )
 			            )
-			        );
-    
-			        /*dump($params);
-			        die();*/
-					
+			        );			   
+			        			        
 					$resp = PaypalWrapper::createOrder(
 						$credentials['client_id'],
 						$credentials['secret_key'],
@@ -4235,17 +4232,19 @@ class StoreController extends CController
 				$cancel_url=$failure_url;
 				
 				try {					
+										
 					$params=array(
 					  'title'=>$payment_description,
 					  'quantity'=>1,
-					  'currency_id'=>FunctionsV3::getCurrencyCode(),
+					  'currency_id'=>$currency_code,
 					  'unit_price'=>$amount_to_pay,
 					  'email'=>$data['email_address'],
 					  'external_reference'=>$reference_id,
 					  'success'=>$success_url,
 					  'failure'=>$failure_url,
 					  'pending'=>$cancel_url,
-					);					
+					);		
+										
 					$resp = mercadopagoWrapper::createPayment($credentials,$params);			
 					$this->redirect($resp);
 			        Yii::app()->end();

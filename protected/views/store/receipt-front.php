@@ -1,5 +1,9 @@
 <?php if (is_array($data) && count($data)>=1):?>
 <?php
+
+    $used_currency = isset($data['used_currency'])?$data['used_currency']: FunctionsV3::getCurrencyCode() ;    
+    Price_Formatter::init( $used_currency );
+
     $merchant_id=$data['merchant_id'];
     $json_details=!empty($data['json_details'])?json_decode($data['json_details'],true):false;
     if ( $json_details !=false){
@@ -154,7 +158,7 @@
 	       	   FunctionsV3::receiptTableRow('Contact Number',$data['contact_phone']);
 	       	   
 	       	   if ($data['order_change']>=0.1){
-	       	   	  FunctionsV3::receiptTableRow('Change', FunctionsV3::prettyPrice($data['order_change']) );
+	       	   	  FunctionsV3::receiptTableRow('Change', Price_Formatter::formatNumber($data['order_change']) );
 	       	   }
 	       	   
 	       } else {
@@ -181,7 +185,7 @@
 	       	  
 	       	  if ($data['order_change']>=0.1){
 	       	  	  FunctionsV3::receiptTableRow('Change',
-	       	  	  FunctionsV3::prettyPrice($data['order_change'])
+	       	  	  Price_Formatter::formatNumber($data['order_change'])
 	       	  	  );
 	       	  }
 	       	  

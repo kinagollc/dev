@@ -26,14 +26,14 @@ class PrettyDateTime
     {
         // $prepend is added to the start of the string if the supplied
         // difference is greater than 0, and $append if less than
-        $prepend = ($difference < 0) ? 'In ' : '';
-        $append = ($difference > 0) ? ' ago' : '';
+        $prepend = ($difference < 0) ? t('In ') : '';
+        $append = ($difference > 0) ? t(' ago') : '';
 
         $difference = floor(abs($difference));
 
         // If difference is plural, add an 's' to $unit
         if ($difference > 1) {
-            $unit = $unit . 's';
+            $unit = $unit . t('s');
         }
 
         return sprintf('%s%d %s%s', $prepend, $difference, $unit, $append);
@@ -66,19 +66,19 @@ class PrettyDateTime
 
         // Throw exception if the difference is NaN
         if (is_nan($difference)) {
-            throw new Exception('The difference between the DateTimes is NaN.');
+            throw new Exception( t('The difference between the DateTimes is NaN.') );
         }
 
         // Today
         if ($reference->format('Y/m/d') == $date) {
             if (0 <= $difference && $absDiff < self::MINUTE) {
-                return 'Moments ago';
+                return t('Moments ago');
             } elseif ($difference < 0 && $absDiff < self::MINUTE) {
-                return 'Seconds from now';
+                return t('Seconds from now');
             } elseif ($absDiff < self::HOUR) {
-                return self::prettyFormat($difference / self::MINUTE, 'minute');
+                return self::prettyFormat($difference / self::MINUTE, t('minute'));
             } else {
-                return self::prettyFormat($difference / self::HOUR, 'hour');
+                return self::prettyFormat($difference / self::HOUR, t('hour'));
             }
         }
 
@@ -89,18 +89,18 @@ class PrettyDateTime
         $tomorrow->modify('+ 1 day');
 
         if ($yesterday->format('Y/m/d') == $date) {
-            return 'Yesterday';
+            return t('Yesterday');
         } else if ($tomorrow->format('Y/m/d') == $date) {
-            return 'Tomorrow';
+            return t('Tomorrow');
         } else if ($absDiff / self::DAY <= 7) {
-            return self::prettyFormat($difference / self::DAY, 'day');
+            return self::prettyFormat($difference / self::DAY, t('day') );
         } else if ($absDiff / self::WEEK <= 5) {
-            return self::prettyFormat($difference / self::WEEK, 'week');
+            return self::prettyFormat($difference / self::WEEK, t('week'));
         } else if ($absDiff / self::MONTH < 12) {
-            return self::prettyFormat($difference / self::MONTH, 'month');
+            return self::prettyFormat($difference / self::MONTH, t('month'));
         }
 
         // Over a year ago
-        return self::prettyFormat($difference / self::YEAR, 'year');
+        return self::prettyFormat($difference / self::YEAR, t('year') );
     }
 }

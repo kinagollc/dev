@@ -1486,7 +1486,8 @@ function loadTypeHead(id, target, action)
 		                        'yii_session_token': yii_session_token,
 		                        'city_id' : city_id,
 		                        'state_id' : state_id,
-		                        'auto_merchant_id' : auto_merchant_id
+		                        'auto_merchant_id' : auto_merchant_id,
+		                        'lang' : lang
 		                    },
 		                    callback: {
 		                        done: function (data) {	        	                        	
@@ -2436,3 +2437,218 @@ function clearFields(data)
 		$(fields).val('');
 	});
 }
+
+jQuery(document).ready(function() {
+	if ( $(".payment_option").exists() ){
+	   $count = $(".payment_option").length;	   
+	   if($count==1){	   	 	   	 
+	   	 $('.payment_option').iCheck('check');
+	   }
+	}	
+});
+
+/*LAZY LOAD STARTS HERE*/
+
+var ajax_lazy_item;
+var $infiniteScroll;
+
+jQuery(document).ready(function() {	
+	
+	$activated_menu = 0;
+	if ((typeof  activated_menu !== "undefined") && ( activated_menu !== null)) {
+		$activated_menu = parseInt(activated_menu);
+	}
+	
+	if ((typeof  menu_lazyload !== "undefined") && ( menu_lazyload !== null)) {		
+		if(menu_lazyload==1){			
+			
+			$initial_cat = parseInt($("#lazy_current_cat_id").val());
+			
+			$(".lazy_load_item").removeClass("active");
+		    $('.category-list [data-cat_id="'+$initial_cat+'"]').addClass("active");		    
+		    initLazyLoad();
+		    initSearchItem();
+		}
+	}
+	
+		
+	$( document ).on( "click", ".lazy_load_item", function() {
+		
+		$(".clear_search_item").hide();
+	    $(".search_foodname_lazy").val('');
+	
+		$cat = $(this).data("id");
+		$cat_id = $(this).data("cat_id");
+		$total_cat_paginate = $(this).data("total_cat_paginate");
+		
+		$(".lazy_load_item").removeClass("active");
+		$(this).addClass("active");
+		
+		$("#total_cat_paginate").val( $total_cat_paginate );
+		$("#lazy_current_cat_id").val( $cat_id );
+		$(".lazy_menu").html('');	
+		
+		stopInfiniteScroll(); 
+		scroll_class("lazy_menu");
+							
+		setTimeout( function(){ 
+		   initLazyLoad();
+	    }, 100);		
+    	    
+	});
+		
+	$( document ).on( "click", ".clear_search_item", function() {
+		reInitLazyLoad();
+	});
+	
+});
+/*end docu*/
+
+initLazyLoad = function(){
+		
+    $infiniteScroll = $('#menu-list-wrapper').infiniteScroll({	  
+			path: function () {
+				
+			  $total_cat = parseInt($("#total_cat_paginate").val());			  
+			  if ( this.loadCount < $total_cat ) {			  
+			  	 $params = 'merchant_id='+merchant_information.merchant_id+'&page='+ this.pageIndex;			  	 
+			  	 
+			  	 if(lazy_use_mobile==1){
+			  	 	return sites_url  + '/lazymenu?'+$params;
+			  	 } else {
+			  	 	$params+="&cat_id="+ $("#lazy_current_cat_id").val();
+			  	 	return sites_url  + '/lazymenu/item?'+$params;
+			  	 }
+			  	 			     
+			  }
+			}, 
+			responseType: 'text',
+			append: false,
+			status: '.lazy_status',
+			history: false ,
+			checkLastPage: true
+	    });		
+	    
+	    // load initial page
+	   $infiniteScroll.infiniteScroll('loadNextPage');	   
+	   
+	   $infiniteScroll.on( 'request.infiniteScroll', function( event, path ) {	   	 	   	
+	   	   /*$lazy_load_done = parseInt($("#lazy_load_done").val());
+	   	   if($lazy_load_done<=0){
+	   	   	   $(".lazy_status").show();
+	   	   }*/
+	   });
+	   
+	   $infiniteScroll.on( 'load.infiniteScroll', function( event, response ) {	
+	   	   try {	   
+			   $data = JSON.parse( response );
+			   $(".lazy_status").hide();			   
+			   if($data.code==1){			   	  
+			   	  lazyMenu1( $data.details, 'lazy_menu', $activated_menu );
+			   } else {		 				   	  
+			   	  lazyCategory( $data, 'lazy_menu' );
+			   }
+		   } catch(err) {
+			  //
+			}
+	   });
+};
+
+reInitLazyLoad  = function(){
+	$(".lazy_menu").html(''); 
+	$(".clear_search_item").hide();
+	$(".search_foodname_lazy").val('');
+	initLazyLoad();				
+};
+
+/*initSearchItem = function(){
+	 $( ".search_foodname_lazy" ).keyup(function( event ) {
+	 	$(".clear_search_item").show();
+	 	if ( event.which == 13 ) {
+		    event.preventDefault();
+		} else {
+			search_string = $(this).val();			
+			if(!empty(search_string)){
+				setTimeout( function(){ 
+	    		  dump("search_string=>"+ search_string);
+	    		  searchByItem(search_string);
+	    	   }, 1000);
+			} else {				
+				reInitLazyLoad();
+			}
+		}
+	 });
+};*/
+
+var typingTimer;  
+var doneTypingInterval = 1000;
+
+initSearchItem = function(){
+	 $( ".search_foodname_lazy" ).keyup(function( event ) {
+	 	 if ( event.which == 13 ) {
+	 	 	event.preventDefault();
+	 	 }
+	 	 $(".clear_search_item").show();
+	 	 clearTimeout(typingTimer);
+	 	 if ($('.search_foodname_lazy').val) {
+	        typingTimer = setTimeout(function(){	            
+	             search_string = $(".search_foodname_lazy").val();
+	             searchByItem(search_string);
+	        }, doneTypingInterval);
+	    }
+	 });
+};
+
+
+searchByItem = function(search_string){
+	merchant_id = merchant_information.merchant_id;
+	data = "merchant_id="+ merchant_id +"&search_string=" + search_string ;
+		
+	ajax_lazy_item = $.ajax({
+	  url: sites_url  + '/lazymenu/searchItem',
+	  method: "GET" ,
+	  data: data ,
+	  dataType: "json",
+	  timeout: 6*1000,
+	  crossDomain: true,
+	  beforeSend: function( xhr ) {
+	  	$(".lazy_menu").html('');  
+	  	$(".lazy_status").show();
+      }
+    });
+    
+    ajax_lazy_item.done(function( data ) {  
+    	stopInfiniteScroll(); 
+    	$(".lazy_menu").html('');   	
+    	if ( data.code==1){    		     		    		    		   	    		       			
+    		lazyMenu1( data.details, 'lazy_menu', $activated_menu );
+    	} else {    		
+    		$(".lazy_menu").html( "<p class=\"text-muted\">"+ data.msg +"</p>" );   	
+    	}
+    });
+    
+     ajax_lazy_item.always(function() {        
+        ajax_lazy_item=null;      
+        $(".lazy_status").hide();
+    });
+          
+    /*FAIL*/
+    ajax_lazy_item.fail(function( jqXHR, textStatus ) {    	
+    	$text = !empty(jqXHR.responseText)?jqXHR.responseText:'';
+    	if(textStatus!="abort"){    	       	   
+    	}
+    	
+    }); 
+    
+};
+
+stopInfiniteScroll = function(){
+	$temp_data = $infiniteScroll.data('infiniteScroll');
+	if ((typeof  $temp_data !== "undefined") && ( $temp_data !== null)) {
+		$infiniteScroll.infiniteScroll('destroy');		
+		$infiniteScroll.removeData('infiniteScroll');
+		$infiniteScroll.off('load.infiniteScroll');
+	}
+};
+
+/*LAZY LOAD END HERE*/

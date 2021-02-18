@@ -9,27 +9,24 @@ $this->renderPartial('/front/order-progress-bar',array(
    'show_bar'=>true
 ));
 
-$error='';
-$amount_to_pay=0;
-$payment_description=Yii::t("default",'Payment to merchant');
-$merchant_name='';
-$client_token='';
-$label=t("Pay");
+require_once "buy.php";
 
-if(is_array($_POST) && count($_POST)>=1){  
-   if($data=Yii::app()->functions->getOrder($getdata['id'])){
-	   $client_id=$data['client_id'];
-	   $merchant_id=isset($data['merchant_id'])?$data['merchant_id']:'';	
-	   $amount_to_pay=Yii::app()->functions->prettyFormat($data['total_w_tax'],$merchant_id);
-	   $amount_to_pay=unPrettyPrice($amount_to_pay);	   
-	   $merchant_type=1;
-	   
-	   //if ( Yii::app()->functions->isMerchantCommission($merchant_id)){
-	   if (FunctionsV3::isMerchantPaymentToUseAdmin($merchant_id)){
-		  $merchant_type=2;
-	   }
-	   	  
-	   $transaction_id=BraintreeClass::PaymentMethod(
+$client_token=''; $label=''; 
+$payment_code = "btr";
+
+if (empty($error)){
+	
+	$merchant_type=1;
+	if (FunctionsV3::isMerchantPaymentToUseAdmin($merchant_id)){
+		$merchant_type=2;
+	}
+		
+	$label = Yii::t("default","Pay [amount]",array(
+	  '[amount]'=>Price_Formatter::formatNumber($amount_to_pay)
+	));
+	
+	if(is_array($_POST) && count($_POST)>=1){
+		 $transaction_id=BraintreeClass::PaymentMethod(
 	      $merchant_type,
 	      $merchant_id,
 	      $amount_to_pay,
@@ -38,73 +35,29 @@ if(is_array($_POST) && count($_POST)>=1){
 	      $_SESSION['kr_client']['last_name']
 	   );
 	   if($transaction_id){
-	   	  //echo "<h2>successful</h2>";	   	 
+	   	  $redirec_link=Yii::app()->createUrl('/store/receipt',array('id'=>$order_id));
 	   	  
-	   	  $db_ext=new DbExt;
-	        $params_logs=array(
-	          'order_id'=>$_GET['id'],
-	          'payment_type'=>"btr",
-	          'raw_response'=>$transaction_id,
-	          'date_created'=>FunctionsV3::dateNow(),
-	          'ip_address'=>$_SERVER['REMOTE_ADDR']
-	        );
-	        $db_ext->insertData("{{payment_order}}",$params_logs);
-	        
-	        $params_update=array(
-	         'status'=>'paid'
-	        );	        
-	        $db_ext->updateData("{{order}}",$params_update,'order_id',$_GET['id']);
-	        
-	        /*POINTS PROGRAM*/ 
-	        if (FunctionsV3::hasModuleAddon("pointsprogram")){
-	           PointsProgram::updatePoints($_GET['id']);
-	        }
-	        
-	        /*Driver app*/
-			if (FunctionsV3::hasModuleAddon("driver")){
-			   Yii::app()->setImport(array(			
-				  'application.modules.driver.components.*',
-			   ));
-			   Driver::addToTask($_GET['id']);
-			}
-	        				        
-	        $this->redirect( Yii::app()->createUrl('/store/receipt',array(
-	          'id'=>$_GET['id']
-	        )) );
-	        Yii::app()->end();
+	   	  if($order_info['status']=="paid"){
+			header('Location: '.$redirec_link."&note=already paid");   
+			Yii::app()->end();
+		  }
+		  
+		  FunctionsV3::updateOrderPayment($order_id,$payment_code,
+          $transaction_id,$get,$reference_id); 
+		
+          FunctionsV3::callAddons($order_id);
+	      header('Location: '.$redirec_link);   
+          Yii::app()->end();	
 	   	  
-	   } else {
-	   	  //echo "<h2>failed</h2>";
-	   	  $error=t("Error processing transaction");
-	   }
-	   
-   } else $error=t("Sorry but we cannot find what your are looking for.");	
-} else {
-   if ( $data=Yii::app()->functions->getOrder($getdata['id'])){	
-		if(!empty($data['total_w_tax'])){
-			$client_id=$data['client_id'];
-			$merchant_id=isset($data['merchant_id'])?$data['merchant_id']:'';	
-			$amount_to_pay=Yii::app()->functions->prettyFormat($data['total_w_tax'],$merchant_id);
-			$amount_to_pay=unPrettyPrice($amount_to_pay);		
-			$payment_description.=isset($data['merchant_name'])?$data['merchant_name']:'';
-			
-			$label.=" ".displayPrice(baseCurrency(),prettyFormat($amount_to_pay,$merchant_id));
-			
-			$merchant_type=1;
-			//if ( Yii::app()->functions->isMerchantCommission($merchant_id)){
-			if (FunctionsV3::isMerchantPaymentToUseAdmin($merchant_id)){
-				$merchant_type=2;
-			}
-			
-			/*generate client token*/
-			if(!$client_token=BraintreeClass::generateCLientToken($merchant_type,$client_id,$merchant_id)){
-				$error=t("Failed generating client token");
-			}
-			
-		} else $error=t("amount to pay is invalid");
-	} else $error=t("Sorry but we cannot find what your are looking for.");	
+	   } else $error=t("Error processing transaction");
+	} else {
+		if(!$client_token=BraintreeClass::generateCLientToken($merchant_type,$client_id,$merchant_id)){
+			$error=t("Failed generating client token");
+		}
+	}
 }
 ?>
+
 <div class="sections section-grey2 section-orangeform">
 <div class="container">  
   <div class="row top30">

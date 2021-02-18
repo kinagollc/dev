@@ -249,6 +249,69 @@ class NotificationWrapper
 		}
 		return true;
 	}
+	
+	public static function checkMigration()
+	{
+		$items = Item_migration::getItemToMigrate();		
+		$subaddon_item = Item_migration::getSubItem();	
+		$translation_category = Item_migration::GetTranslation("category","category_translation","cat_id");			
+		$sizetranslation = Item_migration::GetTranslation("size","size_translation","size_id");			
+		$subcategory_translation = Item_migration::GetTranslation("subcategory","subcategory_translation","subcat_id");			
+		$subcategory_item_translation = Item_migration::GetTranslation("subcategory_item","subcategory_item_translation","sub_item_id");			
+		$ingredients_translation = Item_migration::GetTranslation("ingredients","ingredients_translation","ingredients_id");			
+		$cooking_ref_translation = Item_migration::GetTranslation("cooking_ref","cooking_ref_translation","cook_id");			
+		$item_translation = Item_migration::GetTranslation("item","item_translation","item_id");			
+		$cuisine_translation = Item_migration::GetTranslation("cuisine","cuisine_translation","cuisine_id");			
+		
+		$total_to_migrate = (integer)$items + (integer)$subaddon_item ;
+		
+		if ( Yii::app()->functions->multipleField()){
+			$total_to_migrate = (integer)$items + (integer)$subaddon_item + (integer)$translation_category + 
+			(integer)$sizetranslation + (integer)$subcategory_translation + 
+			(integer)$subcategory_item_translation + (integer)$ingredients_translation +  (integer)$cooking_ref_translation + (integer)$item_translation +
+			(integer)$cuisine_translation;
+		}
+				
+		if($total_to_migrate>0){
+			$error = Yii::t("default","[total] items for migration",array(
+				 '[total]'=>$total_to_migrate
+				));
+			$link = Yii::app()->createUrl("/admin/migration_status");
+			throw new Exception( "<a href=\"$link\">".$error."</a>" );
+		}
+		return true;
+	}
+	
+	/*public static function getItemToMigrate()
+	{
+		if(Yii::app()->db->schema->getTable("{{item_relationship_size}}")){	
+			$stmt="
+			SELECT count(*) as total FROM {{item}} a
+			WHERE item_id NOT IN (
+			  select item_id from {{item_relationship_size}}
+			  where item_id = a.item_id
+			)
+			";			
+			if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
+				if($res['total']>0){
+					return $res['total'];
+				}
+			}
+		}
+		return false;
+	}
+	
+	public static function checkMigrateItem()
+	{
+		if($total = self::getItemToMigrate()){
+			$error = Yii::t("default","[total] food item needs update. click here",array(
+				 '[total]'=>$total
+				));
+			$link = Yii::app()->createUrl("/admin/update_item");
+			throw new Exception( "<a href=\"$link\">".$error."</a>" );
+		}
+		return true;
+	}*/
 		
 }
 /*end class*/

@@ -53,6 +53,9 @@ class AjaxController extends CController
 			}
 		}
 		
+		/* INIT EXCHANGE RATE*/
+		Item_utility::InitMultiCurrency();
+		
 		/*ADD SECURITY VALIDATION TO ALL REQUEST*/	
 		return true;
 	}
@@ -374,13 +377,13 @@ class AjaxController extends CController
     	$data = array(); $post = $_POST; $status = true; $and='';
     	
     	$id  = isset($post['city_id'])?(integer)$post['city_id']:0;
-    	$q  = isset($post['q'])?(integer)$post['q']:'';
+    	$q  = isset($post['q'])?$post['q']:'';
     	
     	if($id>0){
     		$and.= " AND city_id =".q($id)." ";
     	}
     	if(!empty($q)){
-    		$and.= " AND name LIKE =".q("$q%")." ";
+    		$and.= " AND name LIKE ".q("$q%")." ";
     	}
     	
     	$stmt = "
@@ -430,8 +433,10 @@ class AjaxController extends CController
     public function actionShowLocationFee()
     {
     	$this->data=$_GET;    	
+    	$rates = Item_utility::getRates();
     	$this->renderPartial('/front/location-fee',array(
-    	  'data'=>FunctionsV3::GetViewLocationRateByMerchant($this->data['merchant_id'])
+    	  'data'=>FunctionsV3::GetViewLocationRateByMerchant($this->data['merchant_id']),
+    	  'rates'=>$rates
     	));
     }
     
@@ -1270,13 +1275,15 @@ class AjaxController extends CController
       	       ':booking_id'=>$booking_id
       	     )
       	   );
-    		/*SEND PUSH TO MERCHANT APP V2*/
-if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
-	Yii::app()->setImport(array(			
-	  'application.modules.merchantappv2.components.*',
-    ));
-	OrderWrapper::InsertOrderTrigger($booking_id,'booking_request_cancel','','booking');
-}
+      	   
+      	    /*SEND PUSH TO MERCHANT APP V2*/
+	    	if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
+	    		Yii::app()->setImport(array(			
+				  'application.modules.merchantappv2.components.*',
+			    ));
+	    		OrderWrapper::InsertOrderTrigger($booking_id,'booking_request_cancel','','booking');
+	    	}
+    		
     		$this->code = 1;
     		$this->msg = t("Your request has been sent to merchant");
     		$this->details = array(
@@ -1382,7 +1389,7 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     {
     	$name = isset($_POST['q'])?$_POST['q']:'';
     	$data=array();$status = false;    	
-    	$stmt="
+    	/*$stmt="
    	    SELECT cuisine_name as name
    	    FROM {{cuisine}}
    	    WHERE cuisine_name LIKE ".FunctionsV3::q("$name%")."
@@ -1392,7 +1399,14 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
    	   ";    	    	
     	if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){    		
     		$data = Yii::app()->request->stripSlashes($resp);
-    	}    		    
+    	} */
+    	
+    	Item_menu::init();
+    	Item_menu::$language =  Yii::app()->language;
+    	if ( $data = Item_menu::searchByCuisine($name)){
+    		//
+    	}    
+    	
     	header('Content-Type: application/json');
 		echo json_encode(array(
 		    "status" => $status,
@@ -1408,18 +1422,27 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     {
     	$name = isset($_POST['q'])?$_POST['q']:'';
     	$data=array();$status = false;    	
-    	$stmt="
+    	
+    	/*$stmt="
    	    SELECT item_name as name
    	    FROM {{item}}
-   	    WHERE item_name LIKE ".FunctionsV3::q("$name%")."
+   	    WHERE item_name LIKE ".FunctionsV3::q("%$name%")."
    	    AND status ='publish'
    	    ORDER BY item_name ASC   	    
    	    LIMIT 0,10
    	   ";    	    	
-    	//dump($stmt);
+    	dump($stmt);
     	if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){    		
     		$data = Yii::app()->request->stripSlashes($resp);
-    	}    		    
+    		dump($data);
+    	}    		    */
+    	
+    	Item_menu::init();
+    	Item_menu::$language =  Yii::app()->language;
+    	if ( $data = Item_menu::searchByFoodName($name)){
+    		//
+    	}    
+    	
     	header('Content-Type: application/json');
 		echo json_encode(array(
 		    "status" => $status,
@@ -1435,19 +1458,58 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     {    	
     	$name = isset($_POST['q'])?$_POST['q']:'';
     	$merchant_id = isset($_POST['auto_merchant_id'])?(integer)$_POST['auto_merchant_id']:'';
-    	$data=array();$status = false;    	
+    	$data=array();$status = false; 
+    	
+    	$language =Yii::app()->language;
+    	
+    	$and='';
+    	$hide_food = getOption( (integer) $merchant_id,'food_option_not_available');      	
+    	if($hide_food==1){
+			$and = " AND not_available=1 ";
+		}
+		$multi_field = Yii::app()->functions->multipleField();
+        $table_item_translation = Yii::app()->db->schema->getTable("{{item_translation}}");
+        
+        $select = "item_name as name";
+        $where = "WHERE item_name LIKE ".FunctionsV3::q("%$name%")." ";
+        if($multi_field && $table_item_translation && $language!="en" ){
+        	$select="
+        	IFNULL((
+			SELECT IF(item_name IS NULL or item_name = '', 
+			a.item_name, item_name) 
+			from {{item_translation}}
+			 where
+			 item_id = a.item_id
+			 and language = ".q($language)."
+			), a.item_name ) as name
+        	";
+        	
+        	if(!empty($name)){
+	        	$where = "
+	        	WHERE 
+	        	item_id IN (
+	        	  select item_id from {{item_translation}}
+	        	  where item_id = a.item_id
+	        	  and language = ".q($language)."
+	        	  and item_name LIKE ".FunctionsV3::q("%$name%")."	  	        	        	
+	        	)
+	        	";
+        	}
+        }
+    	
     	$stmt="
-   	    SELECT item_name as name
-   	    FROM {{item}}
-   	    WHERE item_name LIKE ".FunctionsV3::q("$name%")."
+   	    SELECT $select
+   	    FROM {{item}} a
+   	    $where
    	    AND merchant_id=".q($merchant_id)."
    	    AND status ='publish'
+   	    $and
    	    ORDER BY item_name ASC   	    
    	    LIMIT 0,10
-   	   ";    	    	    	
-    	if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){    		
+   	   ";    	     	
+    	if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){       		
     		$data = Yii::app()->request->stripSlashes($resp);
-    	}    		    
+    	}        	
     	header('Content-Type: application/json');
 		echo json_encode(array(
 		    "status" => $status,
@@ -1458,5 +1520,6 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		));
     	Yii::app()->end();	
     }        
+    
 
 } /*end class*/    

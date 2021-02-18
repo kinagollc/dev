@@ -59,7 +59,7 @@ font-family:"Montserrat",sans-serif;
 font-size:14px;
 font-weight:normal;
 display:block;
-padding:5px 15px;;
+padding:5px 15px;
 }
 
 #menu li.active a,
@@ -2449,7 +2449,9 @@ height:auto;
 max-height:100px;
 }
 
-.category .goto-category.active{
+.category .goto-category.active,
+.lazy_load_item.active
+{
 border-left:2px solid #f75d34;
 }
 
@@ -3400,4 +3402,87 @@ margin-bottom:5px;
 }
 .box_green .col-md-2{
 padding-top:10px;
+}
+
+
+
+.result-merchant .label.label-default{
+margin-top: 10px;
+margin-bottom: 10px;
+display: inline-block;
+}
+
+#menu-list-wrapper{
+border:0px solid red !important;
+}
+
+.lazy_status{
+text-align:center;
+display:none;
+}
+
+@keyframes ldio-0cjiynj70m26 {
+  0% { transform: translate(-50%,-50%) rotate(0deg); }
+  100% { transform: translate(-50%,-50%) rotate(360deg); }
+}
+.ldio-0cjiynj70m26 div {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border: 10px solid #f75d34;
+  border-top-color: transparent;
+  border-radius: 50%;
+}
+.ldio-0cjiynj70m26 div {
+  animation: ldio-0cjiynj70m26 1s linear infinite;
+  top: 50px;
+  left: 50px
+}
+.loadingio-spinner-rolling-ow1huvfseu {
+  width: 35px;
+  height: 35px;
+  display: inline-block;
+  overflow: hidden;
+  background: none;
+}
+.ldio-0cjiynj70m26 {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform: translateZ(0) scale(0.35);
+  backface-visibility: hidden;
+  transform-origin: 0 0; /* see note above */
+}
+.ldio-0cjiynj70m26 div { box-sizing: content-box; }
+
+
+.search-food-wrap a.clear_search_item{
+font-size: 28px;
+color: #282c3f;
+position: absolute;
+right: 15px;
+top: 10px;
+display:none;
+}
+
+#menu-list-wrapper .cat_category_name
+{
+font-size:20px;
+}
+
+.menu-1 .cat_category_name,
+.menu-1 p.cat_category_description
+{
+margin-left:-15px !important;
+}
+
+.menu-1 p.cat_category_description,
+.menu-3 p.cat_category_description
+{
+margin-bottom:10px !important
+}
+
+.menu-2 .cat_category_name,
+.menu-2 p.cat_category_description{
+margin-left:15px !important;
 }

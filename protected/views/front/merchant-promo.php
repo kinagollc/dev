@@ -29,7 +29,7 @@
 </div>  
 <?php foreach ($promo['voucher'] as $val): 
       if ( $val['voucher_type']=="fixed amount"){
-      	  $amount=FunctionsV3::prettyPrice($val['amount']);
+      	  $amount=Price_Formatter::formatNumber($val['amount']);
       } else $amount=number_format( ($val['amount']/100)*100 )." %";
 ?>
    <p><i class="green-color ion-ios-plus-empty"></i> <?php echo $val['voucher_name']." - ".$amount." ".t("Discount")?></p>
@@ -47,7 +47,7 @@
     </a>     
 </div>  
 <p><i class="green-color ion-ios-plus-empty"></i> <?php 
-echo t("Free Delivery On Orders Over")." ". FunctionsV3::prettyPrice($promo['free_delivery'])?></p>
+echo t("Free Delivery On Orders Over")." ". Price_Formatter::formatNumber($promo['free_delivery'])?></p>
 <?php endif;?>
 
 </div>

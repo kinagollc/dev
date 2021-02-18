@@ -27,15 +27,9 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     <div class="mycol">
 	        <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>             
 	     </div>
-	     <?php if ($minimum_order>0):?>
 	     <div class="mycol">
-	        <p class="small"><?php echo t("Minimum Order").": ".FunctionsV3::prettyPrice($minimum_order)?></p>
+	        <p class="small"><?php echo t("Minimum Order").": ".Price_Formatter::formatNumber($minimum_order)?></p>
 	     </div>
-	     <?php else :?>
-	     <div class="mycol">
-	      <p class="small"><?php echo t("&nbsp;")?></p>
-	      </div>
-	     <?php endif;?>
 	     
 	     <div class="mycol">
 	        <a href="javascript:;" data-id="<?php echo $merchant_id?>"  title="<?php echo t("add to your favorite places")?>" class="add_favorites <?php echo "fav_".$merchant_id?>"><i class="ion-android-favorite-outline"></i></a>
@@ -82,6 +76,14 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	<a target="_blank" href="<?php echo FunctionsV3::fixedLink($merchant_website)?>">
 	  <?php echo $merchant_website;?>
 	</a>
+	</p>
+	<?php endif;?>
+	
+	<?php if(!empty($contact_phone)):?>
+	<p class="small">
+	<?php echo Yii::t("default","Contact number :[contact_phone]",array(
+	 '[contact_phone]'=>$contact_phone
+	));?>
 	</p>
 	<?php endif;?>
 			

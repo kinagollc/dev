@@ -23,7 +23,7 @@ class InvoicecronController extends CController
 	
 	public function actionGenerateInvoice()
 	{
-		$DbExt=new DbExt;
+		
 		$terms=isset($_GET['terms'])?$_GET['terms']:7;
 		$and=''; $date_covered_start=''; $date_covered_end='';
 		
@@ -62,6 +62,16 @@ class InvoicecronController extends CController
 				break;
 		}				
 		
+		$now = new DateTime();
+		$mins = $now->getOffset() / 60;
+		$sgn = ($mins < 0 ? -1 : 1);
+		$mins = abs($mins);
+		$hrs = floor($mins / 60);
+		$mins -= $hrs * 60;
+		$offset = sprintf('%+d:%02d', $hrs*$sgn, $mins);			
+		Yii::app()->db->createCommand("SET time_zone='$offset';")->query();
+		
+		
 		$stmt="
 		SELECT 
 		merchant_id,
@@ -89,9 +99,10 @@ class InvoicecronController extends CController
 		LIMIT 0,5
 		";
 		if (isset($_GET['debug'])){ dump($stmt); }		
-		if ($res=$DbExt->rst($stmt)){
+		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
 			foreach ($res as $val) {
 				if (isset($_GET['debug'])){ dump($val); }
+				
 				$stmt2="
 				SELECT SUM(total_commission) as total_commission
 				FROM
@@ -101,8 +112,20 @@ class InvoicecronController extends CController
 				$and
 				$and_status
 				";
-				if (isset($_GET['debug'])){ dump($stmt2); }
-				if ($res2=$DbExt->rst($stmt2)){
+				if (Item_utility::MultiCurrencyEnabled() && Yii::app()->db->schema->getTable("{{view_order_summary}}") ){
+					$stmt2="
+					SELECT SUM(total_commission_ex) as total_commission
+					FROM
+					{{view_order_summary}}
+					WHERE
+					merchant_id=".FunctionsV3::q($val['merchant_id'])."
+					$and
+					$and_status
+					";
+				}
+				
+				if (isset($_GET['debug'])){ dump($stmt2); }				
+				if($res2 = Yii::app()->db->createCommand($stmt2)->queryAll()){	
 					$res2=$res2[0];					
 					$params=array(
 					  'merchant_id'=>$val['merchant_id'],
@@ -116,8 +139,8 @@ class InvoicecronController extends CController
 					  'date_created'=>FunctionsV3::dateNow(),
 					  'ip_address'=>$_SERVER['REMOTE_ADDR']
 					);
-					if (isset($_GET['debug'])){ dump($params);}
-					$DbExt->insertData("{{invoice}}",$params);
+					if (isset($_GET['debug'])){ dump($params);}					
+					Yii::app()->db->createCommand()->insert("{{invoice}}",$params);
 				}
 			}
 		} else {

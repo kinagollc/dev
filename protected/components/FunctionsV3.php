@@ -19,6 +19,14 @@ class FunctionsV3
 		return displayPrice(getCurrencyCode(),prettyFormat( (float) $amount));		
 	}			
 	
+	public static function prettyPriceNoCurrency($amount='')
+	{
+		if(!empty($amount)){
+			return displayPrice("",prettyFormat($amount));
+		}
+		return '';
+	}			
+	
 	public static function getDesktopLogo()
 	{
 		$upload_path=self::uploadPath();
@@ -114,19 +122,7 @@ class FunctionsV3
 	                'url'=>array('/store/driver_signup'));      
        }                                
                        
-        if ( Yii::app()->functions->isClientLogin()){
-        	$top_menu[]=array(
-        	  'url'=>array('/store/profile'),
-        	  'label'=>'<i class="ion-android-contact"></i> '.ucwords(Yii::app()->functions->getClientName()),
-        	  'itemOptions'=>array('class'=>'green-button')      	  
-        	);
-        	
-        	$top_menu[]=array(
-        	  'url'=>array('/store/logout'),
-        	  'label'=>t("Sign Out"),
-        	  'itemOptions'=>array('class'=>'logout-menu orange-button')
-        	);
-        }
+     
         
         /*LANGUAGE BAR TOP*/
         $language_selection=true;
@@ -148,6 +144,29 @@ class FunctionsV3
                 'url'=>"javascript:;");   
         } 
        /*LANGUAGE BAR TOP*/         
+       
+       /*CURRENCY BAR TOP MENU*/
+       if (Item_utility::MultiCurrencyEnabled()){
+       	  if ( Multicurrency_utility::topMenuEnabled()){
+       	  	 $top_menu[] = Multicurrency_layout::topMenu();
+       	  }       
+       }
+       /*CURRENCY BAR TOP MENU*/
+                
+                
+        if ( Yii::app()->functions->isClientLogin()){
+        	$top_menu[]=array(
+        	  'url'=>array('/store/profile'),
+        	  'label'=>'<i class="ion-android-contact"></i> '.ucwords(Yii::app()->functions->getClientName()),
+        	  'itemOptions'=>array('class'=>'green-button')      	  
+        	);
+        	
+        	$top_menu[]=array(
+        	  'url'=>array('/store/logout'),
+        	  'label'=>t("Sign Out"),
+        	  'itemOptions'=>array('class'=>'logout-menu orange-button')
+        	);
+        }         
                
         return array(  		    
 		    'id'=>$class,
@@ -242,6 +261,17 @@ class FunctionsV3
 		  '15'=>"< ".displayPrice(baseCurrency(),15),
 		  '20'=>"< ".displayPrice(baseCurrency(),20),
 		);		
+		return $minimum_list;
+    }
+    
+     public static function minimumDeliveryFeeNew($exchange_rate=1)   
+    {    	
+    	$minimum_list = array();
+    	$data = array(5,10,15,20);
+    	foreach ($data as $val) {
+    		$value = (float)$val * $exchange_rate;
+    		$minimum_list[$val] = "< ".Price_Formatter::formatNumber($value);
+    	}
 		return $minimum_list;
     }
     
@@ -540,7 +570,7 @@ class FunctionsV3
 				if($getdata['sort_filter']=="ratings"){
 					$sort="DESC";
 				}
-				$sort_combine=" ORDER BY ".$getdata['sort_filter']." $sort";
+				$sort_combine=" ORDER BY ". q($getdata['sort_filter']) ." $sort";
 			}
 		}
 		
@@ -1100,6 +1130,9 @@ class FunctionsV3
 	    	$code=1; $button=t("Checkout");
 	    	if ($holiday==1){
 	    		$code=2;
+	    		if($merchant_preorder==1){
+	    			$is_pre_order=1;
+	    		}	    	
 	    	}
 	    } else {
 	    	if ($merchant_preorder==1){
@@ -1320,11 +1353,9 @@ class FunctionsV3
     	return array(
     	  'cod'=>t("Cash On delivery"),
     	  'ocr'=>t("Offline Credit Card Payment"),
-    	  'pyr'=>t("Pay On Delivery"),
-    	  //'pyp'=>t("Paypal"),
+    	  'pyr'=>t("Pay On Delivery"),    	  
     	  'paypal_v2'=>t("Paypal V2"),
-    	  'stp'=>t("Stripe"),
-    	  //'mcd'=>t("Mercapado"),
+    	  'stp'=>t("Stripe"),    	  
     	  'mercadopago'=>t("mercadopago V2"),
     	  'ide'=>t("Sisow"),
     	  'payu'=>t("Payumoney"),
@@ -1335,7 +1366,7 @@ class FunctionsV3
     	  'obd'=>t("Offline Bank Deposit"),
     	  'btr' =>t("Braintree"),
     	  'rzr'=>t("Razorpay"),
-    	  'vog'=>t("voguepay"),    	  
+    	  'vog'=>t("voguepay")    	  
     	);
     }
     
@@ -1412,7 +1443,8 @@ class FunctionsV3
     	}
     	if (getOptionA('mercadopago_v2_enabled')==1){
     		$payment_available[]='mercadopago';
-    	}
+    	}    	
+    	
     	    	
     	$new_payment_list=array();
 		if (is_array($payment_list) && count($payment_list)>=1){
@@ -2800,7 +2832,7 @@ class FunctionsV3
 		return false;
 	}
 	
-	public static function sticPrettyDate($date='')
+		public static function sticPrettyDate($date='')
 {
 	if (!empty($date)){
 		$date_format=getOptionA('website_date_format');
@@ -2824,7 +2856,7 @@ public static function sticPrettyTime($time='')
 	}
 	return false;
 }
-
+	
 	public static function isMerchantCommission($mtid='')
 	{
 		if ( Yii::app()->functions->isMerchantCommission($mtid)){
@@ -3557,16 +3589,17 @@ public static function sticPrettyTime($time='')
     		self::MerchantpushNewOrder($data['order_id']);
     		FunctionsV3::fastRequest(FunctionsV3::getHostURL().Yii::app()->createUrl("merchantapp/cron/processpush"));
     	}
+    	
     	/*SEND PUSH TO MERCHANT APP V2*/
- if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
-	Yii::app()->setImport(array(			
-	  'application.modules.merchantappv2.components.*',
-	));
-	 OrderWrapper::InsertOrderTrigger(
-	   isset($data['order_id'])?$data['order_id']:'',
-	   'receipt_send_to_merchant'   		   
-	 );
- }
+    	if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
+    		Yii::app()->setImport(array(			
+			  'application.modules.merchantappv2.components.*',
+		    ));
+    		 OrderWrapper::InsertOrderTrigger(
+    		   isset($data['order_id'])?$data['order_id']:'',
+    		   'receipt_send_to_merchant'   		   
+    		 );
+    	}
     	    	
     	unset($DbExt);
     }
@@ -3840,7 +3873,8 @@ public static function sticPrettyTime($time='')
     public static function fastRequest($url)
 	{		
         if (preg_match("/https/i", $url)) {
-        	@shell_exec("curl $url");
+        	//@shell_exec("curl $url");
+        	self::consumeUrl($url);
         } else {        	
 		    $parts=parse_url($url);	    
 		    $fp = fsockopen($parts['host'],isset($parts['port'])?$parts['port']:80,$errno, $errstr, 30);
@@ -4074,18 +4108,7 @@ public static function sticPrettyTime($time='')
 		  'ip_address'=>$_SERVER['REMOTE_ADDR']    		 
 		);	    				
 		$DbExt->insertData("{{sms_broadcast_details}}",$params); 	   	
-		/*SEND PUSH TO MERCHANT APP V2*/
-if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
-	Yii::app()->setImport(array(			
-	  'application.modules.merchantappv2.components.*',
-	));
-	OrderWrapper::InsertOrderTrigger(
-	   isset($data['booking_id'])?$data['booking_id']:'',
-	   'booked_notify_merchant',
-	   isset($data['booking_notes'])?$data['booking_notes']:'',
-	   'booking'
-	);
-}
+		
 		unset($DbExt);
 		FunctionsV3::runCronEmail();
 		FunctionsV3::runCronSMS();
@@ -4290,6 +4313,20 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 	    	  }
 	   	   }   	   
    	   }
+
+   	      	  
+   	   /*SEND PUSH TO MERCHANT APP V2*/
+    	if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
+    		Yii::app()->setImport(array(			
+			  'application.modules.merchantappv2.components.*',
+		    ));
+    		OrderWrapper::InsertOrderTrigger(
+    		   isset($data['booking_id'])?$data['booking_id']:'',
+    		   'booked_notify_merchant',
+    		   isset($data['booking_notes'])?$data['booking_notes']:'',
+    		   'booking'
+    		);
+    	}
    	   
    	   unset($DbExt);
    	   FunctionsV3::runCronEmail();
@@ -5497,9 +5534,6 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		    	}
 		    	if (getOption($merchant_id,'merchant_hubtel_enabled')==2){
 		    		$payment_available[]='hubtel';
-		    	}
-		    	if (getOption($merchant_id,'merchant_sofort_enabled')==2){		    		
-		    		$payment_available[]='sofort';
 		    	}		    	
 		    	if (getOption($merchant_id,'merchant_jampie_enabled')==2){		    		
 		    		$payment_available[]='jampie';
@@ -6404,16 +6438,7 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     	);
     	
     	$total_amount = FunctionsV3::prettyPrice($data['total_w_tax']);
-    		/*SEND PUSH TO MERCHANT APP V2*/
-if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
-	Yii::app()->setImport(array(			
-	  'application.modules.merchantappv2.components.*',
-	));
-	 OrderWrapper::InsertOrderTrigger(
-	   isset($data['order_id'])?$data['order_id']:'',
-	   'order_request_cancel_to_merchant'
-	 );
-}
+    		
 		/*EMAIL*/
 		if($tpl_email_enabled==1){
 			$email_subject = getOptionA("order_request_cancel_to_merchant_tpl_subject_$lang");
@@ -6430,7 +6455,14 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 	    		$emails = explode(',',$email);
 	    		if(is_array($emails) && count($emails)>=1){
 	    			foreach ($emails as $email_val) {
-	    				sendEmail($email_val,'',$email_subject,$email_content);
+	    				//sendEmail($email_val,'',$email_subject,$email_content);
+	    				Yii::app()->db->createCommand()->insert("{{email_logs}}",array(
+	    				  'email_address'=>$emails,
+	    				  'subject'=>$email_subject,
+	    				  'content'=>$email_content,
+	    				  'date_created'=>FunctionsV3::dateNow(),
+	    				  'ip_address'=>$_SERVER['REMOTE_ADDR']
+	    				));
 	    			}
 	    		}
 	    	}		
@@ -6538,7 +6570,18 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     			}
     		}
     	}	
-    	/*END SEND NOTIFICATION TO ADMIN SMS*/    	    	
+    	/*END SEND NOTIFICATION TO ADMIN SMS*/    	
+
+    	/*SEND PUSH TO MERCHANT APP V2*/
+    	if (FunctionsV3::hasModuleAddon("merchantappv2")){    		
+    		Yii::app()->setImport(array(			
+			  'application.modules.merchantappv2.components.*',
+		    ));
+    		 OrderWrapper::InsertOrderTrigger(
+    		   isset($data['order_id'])?$data['order_id']:'',
+    		   'order_request_cancel_to_merchant'
+    		 );
+    	}   	
 		
 	}
 	
@@ -6980,7 +7023,15 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     	 from {{review}}
     	 where
     	 order_id = a.order_id
-    	) as review_count
+    	) as review_count,
+    	
+    	(
+    	 select used_currency
+    	 from {{order_delivery_address}}
+    	 where 
+    	 order_id = a.order_id
+    	 limit 0,1
+    	) as used_currency
     	
     	 FROM
     	{{order}} a
@@ -6989,7 +7040,7 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
     	AND status NOT IN ('".initialStatus()."')
     	ORDER BY order_id DESC
     	LIMIT 0,10
-    	";
+    	";    	
     	if ( $res=$DbExt->rst($stmt)){
 			return $res;
 		}
@@ -7217,10 +7268,16 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		
 		$day=Yii::app()->functions->getOption("stores_open_day",$merchant_id);
 		$day_open=!empty($day)?json_decode($day,true):false;
-			
+				
+		$nos_days = 30;
+		$merchant_preorder = getOption($merchant_id,'merchant_preorder');		
+		if($merchant_preorder!=1){
+			$nos_days = 1;
+		}    
+				
 		if(is_array($day_open) && count($day_open)>=1){
 			
-			for ($i = 0; $i <= 30; $i++) {				
+			for ($i = 0; $i < $nos_days; $i++) {				
 				$key=date("Y-m-d",strtotime("+$i day"));
 				$key_day = strtolower(date("l",strtotime($key)));
 				if(in_array($key_day,(array)$day_open)){
@@ -7228,7 +7285,7 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 				}
 			}
 		} else {			
-			for ($i = 0; $i <= 30; $i++) {				
+			for ($i = 0; $i < $nos_days; $i++) {				
 				$key=date("Y-m-d",strtotime("+$i day"));
 				$dates[$key] = FunctionsV3::prettyDate(date("D F d Y",strtotime("+$i day")));
 			}
@@ -7725,6 +7782,11 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 			$new++;
 		}		
 		if( !self::checkIfTableExist('stripe_logger')){
+			$new++;
+		}		
+				
+		/*5.4.3*/
+		if( !self::checkIfTableExist('item_translation')){
 			$new++;
 		}		
 		
@@ -8726,9 +8788,23 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		b.opt_contact_delivery,
 		b.contact_email as email_address,
 		b.contact_email as customer_email,
+		b.used_currency,
+		b.base_currency,
+		b.exchange_rate,
 		
 		c.restaurant_name as merchant_name,
-		c.restaurant_phone as merchant_contact_phone
+		c.restaurant_phone as merchant_contact_phone,
+		
+		d.payment_reference,
+		
+		(
+		select credit_card_number
+		from
+		{{client_cc}}
+		where
+		cc_id=a.cc_id 
+		limit 0,1
+		) as credit_card_number
 		
 		FROM {{order}} a
 		left join {{order_delivery_address}} b
@@ -8738,6 +8814,10 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		left join {{merchant}} c
 		on
 		a.merchant_id = c.merchant_id
+		
+		left join {{payment_order}} d
+		on
+		a.order_id = d.order_id
 		
 		WHERE
 		a.order_id=".q($order_id)."
@@ -8777,8 +8857,10 @@ if (FunctionsV3::hasModuleAddon("merchantappv2")){
 		a.order_id,
 		a.merchant_id,
 		a.order_id_token,
+		a.status,
 		concat(b.first_name,' ',b.last_name) as customer_name,
-		concat(c.first_name,' ',c.last_name) as client_name		
+		concat(c.first_name,' ',c.last_name) as client_name,
+		c.contact_email	
 		
 		FROM
 		{{order}} a

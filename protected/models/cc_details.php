@@ -10,7 +10,13 @@
  </tr>
  <tr>
    <td><?php echo t("Credit Card Number")?></td>
-   <td>: <?php echo $data['credit_card_number']?></td>
+   <td>: <?php 
+   try {   	  
+   	   echo CreditCardWrapper::decryptCard($data['encrypted_card']);
+   } catch (Exception $e) {
+   	  echo  $e->getMessage();
+   }
+   ?></td>
  </tr>
  <tr>
    <td><?php echo t("Expiration")?></td>

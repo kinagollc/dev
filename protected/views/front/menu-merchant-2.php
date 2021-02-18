@@ -4,18 +4,17 @@
 <div class="section-label menu-cat cat-<?php echo $val['category_id']?>">
     <a class="section-label-a">
       <span class="bold">
-      <?php echo qTranslate($val['category_name'],'category_name',$val)?>
+      <?php echo $val['category_name']?>
       </span>
       <b></b>
     </a>     
 </div>    
 <?php if (!empty($val['category_description'])):?>
-<!--<p class="small"><?php echo $val['category_description']?></p>-->
-<p class="small"><?php echo qTranslate($val['category_description'],'category_description',$val)?></p>
+<p class="small"><?php echo $val['category_description'];?></p>
 <?php endif;?>
 <?php echo Widgets::displaySpicyIconNew($val['dish'],"dish-category")?>
 
-<div class="row menu-2 border">
+<div class="row menu-2 border" >
 
 <?php $x=0?>
 <?php if (is_array($val['item']) && count($val['item'])>=1):?>
@@ -23,11 +22,6 @@
 
 <?php 
 $atts='';
-/*if ( $val_item['single_item']==2){
-	  $atts.='data-price="'.$val_item['single_details']['price'].'"';
-	  $atts.=" ";
-	  $atts.='data-size="'.$val_item['single_details']['size'].'"';
-}*/
 if ( $val_item['single_item']==2){
 	  $atts.='data-price="'.$val_item['single_details']['price'].'"';
 	  $atts.=" ";
@@ -46,9 +40,9 @@ if ( $val_item['single_item']==2){
      <div class="food-thumbnail" 
         style="background:url('<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>');">       
      </div>
-     <p class="bold top10"><?php echo qTranslate($val_item['item_name'],'item_name',$val_item)?></p>
+     <p class="bold top10"><?php echo $val_item['item_name']?></p>
      <p class="small food-description read-more">
-     <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
+     <?php echo $val_item['item_description']?>
      </p>
      <?php 
      if (strlen($val_item['item_description'])<59){
@@ -57,6 +51,7 @@ if ( $val_item['single_item']==2){
      ?>
      
      <?php if ( $disabled_addcart==""):?>
+          
      <div class="center top10 food-price-wrap">
      <a href="javascript:;" 
      class="dsktop orange-button inline rounded3 menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>"
@@ -64,8 +59,12 @@ if ( $val_item['single_item']==2){
      data-single="<?php echo $val_item['single_item']?>" 
      <?php echo $atts;?>
      data-category_id="<?php echo $val['category_id']?>"
-      >
-     <?php echo FunctionsV3::getItemFirstPrice($val_item['prices'],$val_item['discount']) ?>
+      >     
+     <?php     
+       $this->widget('application.components.Widget_price',array(
+         'price'=> $val_item['prices']
+       ));
+     ?>     
      </a>
      
      <a href="javascript:;" 
@@ -75,7 +74,11 @@ if ( $val_item['single_item']==2){
      <?php echo $atts;?>
      data-category_id="<?php echo $val['category_id']?>"
       >
-     <?php echo FunctionsV3::getItemFirstPrice($val_item['prices'],$val_item['discount']) ?>
+     <?php     
+       $this->widget('application.components.Widget_price',array(
+         'price'=> $val_item['prices']
+       ));
+     ?>   
      </a>
     
      </div>
@@ -88,8 +91,8 @@ if ( $val_item['single_item']==2){
 <div class="col-md-6 border">
 <p class="small text-danger"><?php echo t("no item found on this category")?></p>
 </div>
-<?php endif;?>
 
+<?php endif;?>
 
 </div> <!--row-->
 <?php endforeach;?>

@@ -16,6 +16,12 @@ $cancel_order_enabled = getOptionA('cancel_order_enabled');
    <table class="table table-striped">
      <tbody>
      <?php foreach ($data as $val):?>     
+     
+     <?php 
+     $used_currency  = isset($val['used_currency'])?$val['used_currency']: FunctionsV3::getCurrencyCode() ;
+     Price_Formatter::init( $used_currency );
+     ?>
+     
       <tr class="tr_mobile">
         <td>
         <div class="mytable">
@@ -72,7 +78,7 @@ $cancel_order_enabled = getOptionA('cancel_order_enabled');
         
         <td> 
         <p><?php echo t("TOTAL")?></p>
-        <p><?php echo FunctionsV3::prettyPrice($val['total_w_tax'])?></p>         
+        <p><?php echo Price_Formatter::formatNumber($val['total_w_tax'])?></p>         
         </td>
         
         <td>
@@ -120,7 +126,11 @@ $cancel_order_enabled = getOptionA('cancel_order_enabled');
            if(!empty($valh['remarks2']) && !empty($valh['remarks_args']) ){
            	   $remarks_args = json_decode($valh['remarks_args'],true);
            	   if(is_array($remarks_args) && count($remarks_args)>=1){
-           	      $remarks = Yii::t("driver",$valh['remarks2'],$remarks_args);            	   
+           	   	  $new_arrgs = array();
+           	   	  foreach ($remarks_args as $remarks_args_key=>$remarks_args_val) {
+           	   	  	$new_arrgs[$remarks_args_key]= Yii::t("driver",$remarks_args_val);
+           	   	  }		           	   	  
+           	      $remarks = Yii::t("driver",$valh['remarks2'],$new_arrgs);            	   
            	   }
            }
            ?>
