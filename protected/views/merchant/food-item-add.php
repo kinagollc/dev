@@ -301,6 +301,10 @@ echo CHtml::hiddenField('merchant_tax',$merchant_tax);
 <div class="clear"></div>
 
 <div style="height:20px;"></div>
+<div class="uk-form-row">
+<label class="uk-form-label"></label>
+<input type="submit" value="<?php echo Yii::t("default","Save")?>" class="uk-button uk-form-width-medium uk-button-success">
+</div>
 <!--GALLERY -->
 	
 	<?php 	
