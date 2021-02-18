@@ -705,8 +705,8 @@ function initReadMore()
 {
 	if ( $(".read-more").exists() ){				
 	    $('.read-more').readmore({
-	    	moreLink:'<a class="small" href="javascript:;">'+js_lang.read_more+'</a>',
-	    	lessLink:'<a class="small" href="javascript:;">'+js_lang.close+'</a>'
+	    	moreLink:'<a class="small" style="font-size:11px;font-weight:bold;" href="javascript:;">'+js_lang.read_more+'</a>',
+	    	lessLink:'<a class="small" style="font-size:11px;font-weight:bold;" href="javascript:;">'+js_lang.close+'</a>'
 	    });
 	}
 }

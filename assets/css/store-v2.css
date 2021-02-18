@@ -1521,6 +1521,15 @@ margin:auto;*/
 max-height:40px;
 min-height:40px;
 overflow:hidden;
+font-size: 11px !important;
+}
+.biggester
+{
+font-size: 10px;
+}
+.read-more
+{
+font-size: 11px important;
 }
 
 .merchant-review-wrap .read-more{
