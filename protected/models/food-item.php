@@ -70,8 +70,7 @@ if ($data['two_flavors']==2){
 }
 //dump($data['dish']);
 ?>
-<div class="moveup">
-<div class="container  view-food-item-wrap">
+<div class="container moveup view-food-item-wrap">
    
   <!--ITEM NAME & DESCRIPTION-->
   <div class="row">
@@ -533,7 +532,7 @@ if ($data['two_flavors']==2){
 </div>
 <?php endif;?>
   
-</div> <!--view-item-wrap--></div>
+</div> <!--view-item-wrap-->
 </form>
 <?php else :?>
 <p class="text-danger"><?php echo Yii::t("default","Sorry but we cannot find what you are looking for.")?></p>
