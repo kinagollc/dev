@@ -19,7 +19,7 @@
      <div class="items-row <?php echo $tc==2?"hide":''?>" >
      
      <?php if (!empty($val['category_description'])):?>
-     <p class="small">
+     <p class="small" style="margin-top:-8px; padding-bottom:8px; #929498">
        <?php //echo qTranslate($val['category_description'],'category_description',$val)?>
        <?php echo $val['category_description']?>
      </p>
@@ -49,8 +49,23 @@
 	  ?>       
      
      <div class="row <?php echo $x%2?'odd':'even'?>">
-        <div class="col-md-10 col-xs-10 border">          
+        <div class="col-md-3 col-xs-3 border">
+    <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" data-lightbox="image<?php echo rand(1,10000); ?>" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
+            rel="<?php echo $val_item['item_id']?>"
+            data-single="<?php echo $val_item['single_item']?>" 
+            <?php echo $atts;?>
+            data-category_id="<?php echo $val['category_id']?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
+            
+             <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" data-lightbox="image<?php echo rand(1,10000); ?>" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
+            
+  </div>
+        <div class="col-md-4 col-xs-4 border">        
           <?php echo $val_item['item_name']?>          
+          <div style="font-style:italic;font-size:11px;!important"><p class="small food-description read-more" style="font-style:italic;font-size:11px;!important">
+    <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
+    </p></div>
+        </div>
+          <div class="col-md-3 col-xs-3 food-price-wrap border">
           <?php 
            $this->widget('application.components.Widget_price',array(
              'price'=> $val_item['prices']
@@ -68,7 +83,7 @@
             <?php echo $atts;?>
             data-category_id="<?php echo $val['category_id']?>"
            >
-           <i class="ion-ios-plus-outline green-color bold"></i>
+           <i class="ion-ios-plus-outline green-general bold"></i>
           </a>
          
           <a href="javascript:;" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
@@ -77,7 +92,7 @@
             <?php echo $atts;?>
             data-category_id="<?php echo $val['category_id']?>"
            >
-           <i class="ion-ios-plus-outline green-color bold"></i>
+           <i class="ion-ios-plus-outline green-general bold"></i>
           </a>
           
           <?php endif;?>
