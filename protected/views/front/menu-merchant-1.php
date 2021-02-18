@@ -61,7 +61,7 @@
   </div>
    <div class="col-md-4 col-xs-4 border">
           <?php echo $val_item['item_name']?>    
-          <div style="font-style:italic;font-size:11px;!important"><p class="small food-description read-more" style="font-style:italic;font-size:11px;!important">
+          <div style="font-style:italic;font-size:11px;!important"><p class="small food-description read-more" style="font-style:italic;position:inherit;font-size:11px;!important">
     <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
     </p></div>
         </div>     

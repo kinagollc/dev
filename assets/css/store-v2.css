@@ -1530,6 +1530,7 @@ font-size: 10px;
 .read-more
 {
 font-size: 11px important;
+position: inherit;
 }
 
 .merchant-review-wrap .read-more{
