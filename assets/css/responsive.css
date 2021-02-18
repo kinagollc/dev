@@ -8,7 +8,7 @@ html, body
 {
 padding-top:22px;
 }
-.view-food-item-wrap {
+.moveup {
 margin-top:-22px;
 }
 
@@ -648,10 +648,6 @@ border:0px solid green;
 
 .menu-nav-mobile, .cart-mobile-handle{
 width:15%;
-}
-
-.view-food-item-wrap {
-margin-top:-22px;
 }
 
 .merchant-review-wrap .into-row,
