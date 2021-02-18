@@ -50,7 +50,7 @@
      
      <div class="row <?php echo $x%2?'odd':'even'?>">
         <div class="col-md-10 col-xs-10 border">          
-          <?php echo $val_item['item_name']?>          
+          <?php echo $val_item['item_name']?>         
           <?php 
            $this->widget('application.components.Widget_price',array(
              'price'=> $val_item['prices']
