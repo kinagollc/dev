@@ -31,7 +31,7 @@ $cssFiles = array(
   $assets_dir."/vendor/intel/build/css/intlTelInput-modified.css",
   $assets_dir."/vendor/rupee/rupyaINR-modified.css",
   $assets_dir."/vendor/bootstrap/css/bootstrap.css",
-  $assets_dir."/vendor/lightbox-master/dist/ekko-lightbox.css",
+  $assets_dir."/vendor/lightbox2/src/css/lightbox.css",
   $assets_dir."/vendor/raty/jquery.raty.css",
   $assets_dir."/vendor/ionicons-2.0.1/css/ionicons.min.css",
   $assets_dir."/vendor/compress/bootstrap-select.min.css",
