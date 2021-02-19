@@ -78,14 +78,6 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	</a>
 	</p>
 	<?php endif;?>
-	
-	<?php if(!empty($contact_phone)):?>
-	<p class="small">
-	<?php echo Yii::t("default","Contact number :[contact_phone]",array(
-	 '[contact_phone]'=>$contact_phone
-	));?>
-	</p>
-	<?php endif;?>
 			
 </div> <!--search-wraps-->
 
