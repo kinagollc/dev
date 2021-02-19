@@ -79,6 +79,8 @@ class ScriptManager
 		$cs->registerScriptFile($baseUrl."/assets/vendor/SimpleAjaxUploader.min.js"
 		,CClientScript::POS_END);
 		
+		$cs->registerScriptFile($baseUrl."/assets/vendor/lightbox2-master/src/js/lightbox.js"
+		,CClientScript::POS_END);
 		
 		$cs->registerScriptFile($baseUrl."/assets/vendor/iCheck/icheck.js"
 		,CClientScript::POS_END); 
