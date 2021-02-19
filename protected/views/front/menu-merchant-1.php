@@ -68,10 +68,10 @@
             <?php echo $atts;?>
             data-category_id="<?php echo $val['category_id']?>"
            >
-           <div style="font-style:italic;font-size:15px;!important"><?php echo $val_item['item_name']?></div>
+           <div style="font-style:italic;font-weight:bold;font-size:15px;!important"><?php echo $val_item['item_name']?></div>
           </a>   
           <?php else :?> 
-          <div style="font-style:italic;font-size:15px;!important"><?php echo $val_item['item_name']?></div>
+          <div style="font-style:italic;font-size:15px;font-weight:bold;!important"><?php echo $val_item['item_name']?></div>
           <?php endif;?> 
           <?php if ( $disabled_addcart==""):?>
           
@@ -81,7 +81,7 @@
             <?php echo $atts;?>
             data-category_id="<?php echo $val['category_id']?>"
            >
-           <div style="font-style:italic;font-size:15px;!important"><?php echo $val_item['item_name']?></div>
+           <div style="font-style:italic;font-size:15px;font-weight:bold;!important"><?php echo $val_item['item_name']?></div>
           </a>   
           <?php endif;?> 
           
