@@ -60,7 +60,7 @@ class mobileWrapper
 			if (file_exists($path_to_upload."/$image")){							
 				$default=$image;							
 				if(empty($addon_path)){
-				  $url = Yii::app()->getBaseUrl(true)."/upload/$default";
+				  $url = Yii::app()->getBaseUrl(true)."/cdn.php?height=320&image=/upload/$default";
 				} else {
 				   $url = Yii::app()->getBaseUrl(true)."/upload/$addon_path/$default";	
 				}
