@@ -189,7 +189,7 @@ class SingleAppClass
 		if (!empty($image)){						
 			if (file_exists($path_to_upload."/$image")){							
 				$default=$image;				
-				$url = Yii::app()->getBaseUrl(true)."/upload/$default";
+				$url = Yii::app()->getBaseUrl(true)."/cdn.php?height=320&image=/upload/$default";
 			} else $url=self::moduleBaseUrl()."/assets/images/$default";
 		} else $url=self::moduleBaseUrl()."/assets/images/$default";
 		return $url;
