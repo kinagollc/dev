@@ -83,8 +83,6 @@
            >
            <div style="font-style:italic;font-size:15px;!important"><?php echo $val_item['item_name']?></div>
           </a>   
-          <?php else :?> 
-          <div style="font-style:italic;font-size:15px;!important"><?php echo $val_item['item_name']?></div>
           <?php endif;?> 
           
           
