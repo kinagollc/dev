@@ -68,7 +68,7 @@
             <?php echo $atts;?>
             data-category_id="<?php echo $val['category_id']?>"
            >
-           <?php echo $val_item['item_name']?> 
+           <div style="font-style:italic;font-size:11px;!important"><?php echo $val_item['item_name']?></div>
           </a>   
           <?php endif;?> 
           <div style="font-style:italic;font-size:11px;!important"><p class="small food-description read-more" style="font-style:italic;position:inherit;font-size:11px;!important">
