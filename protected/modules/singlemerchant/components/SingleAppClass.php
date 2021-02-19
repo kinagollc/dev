@@ -198,11 +198,11 @@ class SingleAppClass
 	public static function getImage2($image='')
 	{	
 		$url='';			
-		$path_to_upload=Yii::getPathOfAlias('webroot')."/cdn.php?height=20&image=/upload";				
+		$path_to_upload=Yii::getPathOfAlias('webroot')."/upload";				
 		
 		if (!empty($image)){			
 			if (file_exists($path_to_upload."/$image")){														
-				$url = Yii::app()->getBaseUrl(true)."/cdn.php?height=20&image=/upload/$image";
+				$url = Yii::app()->getBaseUrl(true)."/upload/$image";
 			}
 		} 
 		return $url;
