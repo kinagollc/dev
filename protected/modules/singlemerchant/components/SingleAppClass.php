@@ -184,7 +184,7 @@ class SingleAppClass
 	public static function getImage($image='', $default="default-logo.png")
 	{	
 		$url='';			
-		$path_to_upload=Yii::getPathOfAlias('webroot')."/cdn.php?height=20&image=/upload";				
+		$path_to_upload=Yii::getPathOfAlias('webroot')."/upload";				
 		
 		if (!empty($image)){						
 			if (file_exists($path_to_upload."/$image")){							
