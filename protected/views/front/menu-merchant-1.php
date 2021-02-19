@@ -60,7 +60,17 @@
             
   </div>
    <div class="col-md-4 col-xs-4 border">
-          <?php echo $val_item['item_name']?>    
+          <?php if ( $disabled_addcart==""):?>
+          
+          <a href="javascript:;" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
+            rel="<?php echo $val_item['item_id']?>"
+            data-single="<?php echo $val_item['single_item']?>" 
+            <?php echo $atts;?>
+            data-category_id="<?php echo $val['category_id']?>"
+           >
+           <?php echo $val_item['item_name']?> 
+          </a>   
+          <?php endif;?> 
           <div style="font-style:italic;font-size:11px;!important"><p class="small food-description read-more" style="font-style:italic;position:inherit;font-size:11px;!important">
     <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
     </p></div>
