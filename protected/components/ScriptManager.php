@@ -138,9 +138,6 @@ class ScriptManager
 		
 		$cs->registerScriptFile($baseUrl."/assets/vendor/EasyAutocomplete/jquery.easy-autocomplete.min.js"
 		,CClientScript::POS_END); 
-		
-		$cs->registerScriptFile($baseUrl."/assets/vendor/lightbox2/src/js/lightbox.js"
-		,CClientScript::POS_END);
 				
 		if($config['theme_time_pick']==2 || $config['website_use_time_picker']==2){
 			$cs->registerScriptFile($baseUrl."/assets/vendor/timepicker.co/jquery.timepicker.js"

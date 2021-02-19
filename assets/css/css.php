@@ -38,7 +38,6 @@ $cssFiles = array(
   $assets_dir."/vendor/justified-gallery/css/justifiedGallery.min.css",
   $assets_dir."/vendor/EasyAutocomplete/easy-autocomplete.min.css",
   $assets_dir."/vendor/animate.min.css",
-  $assets_dir."/vendor/lightbox-master/dist/ekko-lightbox.css",
   $assets_dir."/css/store.css",
   $assets_dir."/css/store-v2.css",
   $assets_dir."/css/responsive.css",
