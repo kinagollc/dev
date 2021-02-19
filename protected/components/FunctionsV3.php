@@ -1236,7 +1236,7 @@ class FunctionsV3
 			if ( $small){
 			    $url_image=websiteUrl()."/assets/images/default-food-image.png";
 			} else $url_image=websiteUrl()."/assets/images/default-food-image-large.png";
-		} else $url_image=websiteUrl()."/upload/$photo";		
+		} else $url_image=websiteUrl()."/image.php?height=70&image=/upload/$photo";		
 		return $url_image;
 	}		
 	
