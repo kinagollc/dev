@@ -73,6 +73,21 @@
           <?php else :?> 
           <div style="font-style:italic;font-size:15px;!important"><?php echo $val_item['item_name']?></div>
           <?php endif;?> 
+          <?php if ( $disabled_addcart==""):?>
+          
+          <a href="javascript:;" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
+            rel="<?php echo $val_item['item_id']?>"
+            data-single="<?php echo $val_item['single_item']?>" 
+            <?php echo $atts;?>
+            data-category_id="<?php echo $val['category_id']?>"
+           >
+           <div style="font-style:italic;font-size:15px;!important"><?php echo $val_item['item_name']?></div>
+          </a>   
+          <?php else :?> 
+          <div style="font-style:italic;font-size:15px;!important"><?php echo $val_item['item_name']?></div>
+          <?php endif;?> 
+          
+          
           <div style="font-style:italic;font-size:11px;!important"><p class="small food-description read-more" style="font-style:italic;position:inherit;font-size:11px;!important">
     <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
     </p></div>
