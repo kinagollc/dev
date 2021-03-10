@@ -8,7 +8,7 @@ class MerchantUserWrapper
 		SELECT 
 		a.id,a.merchant_id,a.user_type,a.email_address,a.username,a.password,a.session_token,a.status,
 		a.user_access,a.contact_number, a.pin,
-		b.restaurant_name		
+		b.restaurant_name, b.stic_dark_theme		
 		FROM {{view_user_master}} a
 		left join {{merchant}} b
 		on
@@ -32,6 +32,7 @@ class MerchantUserWrapper
 				}				
 								
 				$logo = getOption($res['merchant_id'],'merchant_photo');
+				$merchant_photo_bg = getOption($res['merchant_id'],'merchant_photo_bg');
 				return array(				
 				  'id'=>$res['id'],
 				  'merchant_id'=>$res['merchant_id'],
@@ -43,7 +44,8 @@ class MerchantUserWrapper
 				  'email_address'=>$res['email_address'],
 				  'contact_number'=>$res['contact_number'],
 				  'pin'=>$res['pin'],
-				  'merchant_photo'=>FoodItemWrapper::getImage( $logo ,'chef.svg')
+				  'merchant_photo'=>FoodItemWrapper::getImage( $logo ,'chef.svg'),
+				  'stic_dark_theme'=>$res['stic_dark_theme']
 				);
 			}
 		}
@@ -102,7 +104,7 @@ class MerchantUserWrapper
 		SELECT 
 		a.id,a.merchant_id,a.user_type,a.email_address,a.username,a.password,a.session_token,a.status,
 		a.user_access,a.contact_number, a.pin,
-		b.restaurant_name,
+		b.restaurant_name, b.stic_dark_theme,
 		( 
 		 select option_value from {{option}}
 		 where merchant_id=a.merchant_id
@@ -115,7 +117,14 @@ class MerchantUserWrapper
 		 where merchant_id=a.merchant_id
 		 and option_name='merchant_photo'
 		 limit 0,1
-		) as merchant_photo 
+		) as merchant_photo ,
+
+		( 
+		 select option_value from {{option}}
+		 where merchant_id=a.merchant_id
+		 and option_name='merchant_photo_bg'
+		 limit 0,1
+		) as merchant_photo_bg 
 		
 		FROM {{view_user_master}} a
 		left join {{merchant}} b
@@ -144,7 +153,8 @@ class MerchantUserWrapper
 				  'email_address'=>$res['email_address'],
 				  'contact_number'=>$res['contact_number'],
 				  'pin'=>$res['pin'],
-				  'merchant_photo'=>FoodItemWrapper::getImage($res['merchant_photo'],'chef.svg')
+				  'merchant_photo'=>FoodItemWrapper::getImage($res['merchant_photo'],'chef.svg'),
+				  'stic_dark_theme'=>$res['stic_dark_theme']
 				);
 			}
 		}

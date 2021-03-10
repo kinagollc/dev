@@ -118,6 +118,7 @@ class OrderWrapper
 		a.request_cancel,
 		a.date_modified,
 		a.delivery_asap,
+		concat(b.street,' ',b.area_name,' ',b.city,' ',b.state,' ',b.zipcode) as full_address,
 		concat(b.first_name,' ',b.last_name) as customer_name,	
 		b.estimated_time, b.estimated_date_time,
 		(

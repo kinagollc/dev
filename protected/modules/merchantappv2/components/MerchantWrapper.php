@@ -84,13 +84,20 @@ class MerchantWrapper
 			$is_location = true;
 		}
 		$data = array();
+
+		// HOME SECTION 1
 		$data[] = array(
+		 'section'=>'1',
+		 'stic_icon'=>"info",
 		 'icon'=>"1.png",
 		 'label'=>translate("Info"),
 		 'page'=>"info.html",
 		 'access_id'=>'Merchant'
 		);
+
 		$data[] = array(
+		 'section'=>'1',
+		 'stic_icon'=>"settings",
 		 'icon'=>"2.png",
 		 'label'=>translate("Settings"),
 		 'page'=>"merchant_settings.html",
@@ -98,6 +105,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'1',
+		 'stic_icon'=>"opening",
 		 'icon'=>"2.png",
 		 'label'=>translate("Opening"),
 		 'page'=>"store_hours.html",
@@ -105,6 +114,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"all-orders",
 		 'icon'=>"3.png",
 		 'label'=>translate("All Orders"),
 		 'page'=>"all_orders.html",
@@ -112,13 +123,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
-		 'icon'=>"3.png",
-		 'label'=>translate("Status"),
-		 'page'=>"orders_status_list.html",
-		 'access_id'=>'orderstatus'
-		);
-		
-		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"cancel",	
 		 'icon'=>"3.png",
 		 'label'=>translate("Cancel"),
 		 'page'=>"cancel_orders.html",
@@ -126,43 +132,72 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"status",			
+		 'icon'=>"3.png",
+		 'label'=>translate("Status"),
+		 'page'=>"orders_status_list.html",
+		 'access_id'=>'orderstatus'
+		);
+		
+		$data[] = array(
+		 'section'=>'1',
+		 'stic_icon'=>"booking",
 		 'icon'=>"3.png",
 		 'label'=>translate("Booking"),
 		 'page'=>"all_booking.html",
 		 'access_id'=>'tablebooking'
 		);
 		
+		// HOME SECTION 2
 		$data[] = array(
+		 'section'=>'2',
+		 'stic_icon'=>"category",
 		 'icon'=>"3.png",
 		 'label'=>translate("Category"),
 		 'page'=>"category.html",
 		 'access_id'=>'CategoryList'
 		);
+
 		$data[] = array(
+		 'section'=>'2',
+		 'stic_icon'=>"addons",
 		 'icon'=>"4.png",
 		 'label'=>translate("Addon"),
 		 'page'=>"addon_list.html",
 		 'access_id'=>'AddOnCategory'
 		);
+
 		$data[] = array(
+		 'section'=>'2',
+		 'stic_icon'=>"addon-items",
 		 'icon'=>"5.png",
 		 'label'=>translate("Addon item"),
 		 'page'=>"addon_item_list.html",
 		 'access_id'=>'AddOnItem'
 		);
+
 		$data[] = array(
+		 'section'=>'2',
+		 'stic_icon'=>"items",
 		 'icon'=>"6.png",
 		 'label'=>translate("Items"),
 		 'page'=>"item_list.html",
 		 'access_id'=>'FoodItem'
 		);
+
 		$data[] = array(
+		 'section'=>'2',
+		 'stic_icon'=>"ingredients",
 		 'icon'=>"7.png",
 		 'label'=>translate("Ingredients"),
 		 'page'=>"ingredients_list.html",
 		 'access_id'=>'ingredients'
 		);
+
 		$data[] = array(
+		 'section'=>'2',
+		 'stic_icon'=>"cooking",
 		 'icon'=>"8.png",
 		 'label'=>translate("Cooking"),
 		 'page'=>"cooking_list.html",
@@ -170,6 +205,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'2',
+		 'stic_icon'=>"sizes",
 		 'icon'=>"3.png",
 		 'label'=>translate("Sizes"),
 		 'page'=>"size_list.html",
@@ -178,12 +215,18 @@ class MerchantWrapper
 		
 		if(!$is_location):
 		$data[] = array(
+		 'section'=>'2',
+		 'stic_icon'=>"fee",
 		 'icon'=>"10.png",
 		 'label'=>translate("Fee"),
 		 'page'=>"shipping_list.html",
 		 'access_id'=>'shippingrate'
-		);				
+		);
+
+		// HOME SECTION 3
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"min-order",
 		 'icon'=>"9.png",
 		 'label'=>translate("Min. Table"),
 		 'page'=>"mintable_list.html",
@@ -192,6 +235,8 @@ class MerchantWrapper
 		endif;
 		
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"offers",
 		 'icon'=>"10.png",
 		 'label'=>translate("Offers"),
 		 'page'=>"offers_list.html",
@@ -199,6 +244,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"gallery",
 		 'icon'=>"2.png",
 		 'label'=>translate("Gallery"),
 		 'page'=>"gallery_settings.html",
@@ -206,6 +253,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'1',
+		 'stic_icon'=>"banner",	
 		 'icon'=>"2.png",
 		 'label'=>translate("Banner"),
 		 'page'=>"banner_settings.html",
@@ -213,6 +262,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"cards",
 		 'icon'=>"9.png",
 		 'label'=>translate("Cards"),
 		 'page'=>"manage_credit_cards.html",
@@ -220,31 +271,45 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"vouchers",
 		 'icon'=>"10.png",
 		 'label'=>translate("Voucher"),
 		 'page'=>"voucher_list.html",
 		 'access_id'=>'voucher'
 		);
+
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"scheduler",
 		 'icon'=>"5.png",
 		 'label'=>translate("Scheduler"),
 		 'page'=>"scheduler_list.html",
 		 'access_id'=>'category_sked'
 		);
+
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"payment",
 		 'icon'=>"9.png",
 		 'label'=>translate("Payment"),
 		 'page'=>"payment_list.html",
 		 'access_id'=>'payment-gateway'
 		);
+
 		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"reviews",
 		 'icon'=>"2.png",
 		 'label'=>translate("Reviews"),
 		 'page'=>"reviews.html",
 		 'access_id'=>'review'
 		);
 		
+		// HOME SECTION 4
 		$data[] = array(
+		 'section'=>'4',
+		 'stic_icon'=>"social",
 		 'icon'=>"6.png",
 		 'label'=>translate("Social"),
 		 'page'=>"social_settings.html",
@@ -252,6 +317,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'4',
+		 'stic_icon'=>"alert",
 		 'icon'=>"2.png",
 		 'label'=>translate("Alert"),
 		 'page'=>"alert_settings.html",
@@ -259,6 +326,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'4',
+		 'stic_icon'=>"reports",
 		 'icon'=>"3.png",
 		 'label'=>translate("Reports"),
 		 'page'=>"reports_menu.html",
@@ -266,6 +335,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'4',
+		 'stic_icon'=>"sms-alert",
 		 'icon'=>"2.png",
 		 'label'=>translate("SMS alert"),
 		 'page'=>"sms_alert.html",
@@ -273,6 +344,8 @@ class MerchantWrapper
 		);
 		
 		$data[] = array(
+		 'section'=>'4',
+		 'stic_icon'=>"push",
 		 'icon'=>"2.png",
 		 'label'=>translate("Push"),
 		 'page'=>"broadcast_list.html",
@@ -423,8 +496,8 @@ class MerchantWrapper
 			if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
 				return $res;
 			}
-		}		
-		return false;
+		}
+		return false;	
 	}
 	
     public static function getAllBankDeposit($merchant_id=0,$start=0, $total_rows=10,$search_string='')
@@ -1037,8 +1110,8 @@ class MerchantWrapper
 			}
 		}
 		return $tpl;
-	}	
-	
+	}
+
 	public static function AcessFineLocationMessage()
 	{
 		$data = array();
@@ -1049,7 +1122,7 @@ class MerchantWrapper
 		  'content'=>translate("This app collects location data to Improve location accuracy when finding nearby bluetooth printers. Your location can be accessed at any time even when the app is closed or not in use.")
 		);		
 		return $data;
-	}
+	}	
 		
 }
 /*end class*/
