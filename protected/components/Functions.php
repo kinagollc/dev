@@ -8128,6 +8128,9 @@ $menu_html.="</li>";
     
     public function displayPrice($currency='',$amount='')
     {    	
+    if ($amount<=0){
+            return '';
+        }
     	$spacer="";
     	$spacer_enabled=getOptionA("admin_add_space_between_price");
     	if($spacer_enabled==1){
