@@ -23,6 +23,7 @@ class RazorpayController extends CController
 	{
 		
 		$this->pageTitle = mt("Razorpay");
+		require_once('init_currency.php');
 		require_once('buy.php');
 		
 		$device_uiid = isset($_GET['device_uiid'])?$_GET['device_uiid']:'';

@@ -531,11 +531,11 @@ class itemWrapper
 			FROM {{category}}
 			WHERE merchant_id = ".FunctionsV3::q($merchant_id)."				
 			$and		
+			AND status in ('publish')
 			AND ( category_name like ".FunctionsV3::q( "%$category_name%" )." OR 
 			category_description LIKE ".FunctionsV3::q( "%$category_name%" )."  )			
 			ORDER BY category_name ASC
-			";					
-			//dump($stmt);			
+			";								
 			if($res = $db->rst($stmt)){
 				return $res;
 			}

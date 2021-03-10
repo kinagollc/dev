@@ -81,7 +81,7 @@ class CheckoutWrapperTemp
 	        		);	        		
 	        		if($min_order>$order_subtotal){
 	        			$error = Yii::t("default","Sorry but minimum order is [min_order] for distance [distance]",array(
-						 '[min_order]'=>FunctionsV3::prettyPrice($min_order),
+						 '[min_order]'=>Mobile_utility::formatNumber($min_order),
 						 '[distance]'=>$resp_distance['pretty_distance']
 					   ));
 					   throw new Exception( $error );

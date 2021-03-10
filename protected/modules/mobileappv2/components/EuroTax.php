@@ -110,10 +110,18 @@ class EuroTax
 		
 		if($debug){
 		   dump("tax :".$tax);
+		   dump("total ".$data_total['total']);
+		   dump("subtotal ".$data_total['subtotal']);
 		}
 		
 		$data_total['total']=$grand_total;
         $data_total['subtotal']=$grand_total/($tax+1); 
+        
+        if($debug){		   
+		   dump("total ".$data_total['total']);
+		   dump("subtotal ".$data_total['subtotal']);
+		}
+        
         $data_total['taxable_total']=$data_total['total']-$data_total['subtotal'];
 
         if($debug){

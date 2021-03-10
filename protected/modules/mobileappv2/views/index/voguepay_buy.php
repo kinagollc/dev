@@ -23,7 +23,7 @@
      </tr>     
      <tr>
       <td><?php echo mt("Amount")?></td>
-      <td><?php echo FunctionsV3::prettyPrice($amount_to_pay)?></td>
+      <td><?php echo Mobile_utility::formatNumber($amount_to_pay)?></td>
      </tr>     
      <tr>
       <td colspan="2">        

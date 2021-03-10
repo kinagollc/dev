@@ -255,6 +255,10 @@ class AjaxController extends CController
 		isset($this->data['use_api_only_checkout'])?$this->data['use_api_only_checkout']:''
 		);						
 		
+		Yii::app()->functions->updateOptionAdmin('mobile2_hide_empty_category',
+		isset($this->data['mobile2_hide_empty_category'])?$this->data['mobile2_hide_empty_category']:''
+		);						
+		
     	$this->code=1;
 	    $this->msg=$this->t("settings saved");
 		$this->jsonResponse();	
@@ -391,7 +395,7 @@ class AjaxController extends CController
     	
     	$cols = array(
 		  'id','full_name','device_platform','device_uiid','device_id','push_enabled','subscribe_topic',
-		  'date_created','last_login','id'
+		  'date_created','date_modified','id'
 		);			
 				
 		$resp = DatatablesWrapper::format($cols,$this->data);			

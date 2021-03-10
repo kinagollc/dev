@@ -274,6 +274,10 @@
   <?php echo htmlWrapper::checkbox('mobile2_food_share','',"Enabled food share", getOptionA('mobile2_food_share') );?>   
 </div> <!--col-->
 
+<div class="col-md-3">
+  <?php echo htmlWrapper::checkbox('mobile2_hide_empty_category','',"Hide empty category", getOptionA('mobile2_hide_empty_category') );?>   
+</div> <!--col-->
+
 </div> <!--row-->
 
 <div class="height20"></div>

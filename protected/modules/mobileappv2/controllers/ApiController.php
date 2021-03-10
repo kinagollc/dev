@@ -11,6 +11,9 @@ class ApiController extends CController
 	public $device_uiid;
 	public $merchant_id;
 	
+	public $mc_currency;
+	public $item_utility = false;
+	
 	public function __construct()
 	{		
 		
@@ -46,6 +49,21 @@ class ApiController extends CController
         	$this->output();
         	return false;
         }	
+
+        /*INIT CURRENCY*/       
+        $mc_currency = isset($_REQUEST['mc_currency'])?$_REQUEST['mc_currency']:'';
+        $this->mc_currency = $mc_currency;
+        
+        if( Mobile_utility::fileExist("components/Item_utility.php") && Mobile_utility::fileExist("components/Price_Formatter.php") ){
+        	$this->item_utility = true;        	
+        	Mobile_utility::$price_formater = true;
+            Mobile_utility::InitMultiCurrency($mc_currency);
+                        
+            Item_menu_mobile::init();
+        	Item_menu_mobile::$language = Yii::app()->language;
+        	Item_menu_mobile::$currency_code = Mobile_utility::$currency;
+            
+        }
                 
         return true;
 	}
@@ -325,7 +343,15 @@ class ApiController extends CController
 		if(isset($this->data['user_token'])){
 			if($client_info = mobileWrapper::getCustomerByToken($this->data['user_token'])){						   
 			   if (!mobileWrapper::checkBlockAccount($client_info['email_address'],$client_info['contact_phone'])){
-			   	   $valid_token = 1;			   	   
+			   	   $valid_token = 1;				   	   
+			        Yii::app()->db->createCommand()->update("{{client}}",array(
+			         'last_login'=>FunctionsV3::dateNow(),
+			        ),
+			  	    'client_id=:client_id',
+				  	    array(
+				  	      ':client_id'=>(integer)$client_info['client_id']
+				  	    )
+			  	    );			   	   
 			   } 		
 			}
 		}
@@ -439,6 +465,23 @@ class ApiController extends CController
 		);
 		
 		$settings['enabled_graphical_tracking'] = isset($get_opt['enabled_graphical_tracking'])?$get_opt['enabled_graphical_tracking']:'';
+		
+		$settings['addon']['multi_currency'] = false;
+		if($this->item_utility){
+			if (Item_utility::MultiCurrencyEnabled()){
+				$settings['addon']['multi_currency'] = true;										
+				$rates = Mobile_utility::$exchange_rates;
+				$currency_use = isset($rates['used_currency'])?$rates['used_currency']:'USD';
+				
+				if(empty($this->mc_currency)){					
+					if( $resp_location = Multicurrency_utility::handleAutoDetecLocation() ){
+						$currency_use = $resp_location;
+					} 
+				}				
+				$settings['addon']['multi_currency_used'] = $currency_use;
+				$settings['addon']['multi_currency_used_symbol'] = Price_Formatter::$number_format['currency_symbol'];
+			}
+		}
 			
 		$this->details=array(
 		  'valid_token'=>$valid_token,
@@ -794,7 +837,8 @@ class ApiController extends CController
 		$search_type = isset($this->data['search_type'])?$this->data['search_type']:'';
 		$page_limit = mobileWrapper::paginateLimit();
 		$enabled_distance = 1;		
-		
+				
+		$exchange_rate = Mobile_utility::getRates();		
 		
 		$cuisine_name='';
 		
@@ -1455,6 +1499,7 @@ class ApiController extends CController
 								));
 							}						
 						}
+
 						try {							
 							$params = array(
 							  'merchant_id'=>$merchant_id,
@@ -1507,7 +1552,7 @@ class ApiController extends CController
 					if(in_array('offers',(array)$search_options)){
 						$offers=array();
 						if(method_exists('FunctionsV3','getOffersByMerchantNew')){
-							if ($offer=mobileWrapper::getOffersByMerchantNew($merchant_id)){
+							if ($offer=mobileWrapper::getOffersByMerchantNew($merchant_id,$exchange_rate)){								
 								foreach ($offer as $offer_val) {
 									$offers[]=$offer_val;
 								}			    				
@@ -1516,15 +1561,17 @@ class ApiController extends CController
 						$free_delivery_above=getOption($merchant_id,'free_delivery_above_price');
 						if($free_delivery_above>0.001){
 						   $free_above = mobileWrapper::t("Free Delivery On Orders Over [subtotal]",array(
-							 '[subtotal]'=>$free_delivery_above
+							 '[subtotal]'=> Price_Formatter::formatNumber( (float)$free_delivery_above * (float)$exchange_rate )
 						   ));
+						   
 						   $offers[] = array(
-							 'raw'=>mt("[fee]",array('[fee]'=>FunctionsV3::prettyPrice($free_delivery_above))),
+							 'raw'=>mt("[fee]",array('[fee]'=>Price_Formatter::formatNumber($free_delivery_above))),
 							 'full'=>$free_above,
 							 'icon'=> "delivery"
 						   );
 						}			    	
 						$val['offers']=$offers;	    	
+																		
 					}
 					
 					if(in_array('voucher',(array)$search_options)){
@@ -1533,7 +1580,7 @@ class ApiController extends CController
 							if ( $voucher=FunctionsV3::merchantActiveVoucher($merchant_id)){
 								foreach ($voucher as $voucher_val) {
 									if ( $voucher_val['voucher_type']=="fixed amount"){
-										$v_amount=FunctionsV3::prettyPrice($voucher_val['amount']);
+										$v_amount=Mobile_utility::formatNumber( (float) $voucher_val['amount'] * (float) $exchange_rate);
 									} else $v_amount=number_format( ($voucher_val['amount']/100)*100 )."%";
 									
 									$vouchers[] = mt("[discount] off | Use coupon [code]",array(
@@ -1582,7 +1629,7 @@ class ApiController extends CController
 											
 						if(in_array('minimum_order',(array)$search_options)){
 						  $val['minimum_order'] = mobileWrapper::t("[min]", array(
-						  '[min]'=>FunctionsV3::prettyPrice($val['minimum_order_raw'])
+						  '[min]'=>Mobile_utility::formatNumber( (float) $val['minimum_order_raw'] * (float) $exchange_rate )
 						  ));		 
 					    } else $val['minimum_order']='';
 						  
@@ -1617,19 +1664,19 @@ class ApiController extends CController
 							}
 							
 				 			if(in_array('minimum_order',(array)$search_options)){
-					 			$val['minimum_order_raw']=$resp_distance['min_order'];
+					 			$val['minimum_order_raw']= (float)$resp_distance['min_order'] * (float)$exchange_rate;
 					 			$val['minimum_order'] = mobileWrapper::t("[min]", array(
-								  '[min]'=>FunctionsV3::prettyPrice($resp_distance['min_order'])
+								  '[min]'=>Mobile_utility::formatNumber( (float)$resp_distance['min_order'] * (float)$exchange_rate )
 								));		
 				 			} else {
 				 			    unset($val['minimum_order']);
                                 unset($val['minimum_order_raw']);
 				 			}							
-							
+											 			
 				 			if(in_array('delivery_fee',(array)$search_options)){
 								if($resp_distance['delivery_fee']>0){
 									$val['delivery_fee'] = mobileWrapper::t("[fee]",array(
-				                	 '[fee]'=>FunctionsV3::prettyPrice($resp_distance['delivery_fee'])
+				                	 '[fee]'=>Mobile_utility::formatNumber( (float)$resp_distance['delivery_fee'] * (float)$exchange_rate )
 				                	));
 								}			
 				 			}				
@@ -1643,12 +1690,12 @@ class ApiController extends CController
 						  //dump("SEARCH BY LOCATIONx");		
 						  if(in_array('minimum_order',(array)$search_options)){
 							  $val['minimum_order'] = mobileWrapper::t("[min]", array(
-							  '[min]'=>FunctionsV3::prettyPrice($val['minimum_order_raw'])
+							  '[min]'=>Mobile_utility::formatNumber( (float)$val['minimum_order_raw'] * (float)$exchange_rate )
 							  ));		 
 						  }
 						  if(in_array('delivery_fee',(array)$search_options)){
 							  $val['delivery_fee'] = mobileWrapper::t("[fee]",array(
-			                	 '[fee]'=>FunctionsV3::prettyPrice($val['location_fee'])
+			                	 '[fee]'=>Mobile_utility::formatNumber( (float) $val['location_fee']  * (float)$exchange_rate )
 			                  ));
 						  }
 					}				
@@ -2013,13 +2060,14 @@ class ApiController extends CController
 		$client_id = $this->checkToken();
 		
 		$this->setMerchantTimezone();
+		$exchange_rate = Mobile_utility::getRates();
 		
 		if($merchant_id>0){
 			
 			$show_delivery_fee = false;
 			$options = mobileWrapper::getDataSearchOptions();						
 			if(in_array('delivery_fee',$options)){
-				$show_delivery_fee = false;
+				$show_delivery_fee = true;
 			}		
 			
 			$lat = isset($this->data['lat'])?$this->data['lat']:'';
@@ -2048,8 +2096,8 @@ class ApiController extends CController
 		 		if($status=="close"){		 			
 		 			$date_close= FunctionsV3::prettyDate(date('c'))." ".FunctionsV3::prettyTime(date('c'));
 		 			$data['close_message']= Yii::t("mobile2","Sorry but we are closed on [date_close]. Please check merchant opening hours.",array(
-    		  '[date_close]'=>$date_close
-    		));
+			    		  '[date_close]'=>$date_close
+			    		));
 		 		}
                 
 		 		$data['status_raw']=$status;
@@ -2073,7 +2121,7 @@ class ApiController extends CController
 	 				 			
 	 			$data['added_as_favorite'] = mobileWrapper::getFavorites($client_id, $merchant_id);
 	 							
-				if($offers=mobileWrapper::getOffersByMerchantNew($merchant_id)){
+				if($offers=mobileWrapper::getOffersByMerchantNew($merchant_id,$exchange_rate)){
 	 				$data['offers']=$offers;
 	 			}
 
@@ -2114,13 +2162,14 @@ class ApiController extends CController
 		    	  'subject'=>$res['restaurant_name'],
 		    	  'files'=>''
 		    	);
-			 	
+		    				 	
 			 	if(in_array('minimum_order',(array)$options)){
     	       		$data['stic_min_order'] = getOption($this->merchant_id,'merchant_minimum_order');     	
 		    	}
 
 		    	$data['delivery_fee'] = '';
-				// if($show_delivery_fee){
+		    	
+				// if($show_delivery_fee){					
 					try {						
 						$provider = mobileWrapper::getMapProvider();											
 						$params_fee =  array(
@@ -2137,18 +2186,18 @@ class ApiController extends CController
 						  'minimum_order'=>isset($res['minimum_order'])?$res['minimum_order']:0
 						);						
 						$resp_fee = CheckoutWrapperTemp::getDeliveryDetails($params_fee);
-						$distance = $resp_fee['distance'];			
+						$distance = $resp_distance['distance'];			
 										
-						if(in_array('distace',(array)$options)){
-							$data['stic_distance_plot'] = mobileWrapper::t("[distance]",array(
-				 			   '[distance]'=>$resp_fee['pretty_distance']
+						if(in_array('distace',(array)$search_options)){
+							$val['stic_distance_plot'] = mobileWrapper::t("[distance]",array(
+				 			   '[distance]'=>$resp_distance['pretty_distance']
 				 			));
 						}
 
-			 			if(in_array('delivery_fee',(array)$options)){
-							if($resp_fee['delivery_fee']>0){
-								$data['stic_delivery_fee'] = mobileWrapper::t("[fee]",array(
-			                	 '[fee]'=>FunctionsV3::prettyPrice($resp_fee['delivery_fee'])
+			 			if(in_array('delivery_fee',(array)$search_options)){
+							if($resp_distance['delivery_fee']>0){
+								$val['stic_delivery_fee'] = mobileWrapper::t("[fee]",array(
+			                	 '[fee]'=>FunctionsV3::prettyPrice($resp_distance['delivery_fee'])
 			                	));
 							}			
 			 			}
@@ -2171,7 +2220,7 @@ class ApiController extends CController
 	{		
 		$page_limit = mobileWrapper::paginateLimit();
 		
-		$this->setMerchantTimezone();
+		$this->setMerchantTimezone();		
 		
 		if (isset($this->data['page'])){
         	$page = $this->data['page'] * $page_limit;
@@ -2179,7 +2228,7 @@ class ApiController extends CController
         
         $page_action =  isset($this->data['page_action'])?$this->data['page_action']:'';
         
-		$merchant_id = isset($this->data['merchant_id'])?$this->data['merchant_id']:'';
+		$merchant_id = isset($this->data['merchant_id'])?(integer)$this->data['merchant_id']:'';
 		
 		$device_uiid = isset($this->data['device_uiid'])?$this->data['device_uiid']:'';
         $cart_data = array();
@@ -2190,10 +2239,78 @@ class ApiController extends CController
 	        	$cart_data = json_decode($cartdata['cart'],true);
 	        }
         }
+        
+        $menu = array(); $total_rows = 0;
+        $default_image=''; $merchant_menu_type = 2;  $disabled_default_image='';
+        
+        if($merchant_id<=0){
+        	$this->t("invalid merchant id");
+        	$this->output();
+        }	
+        
+        /*NEW DATA*/
+        if($this->item_utility){        	
+        	        	     
+			$settings_options = Mobile_utility::getOptionsArray(array(
+			  'mobile2_hide_empty_category'
+			));
+			
+			$menu_type = Item_menu_mobile::$merchant_menu_type;	
+			$default_image = Item_menu_mobile::$default_image;		
+			$disabled_default_image = Item_menu_mobile::$disabled_default_image;			
+			
+        	if ( $category = Item_menu_mobile::getCategory($merchant_id,date("l"), $page, $page_limit) ){        		        		
+        		$total_records=0;
+				$stmtc="SELECT FOUND_ROWS() as total_records";				
+				if($resp = Yii::app()->db->createCommand($stmtc)->queryRow()){		 		
+					$total_records=$resp['total_records'];
+				}							
+				$total_rows = ceil( $total_records / $page_limit );     		
+        		
+        		foreach ($category as $category_val) {        			
+        			$category_val['category_name'] = stripslashes($category_val['category_name']);
+        			$category_val['category_description'] = stripslashes($category_val['category_description']);
+        			$category_val['category_pic'] = mobileWrapper::getImage($category_val['photo'],$default_image,$disabled_default_image);        			
+        			unset($category_val['photo']);
+        			unset($category_val['dish']);
+        			unset($category_val['merchant_id']);
+        			unset($category_val['category_id']);
+        			if($menu_type==1){
+        				if($items = Item_menu_mobile::getItem( $category_val['cat_id'],$merchant_id,0,10000 )){
+        				    $items = Item_menu_mobile::reFormat($items,$cart_data);
+        				    $category_val['item'] = $items;
+        				} else $category_val['item'] = array();
+        			}        		
+        			$menu[]=$category_val;        			        		
+        		}        		
+        		
+        		
+        		$this->code = 1;
+				$this->msg = "OK";				
+				$this->details = array(
+				  'paginate_total'=>$total_rows,
+				  'list'=>$menu,
+				  'item_id'=>isset($this->data['item_id'])?$this->data['item_id']:'',
+				  'cat_id'=>isset($this->data['cat_id'])?$this->data['cat_id']:'',
+				  'page_action'=>$page_action
+				);
+				
+				$food_viewing_private = getOption($merchant_id,'food_viewing_private');
+				if($food_viewing_private==2){
+					$this->code = 2;
+					$this->msg = $this->t("This restaurant has not published their menu yet");
+					$this->details = array();
+				}
+        		
+        	} else $this->msg = $this->t("This restaurant has not published their menu yet");        	
+        	$this->output();
+        }
+        /*end NEW DATA*/        
+        
                 
 		if($merchant_id>0){
 			itemWrapper::setMultiTranslation();			
-			if($menu = itemWrapper::getMenu($merchant_id, $page, $page_limit , $cart_data)){								
+			if($menu = itemWrapper::getMenu($merchant_id, $page, $page_limit , $cart_data)){					
 				$this->code = 1;
 				$this->msg = "OK";
 				$menu['item_id']=isset($this->data['item_id'])?$this->data['item_id']:'';
@@ -2215,32 +2332,21 @@ class ApiController extends CController
 	}
 			
 	public function actiongetItemByCategory()
-	{		
-		$enabled_trans=getOptionA('enabled_multiple_translation');
-		
-		$merchant_id = isset($this->data['merchant_id'])?$this->data['merchant_id']:'';
-		
-		$cat_id = isset($this->data['cat_id'])?$this->data['cat_id']:'';
+	{			
+				
+		$merchant_id = isset($this->data['merchant_id'])? (integer) $this->data['merchant_id']:'';
+		$cat_id = isset($this->data['cat_id'])? (integer) $this->data['cat_id']:'';
 		$page_action = isset($this->data['page_action'])?$this->data['page_action']:'';
 		
-		itemWrapper::setMultiTranslation();
-		
-		$category = itemWrapper::getCategoryByID($cat_id);
-		if($enabled_trans==2){
-		   $category_name['category_name_trans']=!empty($category['category_name_trans'])?json_decode($category['category_name_trans'],true):'';
-           $category['category_name'] = qTranslate($category['category_name'],'category_name',$category_name);
-		}
-
 		$page_limit = mobileWrapper::paginateLimit();		
 		if (isset($this->data['page'])){
         	$page = $this->data['page'] * $page_limit;
         } else  $page = 0;  
-		
-        itemWrapper::$sizes = itemWrapper::getSize($merchant_id);
         
-        $filter_dishes=array();
+        
+        $filter_dishes='';
         if(isset($this->data['filter_dishes'])){
-        	$filter_dishes = $this->data['filter_dishes'];
+        	$filter_dishes = (integer)$this->data['filter_dishes'];
         }	
         
         $device_uiid = isset($this->data['device_uiid'])?$this->data['device_uiid']:'';
@@ -2252,6 +2358,60 @@ class ApiController extends CController
 	        	$cart_data = json_decode($cartdata['cart'],true);
 	        }
         }
+				
+        /*NEW DATA*/
+		if($this->item_utility){
+			$date_today = date("l");	
+			$cart_theme = getOptionA('mobileapp2_cart_theme');		
+			$category = array(); $category_list = array();
+			
+			$category = Item_menu_mobile::getCategoryByID( $merchant_id, $cat_id);
+			
+			if($cart_theme==1){
+			   $category_list = Item_menu_mobile::getCategory( $merchant_id , $date_today );
+			}		
+								
+			if($filter_dishes>0){
+				Item_menu_mobile::$pre_filter = array(
+				  'dish'=>$filter_dishes
+				);
+			}
+			
+			if($item_list = Item_menu_mobile::getItem( $cat_id, $merchant_id, $page, $page_limit)){					
+				$item_list = Item_menu_mobile::reFormat($item_list,$cart_data);												
+				$this->code = 1;
+				$this->msg = "OK";
+				$this->details = array(
+				 'page_action'=>$page_action,
+				 'paginate_total'=>isset($item_list[0]['paginate_total']) ? $item_list[0]['paginate_total'] : 0,
+				 'category'=>$category,
+				 'category_list'=>$category_list,
+				 'data'=>$item_list
+				);
+			} else {
+				$this->msg = $this->t("no item found on this category");
+				$this->details = array(
+				 'page_action'=>0,
+				 'category'=>$category,		
+				 'category_list'=>$category_list
+				);
+			}					
+			$this->output();			
+		}
+		/*END NEW DATA*/
+		
+		
+		$enabled_trans=getOptionA('enabled_multiple_translation');									
+		itemWrapper::setMultiTranslation();
+		
+		$category = itemWrapper::getCategoryByID($cat_id);
+		if($enabled_trans==2){
+		   $category_name['category_name_trans']=!empty($category['category_name_trans'])?json_decode($category['category_name_trans'],true):'';
+           $category['category_name'] = qTranslate($category['category_name'],'category_name',$category_name);
+		}
+		
+        itemWrapper::$sizes = itemWrapper::getSize($merchant_id);
+        
                 
         if($merchant_id>0 && $cat_id>0 ){        	
 			if($res = itemWrapper::getItemByCategory($merchant_id,$cat_id,true,$page,$page_limit,$filter_dishes,$cart_data)){
@@ -2281,6 +2441,20 @@ class ApiController extends CController
 	{
 		$item_name = isset($this->data['item_name'])?$this->data['item_name']:'';
 		$merchant_id = isset($this->data['merchant_id'])?$this->data['merchant_id']:'';
+		
+		/*NEW DATA*/
+		if($this->item_utility){			
+			if ( $res = Item_menu_mobile::searchByItem($item_name,$merchant_id,0,100)){				
+				$items = Item_menu_mobile::reFormat($res,array(),true,$item_name);				
+				$this->code = 1;
+				$this->msg = "OK";
+				$this->details = array(
+				 'data'=>$items
+				);
+			} else $this->msg = $this->t("No results");
+			$this->output();
+		}
+		/*END NEW DATA*/
 						
 		if($res = itemWrapper::searchItemByName($merchant_id,$item_name)){
 			itemWrapper::$sizes = itemWrapper::getSize($merchant_id);
@@ -2309,18 +2483,18 @@ class ApiController extends CController
 						}					
 							
 						if(array_key_exists($size_id,(array)itemWrapper::$sizes)){
-							$prices[]=itemWrapper::$sizes[$size_id]."&nbsp;".FunctionsV3::prettyPrice($priceval);
+							$prices[]=itemWrapper::$sizes[$size_id]."&nbsp;".Mobile_utility::formatNumber($priceval);
 							$prices2[] = array(							  
-							  'original_price'=>itemWrapper::$sizes[$size_id]."&nbsp;".FunctionsV3::prettyPrice($original_price),
+							  'original_price'=>itemWrapper::$sizes[$size_id]."&nbsp;".Mobile_utility::formatNumber($original_price),
 							  'discount'=>$val['discount'],
-							  'discounted_price_pretty'=>itemWrapper::$sizes[$size_id]."&nbsp;".FunctionsV3::prettyPrice($priceval),
+							  'discounted_price_pretty'=>itemWrapper::$sizes[$size_id]."&nbsp;".Mobile_utility::formatNumber($priceval),
 							);
 						} else {							
-							$prices[]=FunctionsV3::prettyPrice($priceval);		
+							$prices[]=Mobile_utility::formatNumber($priceval);		
 							$prices2[] = array(							  
-							  'original_price'=>FunctionsV3::prettyPrice($original_price),
+							  'original_price'=>Mobile_utility::formatNumber($original_price),
 							  'discount'=>$val['discount'],
-							  'discounted_price_pretty'=>FunctionsV3::prettyPrice($priceval),
+							  'discounted_price_pretty'=>Mobile_utility::formatNumber($priceval),
 							);
 						}
 					}					
@@ -2344,7 +2518,8 @@ class ApiController extends CController
 	public function actionitemDetails()
 	{		
 		$merchant_id = isset($this->data['merchant_id'])?$this->data['merchant_id']:'';		
-		$item_id = isset($this->data['item_id'])?$this->data['item_id']:'';		
+		$item_id = isset($this->data['item_id'])?(integer)$this->data['item_id']:0;		
+		$category_id = isset($this->data['cat_id'])?(integer)$this->data['cat_id']:0;		
 		$device_uiid = isset($this->data['device_uiid'])?$this->data['device_uiid']:'';		
 		
 		if($merchant_id<0 || empty($merchant_id)){
@@ -2385,6 +2560,48 @@ class ApiController extends CController
 			}		
 		}
 		
+		$inventory_enabled = FunctionsV3::inventoryEnabled($merchant_id);
+		
+		/*NEW DATA*/
+		if($this->item_utility){
+			if($data = Item_menu_mobile::getItemDetails($item_id,$category_id)){
+				
+				$row = isset($this->data['row'])?$this->data['row']:'';
+				if(is_numeric($row)){				
+					if($resp=mobileWrapper::getCart($device_uiid)){
+						$cart=json_decode($resp['cart'],true);
+						if(array_key_exists($row,(array)$cart)){
+							$cart[$row]['row']=$row;
+							$cart_data = isset($cart[$row])?$cart[$row]:'';
+						}
+					}
+				} else $cart_data='';
+								
+				if(isset($data['not_available'])){
+					if($data['not_available']==2){				
+					   $ordering_msg = $this->t("Sorry but this item is not available");
+					   $ordering_disabled=true;
+					}
+				}
+				
+				$this->code = 1;
+			    $this->msg = "OK";
+				$this->details = array(
+				  'inventory_enabled'=>$inventory_enabled==true?1:0,
+				  'cat_id'=>isset($this->data['cat_id'])?$this->data['cat_id']:'',
+				  'data'=>$data,
+				  'cart_data'=>$cart_data,		
+				  'ordering_disabled'=>$ordering_disabled,
+				  'ordering_msg'=>$ordering_msg
+				);		
+				
+			} else $this->msg = $this->t("Invalid item id");
+		    $this->output();
+		}
+		/*END NEW DATA*/
+		
+		
+		/*OLD DATA*/
 		if ($res=Yii::app()->functions->getItemById($this->data['item_id'])){
 			
 			itemWrapper::setMultiTranslation();
@@ -2491,7 +2708,7 @@ class ApiController extends CController
 			
 			
 			/*inventory*/
-			$inventory_enabled = FunctionsV3::inventoryEnabled($merchant_id);
+			//$inventory_enabled = FunctionsV3::inventoryEnabled($merchant_id);
 			
 			/*SHARE OPTIONS*/
 			$res['share_options'] = array(
@@ -2817,7 +3034,15 @@ class ApiController extends CController
 				  'merchant_id'=>$merchant_id,
 				  'card_fee'=>0
 				);
-										
+				
+				/*MULTI CURRENCY*/
+				$exchange_rate = 1;
+				if($this->item_utility){        	
+			    	$rates = Mobile_utility::$exchange_rates;		    
+			    	$exchange_rate = Mobile_utility::getRates();
+			    	$params = array_merge( (array) $params , (array) $rates);		    	
+				}
+				
 				Yii::app()->functions->displayOrderHTML( $params,$cart );
 				$code = Yii::app()->functions->code;		
 				if($code==1){
@@ -2828,8 +3053,9 @@ class ApiController extends CController
 						foreach ($cart as $val) {					
 							$item_total+=$val['qty'];
 						}
-					}			    
-				    					
+					}			 
+					 
+										
 					$basket_total = $details['total']['subtotal'];
 					if($item_total>1){
 						$basket_msg = mt("[item] items",array('[item]'=>$item_total));
@@ -2837,7 +3063,7 @@ class ApiController extends CController
 						$basket_msg = mt("[item] item",array('[item]'=>$item_total));
 				    }
 				    			    
-				    $basket_total = FunctionsV3::prettyPrice($basket_total);			    
+				    $basket_total = Mobile_utility::formatNumber($basket_total);			    
 					$this->code=1;
 					$this->msg = "OK";				
 					$this->details = array(
@@ -2854,7 +3080,7 @@ class ApiController extends CController
 		$this->details = array(
 		  'count'=>0,
 		  'basket_count'=>mt("0"),		  
-		  'basket_total'=>FunctionsV3::prettyPrice(0.00001)
+		  'basket_total'=>Mobile_utility::formatNumber(0.00001)
 		);				
 		$this->output();
 	}
@@ -3134,6 +3360,16 @@ class ApiController extends CController
 			
 			$multiple_translation = getOptionA('enabled_multiple_translation'); 	
 			
+			
+			/*MULTI CURRENCY*/
+			$exchange_rate = 1;
+			if($this->item_utility){        	
+		    	$rates = Mobile_utility::$exchange_rates;		    
+		    	$exchange_rate = Mobile_utility::getRates();
+		    	$data = array_merge( (array) $data , (array) $rates);		    	
+			}
+								
+			
 			Yii::app()->functions->displayOrderHTML( $data,$cart );
 			$code = Yii::app()->functions->code;
 			$msg  = Yii::app()->functions->msg;
@@ -3217,11 +3453,13 @@ class ApiController extends CController
     	       	  	  $this->merchant_id,$res['distance'],$res['distance_unit'],$merchant_minimum_order
     	       	  	  );
     	       	  }    	       
+    	       	      	       	  
+    	       	  $merchant_minimum_order = (float)$merchant_minimum_order * (float)$exchange_rate;
     	       	      	       	      	       	  
     	       	  if($merchant_minimum_order>0){
     	       	  	 if($merchant_minimum_order>$subtotal){
     	       	  	 	$cart_error[] = Yii::t("mobile2","Sorry, your order does not meet the minimum [transaction_type] amount of [min_amount]",array(
-    	       	  	 	 '[min_amount]'=>FunctionsV3::prettyPrice($merchant_minimum_order),
+    	       	  	 	 '[min_amount]'=>Mobile_utility::formatNumber($merchant_minimum_order),
     	       	  	 	 '[transaction_type]'=>$this->t($transaction_type)
     	       	  	 	));
     	       	  	 }    	       	  
@@ -3229,48 +3467,55 @@ class ApiController extends CController
     	       	  
     	       	  
     	       	  $merchant_maximum_order = getOption($this->merchant_id,'merchant_maximum_order');
+    	       	  $merchant_maximum_order = (float)$merchant_maximum_order * (float)$exchange_rate;
+    	       	  
     	       	  if($merchant_maximum_order>0.001){
     	       	  	 if($subtotal>$merchant_maximum_order) {
     	       	  	 	$cart_error[] = Yii::t("mobile2","Sorry, your order has exceeded the maximum [transaction_type] amount of [min_amount]",array(
-    	       	  	 	 '[min_amount]'=>FunctionsV3::prettyPrice($merchant_maximum_order),
+    	       	  	 	 '[min_amount]'=>Mobile_utility::formatNumber($merchant_maximum_order),
     	       	  	 	 '[transaction_type]'=>$this->t($transaction_type)
     	       	  	 	));
     	       	  	 }    	       	  
     	       	  }    	       	     
     	       } elseif ( $transaction_type=="pickup"){
     	       	  $minimum_order = getOption($this->merchant_id,'merchant_minimum_order_pickup'); 
+    	       	  $minimum_order = (float)$minimum_order * (float)$exchange_rate;
+    	       	  
     	       	  if($minimum_order>0.001){
     	       	  	 if($minimum_order>$subtotal){
     	       	  	 	$cart_error[] = Yii::t("mobile2","Sorry, your order does not meet the minimum [transaction_type] amount of [min_amount]",array(
-    	       	  	 	 '[min_amount]'=>FunctionsV3::prettyPrice($minimum_order),
+    	       	  	 	 '[min_amount]'=>Mobile_utility::formatNumber($minimum_order),
     	       	  	 	 '[transaction_type]'=>$this->t($transaction_type)
     	       	  	 	));
     	       	  	 }    	       	  
     	       	  }    	         	       	  
     	       	  $maximum_order = getOption($this->merchant_id,'merchant_maximum_order_pickup');
+    	       	  $maximum_order = (float)$maximum_order * (float)$exchange_rate;
     	       	  if($maximum_order>0.001){
     	       	  	 if($subtotal>$maximum_order) {
     	       	  	 	$cart_error[] = Yii::t("mobile2","Sorry, your order has exceeded the maximum [transaction_type] amount of [min_amount]",array(
-    	       	  	 	 '[min_amount]'=>FunctionsV3::prettyPrice($maximum_order),
+    	       	  	 	 '[min_amount]'=>Mobile_utility::formatNumber($maximum_order),
     	       	  	 	 '[transaction_type]'=>$this->t($transaction_type)
     	       	  	 	));
     	       	  	 }    	       	  
     	       	  }	       	
     	       } elseif ( $transaction_type=="dinein"){
     	       	  $minimum_order = getOption($this->merchant_id,'merchant_minimum_order_dinein'); 
+    	       	  $minimum_order = (float)$minimum_order * (float)$exchange_rate;
     	       	  if($minimum_order>0.001){
     	       	  	 if($minimum_order>$subtotal){
     	       	  	 	$cart_error[] = Yii::t("mobile2","Sorry, your order does not meet the minimum [transaction_type] amount of [min_amount]",array(
-    	       	  	 	 '[min_amount]'=>FunctionsV3::prettyPrice($minimum_order),
+    	       	  	 	 '[min_amount]'=>Mobile_utility::formatNumber($minimum_order),
     	       	  	 	 '[transaction_type]'=>$this->t($transaction_type)
     	       	  	 	));
     	       	  	 }    	       	  
     	       	  }      	       	  
     	       	  $maximum_order = getOption($this->merchant_id,'merchant_maximum_order_dinein');
+    	       	  $maximum_order = (float)$maximum_order * (float)$exchange_rate;
     	       	  if($maximum_order>0.001){
     	       	  	 if($subtotal>$maximum_order) {
     	       	  	 	$cart_error[] = Yii::t("mobile2","Sorry, your order has exceeded the maximum [transaction_type] amount of [min_amount]",array(
-    	       	  	 	 '[min_amount]'=>FunctionsV3::prettyPrice($maximum_order),
+    	       	  	 	 '[min_amount]'=>Mobile_utility::formatNumber($maximum_order),
     	       	  	 	 '[transaction_type]'=>$this->t($transaction_type)
     	       	  	 	));
     	       	  	 }    	       	  
@@ -3383,7 +3628,14 @@ class ApiController extends CController
 	   	   $payment_list = array();
 	    }  
 	    $this->details['payment_list_count'] = count($payment_list);
-	    $this->details['payment_list'] = $payment_list;		      	
+	    $this->details['payment_list'] = $payment_list;		
+
+	    /*MULTI CURRENCY*/
+	    if($this->item_utility){
+	    	if (Item_utility::MultiCurrencyEnabled()){	    		
+	    		$this->details['currency_exchange_rate_format'] =  Price_Formatter::$number_format;
+	    	}
+	    }
 								
 		$this->output();
 	}
@@ -3406,6 +3658,10 @@ class ApiController extends CController
 			$this->data['client_id'] = $client_info['client_id'];			
             mobileWrapper::registeredDevice($this->data);
 		}
+		
+		/*DELETE CART IF DATE IS YESTERDAY*/
+		$prev_date=date('Y-m-d 00:00:00',strtotime(date("c") . "-1 days"));
+		Item_menu_mobile::deletePreviousCart($this->device_uiid , $prev_date);		
 		
 		if($res = mobileWrapper::getCart($this->device_uiid)){			
 			$cart=json_decode($res['cart'],true);
@@ -3685,6 +3941,9 @@ class ApiController extends CController
 			 	if(isset($res['ocr'])){unset($res['ocr']);}
 			 }				 
 			 
+			 
+			 $exchange_rate = Mobile_utility::getRates();
+			 			 			 
 			 foreach ($res as $key => $val) {
 			 	switch ($key) {
 			 		case "cod":
@@ -3702,10 +3961,10 @@ class ApiController extends CController
 			 			break;
 			 						 	
 			 		case "paypal_v2":	
-			 		   if ( !$resp = PaypalWrapper::getCredentials($this->merchant_id)){
+			 		   if ( $resp = PaypalWrapper::getCredentials($this->merchant_id)){
 			 		   	   if ($resp['card_fee']>0.0001){
 			 		   	   	  $val = Yii::t("mobile2","Paypal V2 (card fee [card_fee])",array(
-			 		   	   	    '[card_fee]'=>FunctionsV3::prettyPrice($resp['card_fee'])
+			 		   	   	    '[card_fee]'=>Mobile_utility::formatNumber( (float)$resp['card_fee'] * (float)$exchange_rate )
 			 		   	   	  ));
 			 		   	   } else $val = mt($val);
 			 		   } else $val = mt($val);
@@ -3714,10 +3973,10 @@ class ApiController extends CController
 			 		case "stp":				 		
 			 		   if ( $resp = StripeWrapper::getCredentials($this->merchant_id)){
 			 		   	   if ($resp['card_fee']>0.0001){
-			 		   	   	  $cardfee = FunctionsV3::prettyPrice($resp['card_fee']);
+			 		   	   	  $cardfee = Mobile_utility::formatNumber((float)$resp['card_fee'] * (float)$exchange_rate);
 			 		   	   	  if(isset($resp['card_percentage'])){
 			 		   	   	  	 $cardfee = FunctionsV3::prettyPriceNoCurrency($resp['card_percentage'])."%";
-			 		   	   	  	 $cardfee.= "+".FunctionsV3::prettyPriceNoCurrency($resp['card_fee']);
+			 		   	   	  	 $cardfee.= "+".FunctionsV3::prettyPriceNoCurrency($cardfee);
 			 		   	   	  }			 		   	   
 			 		   	   	  $val = Yii::t("mobile2","Stripe (card fee [card_fee])",array(
 			 		   	   	    '[card_fee]'=>$cardfee
@@ -3730,12 +3989,12 @@ class ApiController extends CController
 			 		   if ( $resp = mercadopagoWrapper::getCredentials($this->merchant_id)){
 			 		   	   if ($resp['card_fee']>0.0001){
 			 		   	   	  $val = Yii::t("mobile2","Mercadopago (card fee [card_fee])",array(
-			 		   	   	    '[card_fee]'=>FunctionsV3::prettyPrice($resp['card_fee'])
+			 		   	   	    '[card_fee]'=>Mobile_utility::formatNumber( (float)$resp['card_fee'] * (float)$exchange_rate )
 			 		   	   	  ));
 			 		   	   } else $val = mt($val);
 			 		   } else $val = mt($val);
 			 		   break;    
-			 		   
+			 		   			 		   
 			 		default:
 			 			$val = mt($val);
 			 			break;
@@ -3745,6 +4004,7 @@ class ApiController extends CController
 		 		  'payment_name'=>$val
 		 		);
 			 }
+			 			
 			 $this->details = array(
 			   'data'=>$list
 			 );
@@ -3910,7 +4170,7 @@ class ApiController extends CController
     			    	}
     			    }
     			   break;   
-    			       			     
+    			       			      
     			default:
     				break;
     		}
@@ -3949,15 +4209,29 @@ class ApiController extends CController
 				$data['delivery_charge']=$res['delivery_fee'];
 			}
 			
-			//dump($data);
+			
+			/*MULTI CURRENCY*/
+			$exchange_rate = 1; $rates = array();
+			if($this->item_utility){        	
+		    	$rates = Mobile_utility::$exchange_rates;		    
+		    	$exchange_rate = Mobile_utility::getRates();
+		    	$data = array_merge( (array) $data , (array) $rates);		  		    	
+			}
+			
 			Yii::app()->functions->displayOrderHTML( $data,$cart );
 			$code = Yii::app()->functions->code;
 		    $msg  = Yii::app()->functions->msg;
 		    if ($code==1){
 		    	$raw = Yii::app()->functions->details['raw'];
 		    	
-		    	//dump($raw['total']['card_fee']);
-		    	
+		    			    			    
+		    	/*MULTI CURRENCY*/			    	
+		    	if($this->item_utility){
+		    		if (Item_utility::MultiCurrencyEnabled() && $exchange_rate!=1){		    			
+		    			$cart = Cart_utility::reFormat($cart,$exchange_rate);
+		    		}
+		    	}
+		    			    			    	
 		        /*EURO TAX*/
 			    $is_apply_tax = 0;
 			    if(EuroTax::isApplyTax($this->merchant_id)){
@@ -3971,15 +4245,21 @@ class ApiController extends CController
 				if(empty($donot_apply_tax_delivery)){
 					$donot_apply_tax_delivery=1;
 				}
-				
-				if($card_percentage>0){
+								
+				/*if($card_percentage>0){					
 					$card_fee = (float) $raw['total']['card_fee'];
-				}
-				
+				}*/
+				if(isset($raw['total']['card_fee'])){
+	            	if($raw['total']['card_fee']>0){
+	            		$card_fee = (float) $raw['total']['card_fee'];
+	            	}			            
+	            }
+								
 				$params = array(
 				  'merchant_id'=>$this->merchant_id,				  
 				  'client_id'=>$client_id,
-				  'json_details'=>$res['cart'],
+				  //'json_details'=>$res['cart'],
+				  'json_details'=>json_encode($cart),
 				  'trans_type'=>$transaction_type,
 				  'payment_type'=>$this->data['payment_provider'],
 				  'sub_total'=>$raw['total']['subtotal'],
@@ -4003,7 +4283,7 @@ class ApiController extends CController
 				  'request_from'=>"mobileapp2",
 				  'apply_food_tax'=>$is_apply_tax,				  
 				);
-
+				
 				$order_id_token = $params['order_id_token'];
 				
 				/*TIPS*/
@@ -4097,7 +4377,7 @@ class ApiController extends CController
 				if(!empty($res['voucher_details'])){
 					$voucher_details = !empty($res['voucher_details'])?json_decode($res['voucher_details'],true):false;	
 					if(is_array($voucher_details) && count($voucher_details)>=1){
-						$params['voucher_amount']=$voucher_details['amount'];
+						$params['voucher_amount'] = (float)$voucher_details['amount'] *  (float)$exchange_rate;
 			         	$params['voucher_code']=$voucher_details['voucher_name'];
 			         	$params['voucher_type']=$voucher_details['voucher_type'];
 					}
@@ -4105,7 +4385,7 @@ class ApiController extends CController
 				
 				/*POINTS*/
 				if($res['points_amount']>0.0001){
-					$params['points_discount']=$res['points_amount'];
+					$params['points_discount']= (float)$res['points_amount']  * (float)$exchange_rate;
 				}	
 				
 				/*SET COMMISSION*/
@@ -4289,7 +4569,11 @@ class ApiController extends CController
 					$params_address['contact_email'] = $customer_email;
 					$params_address['date_created'] = FunctionsV3::dateNow();
 					$params_address['ip_address'] = $_SERVER['REMOTE_ADDR'];
-					 					
+					
+					$params_address['used_currency'] = isset($rates['used_currency'])?$rates['used_currency']:'';
+		            $params_address['base_currency'] = isset($rates['base_currency'])?$rates['base_currency']:'';
+		            $params_address['exchange_rate'] = isset($rates['exchange_rate'])?(float)$rates['exchange_rate']:0;
+					 							            
 					Yii::app()->db->createCommand()->insert("{{order_delivery_address}}",$params_address);
 					
 					/*SAVE ADDRESS*/			
@@ -4346,6 +4630,11 @@ class ApiController extends CController
 					
 					$provider_credentials=array();
 					$redirect_url='';
+					$mc_currency = isset($this->data['mc_currency'])?$this->data['mc_currency']:'';
+					$payment_params = "id=".urlencode($order_id)."&lang=$lang_code";
+					$payment_params.= "&device_uiid=".urlencode($this->device_uiid);					
+					$payment_params.= "&mc_currency=".urlencode($mc_currency);
+					
 					
 					/*SAVE POINTS*/
 					switch ($payment_provider) {
@@ -4397,45 +4686,39 @@ class ApiController extends CController
 					    	  
 					    case "rzr":	  					      
 					       $next_step='init_webview';
-					       $redirect_url = websiteUrl()."/".APP_FOLDER."/razorpay?id=".urlencode($order_id)."&lang=$lang_code";
-					       $redirect_url.= "&device_uiid=".urlencode($this->device_uiid);
+					       $redirect_url = websiteUrl()."/".APP_FOLDER."/razorpay?".$payment_params;
 					       break;
 					       
 					    case "btr":
 					       $next_step='init_webview';
-					       $redirect_url = websiteUrl()."/".APP_FOLDER."/braintree?id=".urlencode($order_id)."&lang=$lang_code";
-					       $redirect_url.= "&device_uiid=".urlencode($this->device_uiid);				       
+					       $redirect_url = websiteUrl()."/".APP_FOLDER."/braintree?".$payment_params;
 					    	break;
 					    	
 					    case "paypal_v2":	
 					       $next_step='init_webview';
-					       $redirect_url = websiteUrl()."/".APP_FOLDER."/paypal?id=".urlencode($order_id)."&lang=$lang_code";
-					       $redirect_url.= "&device_uiid=".urlencode($this->device_uiid);
+					       $redirect_url = websiteUrl()."/".APP_FOLDER."/paypal?".$payment_params;
 					       break;
 					       
 					    case "stp":	
 					       $next_step='init_webview';
-					       $redirect_url = websiteUrl()."/".APP_FOLDER."/stripe?id=".urlencode($order_id)."&lang=$lang_code";
-					       $redirect_url.= "&device_uiid=".urlencode($this->device_uiid);
+					       $redirect_url = websiteUrl()."/".APP_FOLDER."/stripe?".$payment_params;
 					       break;   
 					       
 					    case "mercadopago":	
 					       $next_step='init_webview';
-					       $redirect_url = websiteUrl()."/".APP_FOLDER."/mercadopago?id=".urlencode($order_id)."&lang=$lang_code";
-					       $redirect_url.= "&device_uiid=".urlencode($this->device_uiid);		       
+					       $redirect_url = websiteUrl()."/".APP_FOLDER."/mercadopago?".$payment_params;
 					       break;      
 					       
 					    case "vog":	
 					       $next_step='init_webview';
-					       $redirect_url = websiteUrl()."/".APP_FOLDER."/voguepay?id=".urlencode($order_id)."&lang=$lang_code";
-					       $redirect_url.= "&device_uiid=".urlencode($this->device_uiid);				       
+					       $redirect_url = websiteUrl()."/".APP_FOLDER."/voguepay?".$payment_params;
 					       break;         
 					       					       					    			    					    
 					    case "payu":   
 					       $next_step='init_webview';					       
-					       $redirect_url = websiteUrl()."/".APP_FOLDER."/payu?id=".urlencode($order_id)."&lang=$lang_code";
+					       $redirect_url = websiteUrl()."/".APP_FOLDER."/payu?".$payment_params;
 					       break;         
-					       					       					   		       					     					      
+					       					    
 						default:						
 						    $next_step = "init_".$payment_provider;
 							break;
@@ -4635,6 +4918,8 @@ class ApiController extends CController
 					
 		$date_now=date('Y-m-d g:i:s a');	 
 		
+		$default_currency = FunctionsV3::getCurrencyCode();
+		
 		$and='';		
 		$tab = isset($this->data['tab'])?$this->data['tab']:'';		
 		$and = mobileWrapper::getOrderTabsStatus($tab);
@@ -4662,7 +4947,13 @@ class ApiController extends CController
 		where order_id = a.order_id
 		and status='publish'		
 		limit 0,1
-		) as rating
+		) as rating,
+		
+		(
+		select used_currency from {{order_delivery_address}}
+		where order_id = a.order_id
+		limit 0,1
+		) as used_currency
 		
 		FROM
 		{{order}} a
@@ -4690,16 +4981,22 @@ class ApiController extends CController
 			
 			$data = array();
 			foreach ($res as $val) {		
+								
+				$used_currency = isset($val['used_currency'])?$val['used_currency']: $default_currency ;    			
+				if($this->item_utility){
+					Price_Formatter::init( $used_currency );
+				}
+				
 				$val['merchant_name'] = clearString($val['merchant_name']);
 				$val['status'] = mt($val['status']);
 				$val['transaction'] = mobileWrapper::t("[order_id]",array(
 				  '[trans_type]'=>t($val['trans_type']),
 				  '[order_id]'=>t($val['order_id']),
 				));
-				$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
-				$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
+				$val['stic_date_created'] = mobileWrapper::sticPrettyDate($val['date_created']);
+				$val['stic_time_created'] = mobileWrapper::sticPrettyTime($val['date_created']);
 				$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
-				$val['total_w_tax'] = FunctionsV3::prettyPrice($val['total_w_tax']);
+				$val['total_w_tax'] = Mobile_utility::formatNumber($val['total_w_tax']);
 				$val['payment_type'] = mobileWrapper::t(FunctionsV3::prettyPaymentTypeTrans($val['trans_type'],$val['payment_type']));
 				$val['logo']=mobileWrapper::getImage($val['logo']);
 				
@@ -4772,13 +5069,13 @@ class ApiController extends CController
 					break;
 			
 				case "completed":			
-				    $msg1 = $this->t("There is no completed order");
+				    $msg1 = $this->t("There is no completed order");	
 				    $msg2 = $this->t("Try again later");
 					break;
 					
 				case "cancelled":				
-				    $msg1 = $this->t("There is no cancelled order");
-				    $msg2 = $this->t("Try again later");	
+				    $msg1 = $this->t("There is no cancelled order");	
+				    $msg2 = $this->t("Try again later");
 					break;
 							
 				default:
@@ -4878,8 +5175,8 @@ class ApiController extends CController
 				$val['booking_ref'] = mobileWrapper::t("[booking_id]",array(
 				  '[booking_id]'=> $val['booking_id']
 				));
-				$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
-				$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
+				$val['stic_date_created'] = mobileWrapper::sticPrettyDate($val['date_created']);
+				$val['stic_time_created'] = mobileWrapper::sticPrettyTime($val['date_created']);
 				$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
 				$val['logo']=mobileWrapper::getImage($val['logo']);
 				
@@ -5512,7 +5809,7 @@ class ApiController extends CController
 							$args[$args_key]=t($args_val);
 						 }						 
 						 $new_remarks=$val['remarks2'];
-						 $remarks=Yii::t("driver","".$new_remarks,$args);	
+						 $remarks=Yii::t("mobile2","".$new_remarks,$args);	
 					  }
 		   	   	  }
 		   	   	  
@@ -5640,10 +5937,15 @@ class ApiController extends CController
 		
 		if($order_id>0){
 						
-			if ( $data = mobileWrapper::getReceiptByID($order_id)){
+			if ( $data = mobileWrapper::getReceiptByID($order_id)){				
 				$data = Yii::app()->request->stripSlashes($data);
 				
-				$json_details=!empty($data['json_details'])?json_decode($data['json_details'],true):false;				
+				$json_details=!empty($data['json_details'])?json_decode($data['json_details'],true):false;			
+				
+				$used_currency = isset($data['used_currency'])?$data['used_currency']: getOptionA('admin_currency_set') ;    
+				if($this->item_utility){
+					Price_Formatter::init( $used_currency );
+				}
 				
 				if ( $json_details !=false){
 					
@@ -5717,7 +6019,7 @@ class ApiController extends CController
 			        }
 			        if ( $data['payment_type']=="ccr" || $data['payment_type']=="ocr"){			           
 			           $new_data[] = mobileWrapper::receiptFormater("Card #",
-			             Yii::app()->functions->maskCardnumber($data['credit_card_number'])
+			             Yii::app()->functions->maskCardnumber( isset($data['credit_card_number'])?$data['credit_card_number']:'' )
 			           );
 			        }
 			        
@@ -5772,7 +6074,7 @@ class ApiController extends CController
 				       	    $new_data[] = mobileWrapper::receiptFormater("Contact Number",$data['contact_phone']);
         	         		
 				       	    if ($data['order_change']>=0.0001){	       	   	               
-	       	   	               $new_data[] = mobileWrapper::receiptFormater("Change", FunctionsV3::prettyPrice($data['order_change']) );
+	       	   	               $new_data[] = mobileWrapper::receiptFormater("Change", Mobile_utility::formatNumber($data['order_change']) );
 	       	                }
 	       	                
 	       	                if($data['opt_contact_delivery']==1){
@@ -5795,7 +6097,7 @@ class ApiController extends CController
 					       	}
 					       	
 					       	if ($data['order_change']>=0.0001){	       	   	               
-	       	   	               $new_data[] = mobileWrapper::receiptFormater("Change", FunctionsV3::prettyPrice($data['order_change']) );
+	       	   	               $new_data[] = mobileWrapper::receiptFormater("Change", Mobile_utility::formatNumber($data['order_change']) );
 	       	                }
         	         		
         	         	    break;        	         	
@@ -5814,7 +6116,7 @@ class ApiController extends CController
 					       	}
 					       	
 					       	if ($data['order_change']>=0.0001){	       	   	               
-	       	   	               $new_data[] = mobileWrapper::receiptFormater("Change", FunctionsV3::prettyPrice($data['order_change']) );
+	       	   	               $new_data[] = mobileWrapper::receiptFormater("Change", Mobile_utility::formatNumber($data['order_change']) );
 	       	                }
 	       	                
 	       	                $new_data[] = mobileWrapper::receiptFormater("Number of guest", $data['dinein_number_of_guest'] );
@@ -6863,15 +7165,17 @@ class ApiController extends CController
 	}
 	
 	public function actionGetMerchantPromo()
-	{
+	{		
 		$data = array();
+		$exchange_rate = Mobile_utility::getRates();
+		
 		if($this->merchant_id>0){
 			$merchant_id =  $this->merchant_id;
 			$promo = array();
     		$promo['enabled']=1;
     		
     		if (method_exists("FunctionsV3","getOffersByMerchantNew")){	
-	    		if($offer=FunctionsV3::getOffersByMerchantNew($merchant_id)){
+	    		if($offer=FunctionsV3::getOffersByMerchantNew($merchant_id,$exchange_rate)){
 		    	   $promo['offer']=$offer;
 		    	   $promo['enabled']=2;
 		    	}		    	
@@ -6882,7 +7186,7 @@ class ApiController extends CController
 		    		$promo['enabled']=2;	    		
 		    		foreach ($voucher as $val) {
 		    			if ( $val['voucher_type']=="fixed amount"){
-				      	  $amount=FunctionsV3::prettyPrice($val['amount']);
+				      	  $amount=Mobile_utility::formatNumber( (float) $val['amount'] * (float)($exchange_rate) );
 				        } else $amount=number_format( ($val['amount']/100)*100 )."%";
 				        				        
 				        $promo['voucher'][] = mt("[discount] off | Use coupon [code]",array(
@@ -6895,7 +7199,8 @@ class ApiController extends CController
 	    	
 	    	$free_delivery_above_price=getOption($merchant_id,'free_delivery_above_price');
 	    	if ($free_delivery_above_price>0){
-	    	    $promo['free_delivery'][0]=$this->t("Free Delivery On Orders Over")." ". FunctionsV3::prettyPrice($free_delivery_above_price);
+	    		$free_delivery_above_price = (float)$free_delivery_above_price * (float)($exchange_rate);
+	    	    $promo['free_delivery'][0]=$this->t("Free Delivery On Orders Over")." ". Mobile_utility::formatNumber($free_delivery_above_price);
 	    		$promo['enabled']=2;
 	    	}
 	    		    
@@ -7167,13 +7472,13 @@ class ApiController extends CController
 				if($res = itemWrapper::searchByCategoryByName($this->merchant_id,$item_name)){
 				   $data = array();
 				   foreach ($res as $val) {				   	 
+				   	 $val['category_description'] = stripslashes($val['category_description']);
 				   	 $val['category_name'] = mobileWrapper::highlight_word($val['category_name'],$item_name);
 				     $val['photo']=mobileWrapper::getImage($val['photo']);
 				   	 $val['category_description']=strip_tags($val['category_description']);				
 				   	 $val['category_description'] = mobileWrapper::highlight_word($val['category_description'],$item_name);
 				     $data[]=$val;				   	
-				   }
-				   
+				   }				   
 				   $this->code = 1;
 				   $this->msg = "OK";
 				   $this->details = array(
@@ -7324,7 +7629,52 @@ class ApiController extends CController
 		$search_mode = $search_resp['search_mode'];
 		$location_mode = $search_resp['location_mode'];	
 		
+		$exchange_rate = (float)Mobile_utility::getRates();		
+		
 		$search_string = isset($this->data['search_string'])?$this->data['search_string']:'';
+		
+		$and_category = ''; $and_category_status = '';
+		if(Yii::app()->db->schema->getTable("{{item_relationship_category}}")){
+			$and_category="
+			AND IF(
+			  (
+			   select option_value 
+			   from {{option}}
+			   where option_name='enabled_category_sked'
+			   and merchant_id = c.merchant_id
+			   order by id DESC
+			   limit 0,1
+			  )>=1,
+			  
+			   b.item_id IN (
+				  select item_id
+				  from {{item_relationship_category}} rc
+				  where 
+				  item_id = b.item_id		
+				  and cat_id IN (
+				     select cat_id from {{category}}
+				     where 
+				     cat_id = rc.cat_id
+				     and ". strtolower(date("l")) ." = 1
+				  )
+				)
+			  
+			  ,true
+			)			
+			";
+						
+		}	
+		
+		if(Yii::app()->db->schema->getTable("{{view_item_cat2}}")){
+		    $and_category_status="
+			AND b.item_id IN (
+				  select item_id from {{view_item_cat2}}
+				  where item_id = b.item_id
+				  and category_status = 'publish'
+				)
+			";
+		}
+				
 		if(!empty($search_string)){				
 			$stmt="
 			SELECT 
@@ -7335,13 +7685,14 @@ class ApiController extends CController
 			a.logo as logo,
 			'restaurant',
 			a.service as category,
-			a.merchant_id as mmtid
+			a.merchant_id as mmtid			
 			
 			FROM  {{merchant}} a
 			WHERE restaurant_name LIKE ".FunctionsV3::q("%$search_string%")."
 			AND a.status = 'active' AND a.is_ready='2'
 			
 			UNION ALL
+			
 			SELECT 
 			b.merchant_id,
 			b.item_id as id,
@@ -7350,7 +7701,7 @@ class ApiController extends CController
 			b.photo as logo,					
 			'food',
 			b.category as category,
-			c.merchant_id as mmtid
+			c.merchant_id as mmtid			
 			
 			FROM {{item}} b						
 			left join {{merchant}} c
@@ -7362,9 +7713,12 @@ class ApiController extends CController
 			AND b.status ='publish'
 			AND c.status='active'
 			AND c.is_ready='2'
-			
+			$and_category_status			
+			$and_category
+						
 			
 			UNION ALL
+			
 			SELECT 
 			c.cuisine_id as merchant_id,
 			c.cuisine_id,
@@ -7373,7 +7727,7 @@ class ApiController extends CController
 			c.featured_image as logo,
 			'cuisine',
 			c.cuisine_name as category,
-			c.cuisine_id as mmtid
+			c.cuisine_id as mmtid			
 			
 			FROM {{cuisine}} c
 			WHERE c.cuisine_name LIKE ".FunctionsV3::q("%$search_string%")."
@@ -7404,9 +7758,8 @@ class ApiController extends CController
 						AS distance		
 				";			
 			}
-			
-			if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
-				$res = Yii::app()->request->stripSlashes($res);
+									
+			if($res = Yii::app()->db->createCommand($stmt)->queryAll()){				
 				$data = array();
 				foreach ($res as $val) {
 					$val['title'] = clearString($val['title']);
@@ -7453,18 +7806,18 @@ class ApiController extends CController
 									}					
 										
 									if(array_key_exists($size_id,(array)itemWrapper::$sizes)){
-										$prices[]=itemWrapper::$sizes[$size_id]."&nbsp;".FunctionsV3::prettyPrice($priceval);
+										$prices[]=itemWrapper::$sizes[$size_id]."&nbsp;".Mobile_utility::formatNumber( (float)$priceval * $exchange_rate);
 										$prices2[] = array(							  
-										  'original_price'=>itemWrapper::$sizes[$size_id]."&nbsp;".FunctionsV3::prettyPrice($original_price),
+										  'original_price'=>itemWrapper::$sizes[$size_id]."&nbsp;".Mobile_utility::formatNumber( (float) $original_price * $exchange_rate ),
 										  'discount'=>$res_item['discount'],
-										  'discounted_price_pretty'=>itemWrapper::$sizes[$size_id]."&nbsp;".FunctionsV3::prettyPrice($priceval),
+										  'discounted_price_pretty'=>itemWrapper::$sizes[$size_id]."&nbsp;".Mobile_utility::formatNumber( (float) $priceval * $exchange_rate ),
 										);
 									} else {							
-										$prices[]=FunctionsV3::prettyPrice($priceval);		
+										$prices[]=Mobile_utility::formatNumber( (float) $priceval * $exchange_rate );		
 										$prices2[] = array(							  
-										  'original_price'=>FunctionsV3::prettyPrice($original_price),
+										  'original_price'=>Mobile_utility::formatNumber( (float)$original_price * $exchange_rate ),
 										  'discount'=>$res_item['discount'],
-										  'discounted_price_pretty'=>FunctionsV3::prettyPrice($priceval),
+										  'discounted_price_pretty'=>Mobile_utility::formatNumber( (float)$priceval * $exchange_rate),
 										);
 									}
 								}					
@@ -7746,6 +8099,9 @@ class ApiController extends CController
 	
 	public function actionapplyRedeemPoints()
 	{
+		
+		$exchange_rate = Mobile_utility::getRates();
+			
 		$points = isset($this->data['points'])?$this->data['points']:0;
 		
 		if (!is_numeric($this->merchant_id)){
@@ -7778,6 +8134,7 @@ class ApiController extends CController
 			$this->msg = $this->t("Sorry but your points is not enough");
 			$this->output();
 		}	
+		
 		
 		if($points>$available_points){
 			$this->msg = $this->t("Sorry but your points is not enough");
@@ -7846,6 +8203,7 @@ class ApiController extends CController
 			
 			/*CHECK ABOVE ORDER*/
 			$subtotal = isset($cart['total']['subtotal'])?$cart['total']['subtotal']:0;
+			$subtotal = (float)$subtotal * (float)$exchange_rate;
 			
 			$points_apply_order_amt = getOptionA('points_apply_order_amt');
 			if(!$is_disabled_merchant_settings){
@@ -7854,11 +8212,13 @@ class ApiController extends CController
 					$points_apply_order_amt=$mt_points_apply_order_amt;
 				}			
 			}
+						
+			$points_apply_order_amt = (float)$points_apply_order_amt * (float)$exchange_rate;			
 			
 			if($points_apply_order_amt>0.0001){
 				if($points_apply_order_amt>$subtotal){
 					$this->msg = Yii::t("mobile2","Sorry but you can only redeem points on orders over [amount]",array(
-					  '[amount]'=>FunctionsV3::prettyPrice($points_apply_order_amt)
+					  '[amount]'=>Mobile_utility::formatNumber($points_apply_order_amt)
 					));
 					$this->output();
 				}			
@@ -7925,7 +8285,7 @@ class ApiController extends CController
 			$this->details = array(
 			  'points_apply'=>$this->data['points'],
 			  'points_amount'=>$points_amount,
-			  'pretty_points_amount'=>FunctionsV3::prettyPrice($points_amount)
+			  'pretty_points_amount'=>Mobile_utility::formatNumber($points_amount)
 			);
 			
 		} else $this->msg = $this->t("Cart is empty");
@@ -8249,7 +8609,12 @@ class ApiController extends CController
 		if ($client_id = $this->checkToken()){
 			$order_id = isset($this->data['order_id'])?$this->data['order_id']:'';
 	        $_GET['id'] = $order_id;
+	        $_GET['mc_currency'] = isset($this->data['mc_currency'])?$this->data['mc_currency']:'';
+	        
+	        
+	        require_once('init_currency.php');
 	        require_once('buy.php');
+	        
 	        if(empty($error)){
 	        	
 	        	$mode_autho=Yii::app()->functions->getOption('merchant_mode_autho',$merchant_id);
@@ -8385,7 +8750,7 @@ class ApiController extends CController
 		}
 		$this->output();
 	}
-	
+
 	public function actionlogout()
 	{
 		if ($client_id = $this->checkToken()){
@@ -9650,6 +10015,31 @@ class ApiController extends CController
 	public function actiongetActiveMerchantCategory()
 	{
 		$this->getGETData();
+				
+		/*NEW DATA*/
+		if($this->item_utility && $this->merchant_id>0){		
+			
+			Item_menu_mobile::init($this->merchant_id);	
+			
+			if ( $res = Item_menu_mobile::getCategoryItemCount($this->merchant_id, date("l"))){
+				$this->code =1;
+				$this->msg = "ok";
+				$this->details = array(
+				 'data'=>$res
+				);
+				
+				$food_viewing_private = getOption($this->merchant_id,'food_viewing_private');
+				if($food_viewing_private==2){
+					$this->code = 2;
+					$this->msg = $this->t("This restaurant has not published their menu yet");
+					$this->details = array();
+				}
+				
+			} else $this->msg = mt("no results");	
+			$this->output();
+		}		
+		/*END NEW DATA*/
+		
 		if($this->merchant_id>0){
 			if($res = itemWrapper::getMerchantCategory($this->merchant_id)){
 				$this->code =1;
@@ -9763,26 +10153,27 @@ class ApiController extends CController
 	
 	public function actionfoodPromo()
 	{
-		$db = new DbExt();
-		itemWrapper::setMultiTranslation();
+		$db = new DbExt();		
 		
 		$page_limit = mobileWrapper::paginateLimit();
 		
 		$search_resp = mobileWrapper::searchMode();
 		$search_mode = $search_resp['search_mode'];
 		$location_mode = $search_resp['location_mode'];	
+		
+		$code_version = isset($this->data['code_version'])?$this->data['code_version']:'';
 				
 		if (isset($this->data['page'])){
         	$page = $this->data['page'] * $page_limit;
         } else  $page = 0;  
         
         $sort_by = isset($this->data['sort_by'])?$this->data['sort_by']:'';		
-        $sort_fields = isset($this->data['sort_fields'])?$this->data['sort_fields']:'discount';
-
+        $sort_fields = isset($this->data['sort_fields'])?$this->data['sort_fields']:'discount';       
+        
         if(empty($sort_by)){
         	$sort_by = "RAND()"; $sort_fields = '';
-        }       
-        
+        }	
+                
         $page_action =  isset($this->data['page_action'])?$this->data['page_action']:'';        
         
         $default_image='resto_banner.jpg';
@@ -9809,13 +10200,39 @@ class ApiController extends CController
 			 'area_id'=>$area_id,
 			 'postal_code'=>$postal_code,
 			));
-
+			
+			$time_now = date("H:i");
+			$open_day = strtolower(date("l"));
+			
 			$and.= " AND a.merchant_id IN (
 			  select merchant_id from {{merchant}}
 			  where merchant_id=a.merchant_id
 			  and status IN ('active')
+			  
+			  and merchant_id IN (
+			        select merchant_id from {{opening_hours}} 
+				    where
+					merchant_id = a.merchant_id
+					and
+					day=".q($open_day)."
+					and
+					status = 'open'
+					and 
+					
+					(
+					CAST(".q($time_now)." AS TIME)
+					BETWEEN CAST(start_time AS TIME) and CAST(end_time AS TIME)
+					
+					or
+					
+					CAST(".q($time_now)." AS TIME)
+					BETWEEN CAST(start_time_pm AS TIME) and CAST(end_time_pm AS TIME)
+					
+					)
+					
+			      )
+			  
 			)";
-
 		} else {
 			$lat = isset($this->data['lat'])?$this->data['lat']:0;
 		    $lng = isset($this->data['lng'])?$this->data['lng']:0;
@@ -9831,7 +10248,7 @@ class ApiController extends CController
 					* cos( radians( lontitude ) - radians($lng) ) 
 					+ sin( radians($lat) ) * sin( radians( latitude ) ) ) ) 
 					AS distance		
-			";
+			";		
 			/*$and.="
 			AND merchant_id IN (
 			   select merchant_id 
@@ -9858,34 +10275,64 @@ class ApiController extends CController
 			      $query_distance from {{merchant}}
 			      where merchant_id = a.merchant_id
 			      and status IN ('active')
-	              and is_ready='2'
-	              and merchant_id IN (
-	              select merchant_id from {{opening_hours}} 
-	      	      where
-	      		  merchant_id = a.merchant_id
-	      		  and
-	      		  day=".q($open_day)."
-	      		  and
-	      		  status = 'open'
-	      		  and 
-	      		
-	      		  (
-	      		  CAST(".q($time_now)." AS TIME)
-	      		  BETWEEN CAST(start_time AS TIME) and CAST(end_time AS TIME)
-	      		
-	      		  or
-	      		
-	      		  CAST(".q($time_now)." AS TIME)
-	      		  BETWEEN CAST(start_time_pm AS TIME) and CAST(end_time_pm AS TIME)
-	      		
-	      		)
-	      		
-	            )
+			      and is_ready='2'
+			      and merchant_id IN (
+			        select merchant_id from {{opening_hours}} 
+				    where
+					merchant_id = a.merchant_id
+					and
+					day=".q($open_day)."
+					and
+					status = 'open'
+					and 
+					
+					(
+					CAST(".q($time_now)." AS TIME)
+					BETWEEN CAST(start_time AS TIME) and CAST(end_time AS TIME)
+					
+					or
+					
+					CAST(".q($time_now)." AS TIME)
+					BETWEEN CAST(start_time_pm AS TIME) and CAST(end_time_pm AS TIME)
+					
+					)
+					
+			      )
 			   )
 			)
 			";
+			
 		}
-		
+
+		/*USE LATEST DATA*/
+        if($this->item_utility){        	
+        	if ( $data = Item_menu_mobile::getFoodPromo($and,$sort_fields,$sort_by,$page,$page_limit)){ 
+        		$total_records = (integer) $data[0]['total_rows'];
+        		$this->code = 1; 
+	        	$this->msg = "OK";
+	        	$this->details = array(
+	        	  'page_action'=>$page_action,
+	        	  'total'=>mt("[total] promo found",array(
+	        	    '[total]'=>$total_records
+	        	  )),
+	        	  'sortby_default'=>mt("discount"),
+	        	  'list'=>$data
+	        	);
+        	} else {
+        		$this->msg = $this->t("No results");
+	        	$this->details = array(
+	        	  'page_action'=>$page_action,
+	        	  'total'=>mt("[total] promo found",array(
+	        	    '[total]'=>0
+	        	  )),
+	        	);
+        	}
+        	$this->output();
+        } 	       
+        
+        
+        itemWrapper::setMultiTranslation();
+        
         $stmt="
         SELECT 
         SQL_CALC_FOUND_ROWS 
@@ -9898,7 +10345,7 @@ class ApiController extends CController
         $and
         ORDER BY $sort_fields $sort_by
         LIMIT $page,$page_limit
-        ";                              
+        ";           
         
         if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
         	
@@ -9925,18 +10372,18 @@ class ApiController extends CController
 						}					
 							
 						if(array_key_exists($size_id,(array)itemWrapper::$sizes)){
-							$prices[]=itemWrapper::$sizes[$size_id]."&nbsp;".FunctionsV3::prettyPrice($priceval);
+							$prices[]=itemWrapper::$sizes[$size_id]."&nbsp;".Mobile_utility::formatNumber($priceval);
 							$prices2[] = array(							  
-							  'original_price'=>itemWrapper::$sizes[$size_id]."&nbsp;".FunctionsV3::prettyPrice($original_price),
+							  'original_price'=>itemWrapper::$sizes[$size_id]."&nbsp;".Mobile_utility::formatNumber($original_price),
 							  'discount'=>$val['discount'],
-							  'discounted_price_pretty'=>itemWrapper::$sizes[$size_id]."&nbsp;".FunctionsV3::prettyPrice($priceval),
+							  'discounted_price_pretty'=>itemWrapper::$sizes[$size_id]."&nbsp;".Mobile_utility::formatNumber($priceval),
 							);
 						} else {							
-							$prices[]=FunctionsV3::prettyPrice($priceval);		
+							$prices[]=Mobile_utility::formatNumber($priceval);		
 							$prices2[] = array(							  
-							  'original_price'=>FunctionsV3::prettyPrice($original_price),
+							  'original_price'=>Mobile_utility::formatNumber($original_price),
 							  'discount'=>$val['discount'],
-							  'discounted_price_pretty'=>FunctionsV3::prettyPrice($priceval),
+							  'discounted_price_pretty'=>Mobile_utility::formatNumber($priceval),
 							);
 						}
         			}
@@ -10523,6 +10970,10 @@ class ApiController extends CController
 			$failed = GraphicalTracking::getOrderTabStatus('failed');
 			$delayed = GraphicalTracking::getOrderTabStatus('delayed');			
 						
+			if($status=="inprogress"){
+				$status = "arrived";
+			}
+		
 			$estimation_order_status = mt($status);
 			
 			$estimated_time = $res['estimated_time'];
@@ -10592,6 +11043,15 @@ class ApiController extends CController
 					} else $estimation_notes1 = mt("Almost there! Your order will be prepared tomorrow");
 												
 				}
+				
+				if ( $resp_driver_info = GraphicalTracking::getDriverDetailsByOrderID($order_id)){					
+					$estimation_notes2.="<br/>";
+					$estimation_notes2.= mt("Your order is assigned to <b>[driver_name]</b> using <b>[driver_vehicle]</b> contact# <a href=\"tel:[phone]\" >[phone]</a>",array(
+					 '[driver_name]'=>$resp_driver_info['driver_name'],
+					 '[driver_vehicle]'=>$resp_driver_info['driver_vehicle'],
+					 '[phone]'=>$resp_driver_info['driver_phone'],
+					));
+				}							
 												
 			/*READY*/	
 			} elseif ( in_array($status_raw,(array)$ready)){				
@@ -10713,6 +11173,8 @@ class ApiController extends CController
 					      	$duration_time  = strlen($minutes)>=2?$minutes:str_pad($minutes,2,"0",STR_PAD_LEFT);
 					      }				   
 				      }				      
+				      
+				      
 				      $estimation_time = mt($duration_time);
 				      $estimation_minutes = $estimation_minutes;
 				      $estimation_ready = mt("until delivered");		
@@ -10720,6 +11182,12 @@ class ApiController extends CController
 					  $estimation_notes2 = mt("Estimated time until reach your location in [time]",array(
 					    '[time]'=>$duration_time ." ".$duration_unit
 					  ));				
+					  
+					  if($status=="arrived"){
+					  	$estimation_notes1 = mt("Our delivery executive is in your front door");
+					  	$estimation_notes2 = mt("Your delivery is waiting for you outside");
+					  }				   
+					  
 				   } catch (Exception $e) {
 				   	  //echo $e->getMessage();	
 				   	  $duration = mt("N/A");
@@ -10835,6 +11303,18 @@ class ApiController extends CController
 		} else $this->msg = $this->t("order not found");
 		$this->output();
 	}
+	
+	public function actioncurrencyList()
+	{
+		if ( $res = Multicurrency_data::currencyListRaw()){
+			$this->code = 1; $this->msg = "OK";
+			$this->details = array(			 
+			  'data'=>$res
+			);
+		} else $this->msg = mt("No records found");
+		$this->output();
+	}
+
 	
 }
 /* END CLASS*/

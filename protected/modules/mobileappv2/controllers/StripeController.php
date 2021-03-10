@@ -15,7 +15,12 @@ class StripeController extends CController
 	{
 		
 		$this->pageTitle = mt("Stripe");
+		require_once('init_currency.php');				
 		require_once('buy.php');
+		
+				
+		
+		$exchange_rate = Mobile_utility::getRates();
 		
 		$device_uiid = isset($_GET['device_uiid'])?$_GET['device_uiid']:'';
 		
@@ -42,7 +47,7 @@ class StripeController extends CController
 					       'name'=>$payment_description,
 						     'description'=>$description,						     
 						     'amount'=>unPrettyPrice($amount_to_pay)*100,
-						     'currency'=>FunctionsV3::getCurrencyCode(),
+						     'currency'=>$currency_code,
 						     'quantity'=>1
 					     )
 					   ),					   
@@ -95,7 +100,7 @@ class StripeController extends CController
 				       'reference'=>$reference_id,			       
 				       'amount_to_pay'=>$amount_to_pay,	
 				       'payment_description'=>$payment_description,		       
-				       'card_fee'=>$card_fee
+				       'card_fee'=>$order_card_fee
 				    ));
 					
 				} catch (Exception $e) {

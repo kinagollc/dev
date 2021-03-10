@@ -11,6 +11,7 @@ class PayuController extends CController
 	
 	public function actionIndex()
 	{
+		require_once('init_currency.php');
 		require_once('buy.php');
 		
 		if ($credentials = PayumoneyWrapper::getCredentials($merchant_id)){ 					
@@ -31,7 +32,8 @@ class PayuController extends CController
 			  'surl'=>$success_url,
 			  'furl'=>$failed_url,
 			  'curl'=>$cancel_url
-			);					
+			);		
+			
 			try {
 				
 				$hash = PayumoneyWrapper::generateHash($params, $credentials['salt']);				

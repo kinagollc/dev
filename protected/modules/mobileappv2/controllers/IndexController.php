@@ -128,6 +128,12 @@ class IndexController extends CController
 		if ( !FunctionsV3::checkTableFields('mobile2_homebanner',$new_fields)){			
 			$new++;
 		}		
+		
+		if(Yii::app()->db->schema->getTable("{{item_relationship_size}}")){
+			if(!Yii::app()->db->schema->getTable("{{view_item2}}")){
+				$new++;
+			}
+		}
 				
 		if($new>0){
 			$this->redirect(Yii::app()->createUrl('/mobileappv2/update'));

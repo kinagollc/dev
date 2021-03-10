@@ -51,7 +51,7 @@ class mobileWrapper
 			$image=Yii::app()->functions->getOptionAdmin('mobile_default_image_not_available');
 		}					
 		
-		// $default_image = Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$default";	
+		$default_image = Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$default";	
 		if(!empty($image_set)){
 			$default_image = Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$image_set";	
 		}
@@ -422,7 +422,7 @@ class mobileWrapper
     }
     
 
-    public static function getOffersByMerchantNew($merchant_id='')
+    public static function getOffersByMerchantNew($merchant_id='', $exchange_rate=1)
     {    	
     	$offer_list = array(); 
     	$offer = '';
@@ -444,9 +444,9 @@ class mobileWrapper
     			   $applicable_to=json_decode($val['applicable_to'],true);	
     			   if(is_array($applicable_to) && count($applicable_to)>=1){
     			   	  foreach ($applicable_to as $applicable_to_val) {    			   	  	 
-    			   	  	 $applicable_to_list.=t($applicable_to_val).", ";
+    			   	  	 $applicable_to_list.=t($applicable_to_val).",";
     			   	  }
-    			   	  $applicable_to_list = substr($applicable_to_list,0,-2);
+    			   	  $applicable_to_list = substr($applicable_to_list,0,-1);
     			   }    			
     			}    		 
     			
@@ -455,13 +455,13 @@ class mobileWrapper
     			if (!empty($applicable_to_list)){    				
 	    			$offer = self::t("[percent]% Off over [amount] if [transaction]",array(
 	    			  '[percent]'=>$percentage,
-	    			  '[amount]'=>FunctionsV3::prettyPrice($val['offer_price']),
+	    			  '[amount]'=>Mobile_utility::formatNumber( (float)$val['offer_price'] * (float) $exchange_rate ),
 	    			  '[transaction]'=>$applicable_to_list
 	    			));
     			} else {	    			
 	    			$offer = self::t("[percent]% Off over [amount]",array(
 	    			  '[percent]'=>$percentage,
-	    			  '[amount]'=>FunctionsV3::prettyPrice($val['offer_price']),
+	    			  '[amount]'=>Mobile_utility::formatNumber((float)$val['offer_price'] * (float) $exchange_rate ),
 	    			));
     			}
     			$offer_list[] =array(
@@ -3137,10 +3137,10 @@ class mobileWrapper
 			foreach ($res as $val) {
 				if($multipleField){
 					$cuisine_json['cuisine_name_trans']=!empty($val['cuisine_name_trans'])?json_decode($val['cuisine_name_trans'],true):'';					
-					$cuisine.= qTranslate($val['cuisine_name'],'cuisine_name',$cuisine_json)." · ";
-				} else $cuisine.="$val[cuisine_name] · ";				
+					$cuisine.= qTranslate($val['cuisine_name'],'cuisine_name',$cuisine_json).",";
+				} else $cuisine.="$val[cuisine_name],";				
 			}			
-			$cuisine = substr($cuisine,0,-3);
+			$cuisine = substr($cuisine,0,-1);
 		}	
 		return $cuisine;	
 	}
@@ -3257,11 +3257,22 @@ class mobileWrapper
 		b.opt_contact_delivery,
 		b.contact_email as email_address,
 		b.contact_email as customer_email,
+		b.used_currency,
+		b.base_currency,
+		b.exchange_rate,
 		
 		c.restaurant_name as merchant_name,
 		c.restaurant_phone as merchant_contact_phone,
 		
-		d.payment_reference
+		d.payment_reference,
+
+		IF( a.cc_id>0,(select credit_card_number
+		  from {{client_cc}}
+		  where
+		  client_id = a.client_id
+		  and
+		  cc_id = a.cc_id),'' )
+		as credit_card_number
 		
 		FROM {{order}} a
 		left join {{order_delivery_address}} b
@@ -3608,7 +3619,8 @@ class mobileWrapper
 		FROM {{option}}		
 		WHERE option_name IN ($que)
 		AND merchant_id=".q($merchant_id)."
-		";				
+		ORDER BY id DESC
+		";		
 		if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){
 			return $resp;
 		}
@@ -3627,7 +3639,7 @@ class mobileWrapper
 						break;
 				
 					default:
-$data[$val['option_name']] = stripslashes(trim($val['option_value']));
+						$data[$val['option_name']] = trim($val['option_value']);
 						break;
 				}
 				

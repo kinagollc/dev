@@ -532,7 +532,7 @@ class CronController extends CController
 		";
 		if($res = $db->rst($stmt)){
 			foreach ($res as $val) {				
-				$time=date("Y-m-d g:i:s a",strtotime($val['date_created']));	
+				$time=date("Y-m-d g:i:s a",strtotime($val['date_modified']));	
 				$date_diff=Yii::app()->functions->dateDifference($time,$date_now);				
 				if (is_array($date_diff) && count($date_diff)>=1){					
 					if($date_diff['days']>=$days_inactive){						

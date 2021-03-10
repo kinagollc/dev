@@ -355,5 +355,22 @@ class GraphicalTracking
 		return false;
 	}
 	
+	public static function getDriverDetailsByOrderID($order_id='')
+	{
+		$stmt = "
+		SELECT driver_id,driver_name,driver_phone,
+		driver_vehicle
+		FROM {{driver_task_view}}
+		WHERE 
+		order_id=".q($order_id)."
+		AND driver_id>0
+		LIMIT 0,1
+		";		
+		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){			
+			return $res;
+		}
+		return false;
+	}
+	
 }
 /*end class*/

@@ -22,20 +22,20 @@
      <?php if($card_fee>0):?>     
      <tr>
       <td><?php echo mt("Amount")?></td>
-      <td><?php echo FunctionsV3::prettyPrice($amount_to_pay-$card_fee)?></td>
+      <td><?php echo Mobile_utility::formatNumber($amount_to_pay-$card_fee)?></td>
      </tr>
       <tr>
       <td><?php echo mt("Card fee")?></td>
-      <td><?php echo FunctionsV3::prettyPrice($card_fee)?></td>
+      <td><?php echo Mobile_utility::formatNumber($card_fee)?></td>
       </tr>      
       <tr>
       <td><?php echo mt("Total")?></td>
-      <td><?php echo FunctionsV3::prettyPrice($amount_to_pay)?></td>
+      <td><?php echo Mobile_utility::formatNumber($amount_to_pay)?></td>
       </tr>     
      <?php else :?> 
      <tr>
       <td><?php echo mt("Amount")?></td>
-      <td><?php echo FunctionsV3::prettyPrice($amount_to_pay)?></td>
+      <td><?php echo Mobile_utility::formatNumber($amount_to_pay)?></td>
      </tr>
      <?php endif;?>
      

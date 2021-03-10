@@ -351,10 +351,6 @@ class UpdateController extends CController
 		$this->alterTable('mobile2_device_reg',array(
 		  'subscribe_topic'=>"int(1) NOT NULL DEFAULT '1'",
 		));
-
-		$this->alterTable('client',array(
-		  'stic_dark_theme'=>"int(1) NOT NULL DEFAULT '0'",
-		));	
 				
 		$this->alterTable('mobile2_broadcast',array(
 		  'fcm_response'=>"text",
@@ -487,7 +483,7 @@ class UpdateController extends CController
 		  'page_id'=>"varchar(14) NOT NULL DEFAULT ''",
 		  'custom_url'=>"text",
 		));
-		$loger[] = DatataseMigration::createTable("{{merchantapp_task_location}}",array(
+		$logger[] = DatataseMigration::createTable("{{merchantapp_task_location}}",array(
 		   'id'=>'pk',
 		   'lat'=>"varchar(255) NOT NULL DEFAULT ''",    
 		   'lng'=>"varchar(255) NOT NULL DEFAULT ''", 
@@ -508,9 +504,9 @@ class UpdateController extends CController
 		}
 		
 		/*END 1.5.2*/
-
+		
 		/*1.5.4*/
-		$loger[] = DatataseMigration::addColumn("{{order_delivery_address}}",array(
+		$logger[] = DatataseMigration::addColumn("{{order_delivery_address}}",array(
 		  'first_name'=>"varchar(255) NOT NULL DEFAULT ''",
 		  'last_name'=>"varchar(255) NOT NULL DEFAULT ''",
 		  'contact_email'=>"varchar(255) NOT NULL DEFAULT ''",
@@ -523,6 +519,7 @@ class UpdateController extends CController
 		));		
 		/*1.5.4*/
 		
+						
 	    /*VIEW TABLES*/	    
 	    $stmt=array();
 	    
@@ -621,6 +618,124 @@ class UpdateController extends CController
 	    
 	    /*EXECUTE SQL*/
 		$this->executeStatement($stmt);
+		
+		
+		/*1.5.6*/
+		$logger[] = DatataseMigration::addColumn("{{merchant}}",array(
+		  'single_app_keys'=>"varchar(255) NOT NULL DEFAULT ''",		  
+		));
+		
+		$logger[] = DatataseMigration::addColumn("{{item}}",array(
+		  'item_token'=>"varchar(50) NOT NULL DEFAULT ''",
+		  'with_size'=>"int(1) NOT NULL DEFAULT '0'",
+		  'track_stock'=>"int(1) NOT NULL DEFAULT '1'",
+		  'supplier_id'=>"int(14) NOT NULL DEFAULT '0'",
+		));
+		
+		$logger[] = DatataseMigration::addColumn("{{currency}}",array(
+		  'description'=>"varchar(255) NOT NULL DEFAULT '' AFTER currency_symbol",   
+		  'as_default'=>"int(1) NOT NULL DEFAULT '0'",
+		  'is_hidden'=>"int(1) NOT NULL DEFAULT '0'",
+		  'currency_position'=>"varchar(100) NOT NULL DEFAULT 'left'",
+		  'exchange_rate'=>"float(14,4) NOT NULL DEFAULT '0'",
+		  'exchange_rate_fee'=>"float(14,4) NOT NULL DEFAULT '0'",
+		  'number_decimal'=>"int(14) NOT NULL DEFAULT '2'",
+		  'decimal_separator'=>"varchar(5) NOT NULL DEFAULT '.'",
+		  'thousand_separator'=>"varchar(5) NOT NULL DEFAULT ''",
+		));
+		
+		$logger[] = DatataseMigration::addColumn("{{order_delivery_address}}",array(
+		  'used_currency'=>"varchar(5) NOT NULL DEFAULT ''",
+		  'base_currency'=>"varchar(5) NOT NULL DEFAULT ''",
+		  'exchange_rate'=>"float(14,4) NOT NULL DEFAULT '1'"
+		));
+		
+		$stmt="
+		create OR REPLACE VIEW {{view_item2}} as
+		select 
+		a.item_id,
+		a.item_token,
+		a.merchant_id,
+		a.item_name,
+		a.item_name_trans,
+		a.item_description,
+		a.item_description_trans,
+		a.status,
+		a.addon_item,
+		a.multi_option,
+		a.multi_option_value,		
+		a.two_flavors,
+		a.two_flavors_position,
+		a.require_addon,
+		a.with_size,
+		a.supplier_id,
+		a.photo,
+		a.gallery_photo,
+		a.discount,
+		a.not_available,
+		a.cooking_ref,
+		a.ingredients,
+		a.spicydish,
+		a.dish,
+		a.sequence as item_sequence,
+		IFNULL(b.item_size_id,'') as item_size_id,
+		IFNULL(b.item_token,'') as item_size_token,
+		IFNULL(b.size_id,0) as size_id,
+		IFNULL(c.size_name,'') as size_name,
+		IFNULL(c.size_name_trans,'') as size_name_trans,
+		IFNULL(b.price,0) as price,
+		IFNULL(b.cost_price,0) as cost_price,
+		IFNULL(b.sku,'') as sku,
+		a.track_stock,
+		IFNULL(b.available,0) as available,
+		IFNULL(b.low_stock,0) as low_stock
+		
+		from {{item}}  a
+		left join {{item_relationship_size}} b
+		on
+		a.item_id = b.item_id
+		
+		left join {{size}} c
+		on
+		b.size_id = c.size_id
+		";		
+		
+		if(Yii::app()->db->schema->getTable("{{item_relationship_size}}")){			
+			if (Yii::app()->db->createCommand($stmt)->query()){				
+				$logger[] = "Create table {{view_item}} done";
+			} else $logger[] = "Create table {{view_item}} failed";			
+		}
+
+				
+		$stmt="
+		create OR REPLACE VIEW {{view_item_cat2}} as
+		select 
+		a.cat_id,
+		c.category_name,
+		c.category_description,
+		c.category_name_trans,
+		c.category_description_trans,
+		c.sequence as category_sequence,
+		c.status as category_status,
+		b.*
+		from {{item_relationship_category}} a
+		left join {{view_item2}} b
+		on 
+		a.item_id = b.item_id
+		
+		left join {{category}} c
+		on 
+		a.cat_id = c.cat_id
+		
+		where b.item_id >0
+		";		
+				
+		if( Yii::app()->db->schema->getTable("{{view_item2}}") && Yii::app()->db->schema->getTable("{{item_relationship_category}}") ){
+			if (Yii::app()->db->createCommand($stmt)->query()){
+				$logger[] = "Create table {{view_item_cat}} done";				
+			} else $logger[] = "Create table {{view_item_cat}} failed";		
+		}
+		
 		
 		dump($logger);
 		

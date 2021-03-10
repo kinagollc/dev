@@ -13,6 +13,7 @@ class VoguepayController extends CController
 	
 	public function actionIndex()
 	{
+		require_once('init_currency.php');
 		require_once('buy.php');
 		
 		$device_uiid = isset($_GET['device_uiid'])?$_GET['device_uiid']:'';
@@ -33,7 +34,7 @@ class VoguepayController extends CController
 			       'logo'=>$logo,				
 			       'reference_id'=>$reference_id,			       
 			       'amount_to_pay'=>$amount_to_pay,	
-			       'payment_description'=>$payment_description,		       
+			       'payment_description'=>stripslashes($payment_description),		       
 			       'credentials'=>$credentials,
 			       'success_url'=>$success_url,
 			       'fail_url'=>$fail_url

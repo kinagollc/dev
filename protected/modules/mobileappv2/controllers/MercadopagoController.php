@@ -13,6 +13,7 @@ class MercadopagoController extends CController
 	
 	public function actionIndex()
 	{
+		require_once('init_currency.php');	
 		require_once('buy.php');
 		$device_uiid = isset($_GET['device_uiid'])?$_GET['device_uiid']:'';
 		
@@ -30,14 +31,14 @@ class MercadopagoController extends CController
 					$params=array(
 					  'title'=>$payment_description,
 					  'quantity'=>1,
-					  'currency_id'=>FunctionsV3::getCurrencyCode(),
+					  'currency_id'=>$currency_code,
 					  'unit_price'=>$amount_to_pay,
 					  'email'=>$data['email_address'],
 					  'external_reference'=>$reference_id,
 					  'success'=>$success_url,
 					  'failure'=>$failure_url,
 					  'pending'=>$cancel_url,
-					);					
+					);		
 						
 					$resp = mercadopagoWrapper::createPayment($credentials,$params);			
 					$this->redirect($resp);

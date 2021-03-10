@@ -42,6 +42,8 @@ class PaypalController extends CController
 	
 	public function actionInitPaypal()
 	{				
+				
+		require_once('init_currency.php');
 		require_once('buy.php');
 		
 		$device_uiid = isset($_GET['device_uiid'])?$_GET['device_uiid']:'';
@@ -89,8 +91,8 @@ class PaypalController extends CController
 			                )
 			            )
 			        );
-			        
-			     	        
+			        			        
+			        			        			     	       
 			        $resp = PaypalWrapper::createOrder(
 						$credentials['client_id'],
 						$credentials['secret_key'],
