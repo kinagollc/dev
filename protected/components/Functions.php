@@ -3360,7 +3360,9 @@ class Functions extends CApplicationComponent
         if (empty($decimal_separator)){
         	$decimal_separator='.';
         }
-		
+		if ($price<=0){
+            return '';
+        }
 		$thou_separator='';
 		if (!empty($price)){
 			if ($decimal==""){
@@ -3379,6 +3381,7 @@ class Functions extends CApplicationComponent
 		//return number_format(0,$decimal,".",$thou_separator);	
 		$thou_separator=$thousand_separator;
 		return number_format(0,$decimal,$decimal_separator,$thou_separator);	
+		
 	}
 	
 	public function explodeData($data='')
