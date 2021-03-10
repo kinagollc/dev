@@ -51,7 +51,7 @@ class mobileWrapper
 			$image=Yii::app()->functions->getOptionAdmin('mobile_default_image_not_available');
 		}					
 		
-		$default_image = Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$default";	
+		// $default_image = Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$default";	
 		if(!empty($image_set)){
 			$default_image = Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$image_set";	
 		}
@@ -60,7 +60,7 @@ class mobileWrapper
 			if (file_exists($path_to_upload."/$image")){							
 				$default=$image;							
 				if(empty($addon_path)){
-				  $url = Yii::app()->getBaseUrl(true)."/cdn.php?height=320&image=/upload/$default";
+				  $url = Yii::app()->getBaseUrl(true)."/upload/$default";
 				} else {
 				   $url = Yii::app()->getBaseUrl(true)."/upload/$addon_path/$default";	
 				}
@@ -444,9 +444,9 @@ class mobileWrapper
     			   $applicable_to=json_decode($val['applicable_to'],true);	
     			   if(is_array($applicable_to) && count($applicable_to)>=1){
     			   	  foreach ($applicable_to as $applicable_to_val) {    			   	  	 
-    			   	  	 $applicable_to_list.=t($applicable_to_val).",";
+    			   	  	 $applicable_to_list.=t($applicable_to_val).", ";
     			   	  }
-    			   	  $applicable_to_list = substr($applicable_to_list,0,-1);
+    			   	  $applicable_to_list = substr($applicable_to_list,0,-2);
     			   }    			
     			}    		 
     			
@@ -455,7 +455,7 @@ class mobileWrapper
     			if (!empty($applicable_to_list)){    				
 	    			$offer = self::t("[percent]% Off over [amount] if [transaction]",array(
 	    			  '[percent]'=>$percentage,
-	    			  '[amount]'=>Mobile_utility::formatNumber( (float)$val['offer_price'] * (float) $exchange_rate ),
+	    			  '[amount]'=>Mobile_utility::formatNumber((float)$val['offer_price'] * (float) $exchange_rate ),
 	    			  '[transaction]'=>$applicable_to_list
 	    			));
     			} else {	    			
@@ -3137,10 +3137,10 @@ class mobileWrapper
 			foreach ($res as $val) {
 				if($multipleField){
 					$cuisine_json['cuisine_name_trans']=!empty($val['cuisine_name_trans'])?json_decode($val['cuisine_name_trans'],true):'';					
-					$cuisine.= qTranslate($val['cuisine_name'],'cuisine_name',$cuisine_json).",";
-				} else $cuisine.="$val[cuisine_name],";				
+					$cuisine.= qTranslate($val['cuisine_name'],'cuisine_name',$cuisine_json)." · ";
+				} else $cuisine.="$val[cuisine_name] · ";				
 			}			
-			$cuisine = substr($cuisine,0,-1);
+			$cuisine = substr($cuisine,0,-3);
 		}	
 		return $cuisine;	
 	}
@@ -3260,7 +3260,7 @@ class mobileWrapper
 		b.used_currency,
 		b.base_currency,
 		b.exchange_rate,
-		
+
 		c.restaurant_name as merchant_name,
 		c.restaurant_phone as merchant_contact_phone,
 		
@@ -3620,7 +3620,7 @@ class mobileWrapper
 		WHERE option_name IN ($que)
 		AND merchant_id=".q($merchant_id)."
 		ORDER BY id DESC
-		";		
+		";				
 		if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){
 			return $resp;
 		}
@@ -3674,5 +3674,31 @@ class mobileWrapper
 	    }
 	    return $options;
 	}
+	
+		
+	public static function sticPrettyDate($date='')
+    {
+    	if (!empty($date)){
+    		$date_format=getOptionA('website_date_format');
+    		if (empty($date_format)){
+    			$date_format="l, M j";
+    		}
+    		$date = date($date_format,strtotime($date));
+    		return Yii::app()->functions->translateDate($date);
+    	}
+    	return false;
+    }
+    
+    public static function sticPrettyTime($time='')
+    {
+    	if (!empty($time)){
+    		$format=getOptionA('website_time_format');			
+    		if(empty($format)){
+    			$format="g:i a";
+    		}
+    		return date($format,strtotime($time));
+    	}
+    	return false;
+    }
 		
 } /*end class*/

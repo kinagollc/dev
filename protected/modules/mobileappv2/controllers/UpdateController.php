@@ -351,6 +351,10 @@ class UpdateController extends CController
 		$this->alterTable('mobile2_device_reg',array(
 		  'subscribe_topic'=>"int(1) NOT NULL DEFAULT '1'",
 		));
+
+		$this->alterTable('client',array(
+		  'stic_dark_theme'=>"int(1) NOT NULL DEFAULT '0'",
+		));	
 				
 		$this->alterTable('mobile2_broadcast',array(
 		  'fcm_response'=>"text",
