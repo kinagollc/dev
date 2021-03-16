@@ -252,14 +252,6 @@ class MerchantWrapper
 		 'access_id'=>'gallerysettings'
 		);
 		
-		$data[] = array(
-		 'section'=>'1',
-		 'stic_icon'=>"banner",	
-		 'icon'=>"2.png",
-		 'label'=>translate("Banner"),
-		 'page'=>"banner_settings.html",
-		 'access_id'=>'banner_settings'
-		);
 		
 		$data[] = array(
 		 'section'=>'3',
@@ -288,14 +280,6 @@ class MerchantWrapper
 		 'access_id'=>'category_sked'
 		);
 
-		$data[] = array(
-		 'section'=>'3',
-		 'stic_icon'=>"payment",
-		 'icon'=>"9.png",
-		 'label'=>translate("Payment"),
-		 'page'=>"payment_list.html",
-		 'access_id'=>'payment-gateway'
-		);
 
 		$data[] = array(
 		 'section'=>'3',
@@ -343,14 +327,6 @@ class MerchantWrapper
 		 'access_id'=>'smsSettings'
 		);
 		
-		$data[] = array(
-		 'section'=>'4',
-		 'stic_icon'=>"push",
-		 'icon'=>"2.png",
-		 'label'=>translate("Push"),
-		 'page'=>"broadcast_list.html",
-		 'access_id'=>''
-		);
 		
 		return $data;
 	}
