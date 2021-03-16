@@ -715,7 +715,6 @@ $lang['Allow [title] to access this device location?'] = '';
 $lang['This app collects location data to Improve location accuracy when finding nearby bluetooth printers. Your location can be accessed at any time even when the app is closed or not in use.'] = '';
 $lang['No thanks'] = '';
 $lang['Turn on'] = '';
-
 $lang['Merchant address'] = '';
 $lang['Enter pin'] = '';
 $lang['Forgot pin'] = '';
