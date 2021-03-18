@@ -2154,7 +2154,7 @@ class ApiController extends CController
 		    	$data['tab_menu']=mobileWrapper::getRestoTabMenu($merchant_id , $ratings);		
 		    	
 		    	$data['share_options']=array(
-		    	  'message'=>mt("Find this restaurant on [website_name] | [merchant_address]",array(
+		    	  'message'=>mt("Find [restaurant_name] on [website_name] | [merchant_address]",array(
 		    	    '[website_name]'=>getOptionA('website_title'),
 		    	    '[merchant_address]'=>$res['complete_address']
 		    	  )),
