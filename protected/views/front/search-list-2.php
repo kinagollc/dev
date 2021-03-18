@@ -71,7 +71,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	        </p>
 	        	        
 	        <?php if($show_delivery_info):?>
-	        <p><?php echo t("Delivery Est")?>: <?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
+	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i>")?>: <?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
 	        <?php endif;?>
 	        
 	        <p>
