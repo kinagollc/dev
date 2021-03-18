@@ -944,9 +944,8 @@ color:#df0b37;
 
 .result-merchant .inner
 {
-border:1px solid #c9c7c7;
-padding:10px 0;
-padding-bottom:20px;
+border:0px solid #c9c7c7;
+padding-top:20px;
 background:#fff;
 color:#5d5b5b;
 font-size:14px;
