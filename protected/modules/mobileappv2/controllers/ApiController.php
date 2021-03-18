@@ -2156,7 +2156,8 @@ class ApiController extends CController
 		    	$data['share_options']=array(
 		    	  'message'=>mt("Find [restaurant_name] on [website_name] | [merchant_address]",array(
 		    	    '[website_name]'=>getOptionA('website_title'),
-		    	    '[merchant_address]'=>$res['complete_address']
+		    	    '[merchant_address]'=>$res['complete_address'],
+		    	    '[restaurant_name]'=>$res['restaurant_name']
 		    	  )),
 		    	  'url'=>websiteUrl()."/menu-".$res['restaurant_slug'],
 		    	  'subject'=>$res['restaurant_name'],
