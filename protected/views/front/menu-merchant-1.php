@@ -91,11 +91,13 @@
     </p></div>
         </div>     
          <div class="col-md-3 col-xs-3 food-price-wrap border">
+          <?php if ( $disabled_addcart==""):?>
           <?php 
            $this->widget('application.components.Widget_price',array(
              'price'=> $val_item['prices']
            ));
-           ?>          
+           ?>   
+            <?php endif;?>       
         </div>
                    
                    
