@@ -91,7 +91,7 @@
     </p></div>
         </div>     
          <div class="col-md-3 col-xs-3 food-price-wrap border">
-         <?php if($price>0):?>
+         <?php if($prices>0):?>
           <?php 
            $this->widget('application.components.Widget_price',array(
              'price'=> $val_item['prices']
