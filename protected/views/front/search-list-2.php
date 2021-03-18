@@ -54,12 +54,11 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	         
 	       </div> <!--mytable-->
 	       
-	       <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p>   
 	       	       	       
 	       <p class="cuisine">
            <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
            </p>                
-                                                       
+                       <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p>                                   
            <p>
 	        <?php 	        
 	        if(!$search_by_location){		        
