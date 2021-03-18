@@ -31,7 +31,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	       	       <p class="cuisine">
            <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
            </p>     
-	       <p class="merchant-address concat-text" style="margin-top:-5px"><?php echo $val['merchant_address']?></p> 
+	       <p class="merchant-address concat-text" style="margin-top:-10px"><?php echo $val['merchant_address']?></p> 
 	         
 	       	       <div class="mytable">
 	         <div class="mycol">
