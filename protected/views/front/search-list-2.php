@@ -21,9 +21,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	     <!--<a href="<?php echo Yii::app()->createUrl('store/menu/merchant/'.$val['restaurant_slug'])?>">-->
 	     <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
 	      <img class="logo-small"src="<?php echo FunctionsV3::getMerchantLogo($merchant_id);?>">
-	     </a>	     
-	     <?php echo FunctionsV3::displayServicesList($val['service']);?>    
-	     <?php FunctionsV3::displayCashAvailable($merchant_id,true,$val['service'])?>      
+	     </a>	          
 	    </div> <!--col-->
 	    
 	    <div class="col-md-7 border">
@@ -116,7 +114,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	      <!--<a href="<?php echo Yii::app()->createUrl('store/menu/merchant/'.$val['restaurant_slug'])?>" -->
 	      <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>" 
          class="orange-button rounded3 medium">
-          <?php echo t("Order Now")?>
+          <?php echo t("Browse")?>
          </a>   
 	    
 	    </div>
