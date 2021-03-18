@@ -74,17 +74,6 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
 	        <?php endif;?>
 	        
-	        <p>
-	        <?php 	        	        
-	        if($show_delivery_info){
-		        if($distance_covered>0){
-		        	echo Yii::t("default","Delivery Distance : [distance]",array(
-		        	  '[distance]'=>MapsWrapper::prettyDistance($distance_covered,$unit_pretty)
-		        	));
-		        } else echo  t("Delivery Distance").": ".t("not available");
-	        }
-	        ?>
-	        </p>
 	                                
 	        <p>
 	        <?php 	        
