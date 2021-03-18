@@ -63,7 +63,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
            <p>
 	        <?php 	        
 	        if(!$search_by_location){		        
-		        echo Yii::t("default","Distance : [distance]",array(
+		        echo Yii::t("default","<i class='fa fa-location-arrow' aria-hidden='true'></i>[distance]",array(
 		          '[distance]'=>$distance
 		        ));
 	        }
@@ -71,7 +71,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	        </p>
 	        	        
 	        <?php if($show_delivery_info):?>
-	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i>")?>: <?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
+	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i>")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
 	        <?php endif;?>
 	        
 	        <p>
