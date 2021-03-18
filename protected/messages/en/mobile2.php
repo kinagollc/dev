@@ -910,7 +910,7 @@ $lang['ABOUT US'] = '';
 
 /* STIC */
 $lang['What are you looking for?'] = "What are you looking for?";
-$lang['What do you wish?'] = "What are you looking for?";
+$lang['What do you wish?'] = "Lets get started";
 $lang['A wide range of options for you'] = "start by choosing a category";
 $lang['The nearest restaurants to your location'] = "near your location";
 $lang['Choose what you wish'] = "";
