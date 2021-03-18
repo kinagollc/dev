@@ -28,10 +28,11 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	     
 	       
 	       <h2><?php echo clearString($val['restaurant_name'])?></h2>
-	       <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p> 
 	       	       <p class="cuisine">
            <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
-           </p>       
+           </p>     
+	       <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p> 
+	         
 	       	       <div class="mytable">
 	         <div class="mycol">
 	            <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
