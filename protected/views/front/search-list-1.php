@@ -24,15 +24,15 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
        
         
         <div class="mytable">
-          <div class="mycol a"><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?><p><?php 	        
+          <div class="mycol a"><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?></p>
+         <p class="concat-text2 shiftleft">
+        <?php echo FunctionsV3::displayCuisine($val['cuisine']);?><?php 	        
 	        if(!$search_by_location){		        
 		        echo Yii::t("default","(<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance])",array(
 		          '[distance]'=>$distance
 		        ));
 	        }
-	        ?></p></p>
-         <p class="concat-text2 shiftleft">
-        <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
+	        ?>
         </p>          </div>
         
           <div class="mycol b">
