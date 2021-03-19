@@ -41,7 +41,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         </div>
          <!--mytable-->
 
-        <div class="mytable" style="margin-top:-25px;text-align:left!important;padding:5px">
+        <div class="mytable" style="margin-top:-20px;text-align:left!important;padding:5px">
 	        <div class="mycol">
 	        <?php 	        
 	        if(!$search_by_location){		        
