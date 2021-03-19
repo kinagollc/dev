@@ -1054,6 +1054,16 @@ display:block;
 padding-left:8px;
 padding-right:8px;
 }
+.concat-text3
+{
+width: 50%;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+display:block;
+padding-left:8px;
+padding-right:8px;
+}
 
 .result-merchant .concat-text{
 padding-left:8px;
@@ -1069,7 +1079,7 @@ padding:2px;
 .result-merchant .mytable .mycol.a{
 border-left:0;
 border-right:0;
-width:50%;
+width:60%;
 }
 
 .result-merchant .mytable .mycol.b{
