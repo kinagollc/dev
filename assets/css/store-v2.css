@@ -1034,6 +1034,9 @@ text-overflow: ellipsis;
 display:block;
 }
 
+.shiftleft{
+text-align:left;}
+
 .concat-text2
 {
 width: 60%;
