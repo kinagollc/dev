@@ -16,7 +16,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
     <div class="ribbon-offer"><span><?php echo $offer;?></span></div>
     <?php endif;?>
     
-    <div class="row">
+    <div class="row" style="background-image:url('<?php echo FunctionsV3::getMerchantHeader($merchant_id);?>')">
      <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
         <img src="<?php echo FunctionsV3::getMerchantHeader($merchant_id);?>" style="width:100%;height:100px;object-fit:cover;padding:20px;">
         </a>
