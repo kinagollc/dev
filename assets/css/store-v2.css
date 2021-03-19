@@ -1025,6 +1025,12 @@ display:table-cell;
 margin-top:5px;
 }
 
+.buzname {
+font-size:1.6em;
+color:#333;
+font-weight:700;
+}
+
 .concat-text
 {
 width: 100%;
