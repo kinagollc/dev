@@ -17,7 +17,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
     <?php endif;?>
     
     <div class="row">
-    <p class="top15"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
+    <p><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
 	    <div class="col-md-2 border ">
 	     <!--<a href="<?php echo Yii::app()->createUrl('store/menu/merchant/'.$val['restaurant_slug'])?>">-->
 	     <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
