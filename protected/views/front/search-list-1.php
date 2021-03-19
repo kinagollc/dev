@@ -33,13 +33,14 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
           <div class="mycol b">
           <div class="equal_table">
          <div class="col">
+         <div style="padding:5px;">
           <?php 	        
 	        if(!$search_by_location){		        
 		        echo Yii::t("default","<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance]",array(
 		          '[distance]'=>$distance
 		        ));
 	        }
-	        ?>
+	        ?></div>
             <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>
          </div>          
                   
