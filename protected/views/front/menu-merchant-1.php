@@ -90,7 +90,7 @@
     <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
     </p></div>
         </div>     
-         <div class="col-md-3 col-xs-3 food-price-wrap border">
+         <div class="col-md-3 col-xs-3 food-price-wrap border"> 
           <?php 
            $this->widget('application.components.Widget_price',array(
              'price'=> $val_item['prices']
