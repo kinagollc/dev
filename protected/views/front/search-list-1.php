@@ -20,14 +20,13 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         <img src="<?php echo FunctionsV3::getMerchantHeader($merchant_id);?>" style="width:100%;height:200px">
         </a>
         
-        <h2 class="concat-text"><?php echo clearString($val['restaurant_name'])?></h2>
-        <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p>
+        
         
         <div class="mytable">
           <?php if($show_delivery_info):?>
           <div class="mycol a">             
-             <?php echo Price_Formatter::formatNumber($min_fees)?>
-             <p><?php echo t("Minimum Order")?></p>
+             <h2 class="concat-text"><?php echo clearString($val['restaurant_name'])?></h2>
+             <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p>
           </div>
           <?php endif;?>
           <div class="mycol b">
