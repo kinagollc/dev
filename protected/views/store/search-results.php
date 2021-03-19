@@ -266,7 +266,20 @@ echo CHtml::hiddenField('clien_long',$data['client']['long']);
               </div> <!--col-->
               <div class="col-md-6 col-xs-6 border">                
                
-                          
+                           <a href="<?php echo FunctionsV3::clearSearchParams('','display_type=listview')?>" 
+	           class="display-type orange-button block center rounded 
+	           <?php echo $display_type=="gridview"?'inactive':''?>" 
+		          data-type="listview">
+                <i class="fa fa-th-list"></i>
+                </a>
+
+                <a href="<?php echo FunctionsV3::clearSearchParams('','display_type=gridview')?>" 
+		          class="display-type orange-button block center rounded mr10px 
+	             <?php echo $display_type=="listview"?'inactive':''?>" 
+		          data-type="gridview">
+                <i class="fa fa-th-large"></i>
+                </a>           
+
                          
                 
                 <a href="javascript:;" id="mobile-filter-handle" class="orange-button block center rounded mr10px">
