@@ -22,8 +22,12 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	     <!--<a href="<?php echo Yii::app()->createUrl('store/menu/merchant/'.$val['restaurant_slug'])?>">-->
 	     <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
 	      <img class="logo-small"src="<?php echo FunctionsV3::getMerchantLogo($merchant_id);?>">
-	     </a>	          
-	    </div> <!--col-->
+	     </a>	
+	        <div class="mycol">
+	            <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>
+	         </div>          
+	    </div>
+	     <!--col-->
 	    
 	    <div class="col-md-7 border">
 	     
@@ -52,10 +56,6 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	          <p><?php echo t("Minimum Order").": ".Price_Formatter::formatNumber($min_fees)?></p>
 	         </div>
 	         <?php endif;?>
-	         
-	         <div class="mycol">
-	            <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>
-	         </div>
 	         
 	       </div> <!--mytable-->
 	       <div class="mytable">
