@@ -84,11 +84,6 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	         </div>
 	         
 	       </div> 
-            
-        <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>" 
-        class="orange-button rounded3 medium">
-        <?php echo t("Order Now")?>
-        </a>
         
         
     </div> <!--inner-->
