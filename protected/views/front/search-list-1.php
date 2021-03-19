@@ -17,7 +17,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 
         <!--<a href="<?php echo Yii::app()->createUrl('store/menu/merchant/'.$val['restaurant_slug'])?>" >-->
         <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
-        <img class="logo-medium"src="<?php echo FunctionsV3::getMerchantHeader($merchant_id);?>">
+        <img class="mobile-banner" src="<?php echo FunctionsV3::getMerchantHeader($merchant_id);?>">
         </a>
         
         <h2 class="concat-text"><?php echo clearString($val['restaurant_name'])?></h2>
