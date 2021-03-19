@@ -18,7 +18,11 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         <!--<a href="<?php echo Yii::app()->createUrl('store/menu/merchant/'.$val['restaurant_slug'])?>" >-->
          <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
        
-        <div style="background-image:url('<?php echo FunctionsV3::getMerchantHeader($merchant_id);?>');width:100%;height:100px;background-size:cover;background-position:center"></div>
+        <div style="background-image:url('<?php echo FunctionsV3::getMerchantHeader($merchant_id);?>');width:100%;height:100px;background-size:cover;background-position:center">
+        <div align="right">
+            <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>
+         </div> 
+        </div>
         </a>
         
         
@@ -42,9 +46,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
          <div class="col">
             <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>
          </div>          
-         <div class="col">
-            <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>
-         </div>          
+                  
         </div>
              <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
              <?php if(is_array($ratings) && count($ratings)>=1):?>
