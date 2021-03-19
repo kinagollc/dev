@@ -48,9 +48,9 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         </div> <!--mytable-->
 
         <div class="mytable">
-	        
+	        <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>
 	         <div class="mycol">
-	            	    <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>    <?php if($show_delivery_info):?>
+	            	        <?php if($show_delivery_info):?>
 	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
 	        <?php endif;?>
 	         </div>
