@@ -26,7 +26,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         
         <div class="mytable">
           <div class="mycol a"><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?></p>
-         <p class="concat-text shiftleft">
+         <p class="concat-text3 shiftleft">
         <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
         </p>          <div class="mycol">
 	         <?php 	        
