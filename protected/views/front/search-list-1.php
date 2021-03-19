@@ -46,60 +46,44 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
           </div>
         </div> <!--mytable-->
 
-        <div class="top25"></div>
-        
-        
-                
-        
-        <?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?>                        
-              
-                                 
-        <p>
-        <?php 
-        if(!$search_by_location){
-	        echo Yii::t("default","Distance : [distance]",array(
-	          '[distance]'=>$distance
-	        ));
-        }
-        ?>
-        </p>
-        
-        <?php  if($show_delivery_info):?>
-        <p><?php echo t("Delivery Est")?>: <?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
-        <?php endif;?>
-        
-        <p>
-        <?php         
-        if($show_delivery_info){
-	        if($distance_covered>0){
-	        	echo Yii::t("default","Delivery Distance : [distance]",array(
-	        	  '[distance]'=>MapsWrapper::prettyDistance($distance_covered,$unit_pretty)
-	        	));
-	        } else echo  t("Delivery Distance").": ".t("not available");
-        }
-        ?>
-        </p>
-                                
-        <p>
-        <?php 
-        //if($val['service']!=3){
-        if($show_delivery_info){
-	        if ($delivery_fee){
-	             echo t("Delivery Fee").": ".Price_Formatter::formatNumber($delivery_fee);
-	        } else echo  t("Delivery Fee").": ".t("Free Delivery");
-        }
-        ?>
-        </p>
-        
-        <?php if(method_exists('FunctionsV3','getOffersByMerchantNew')):?>
-        <?php if ($offer=FunctionsV3::getOffersByMerchantNew($merchant_id)):?>
-          <?php foreach ($offer as $offer_value):?>
-            <p><?php echo $offer_value?></p>
-          <?php endforeach;?>
-        <?php endif;?>
-        <?php endif;?>   
-        
-        <?php echo FunctionsV3::displayServicesList($val['service'])?>          
+       <div class="mytable">
+	        
+	         <div class="mycol">
+	            	        <?php if($show_delivery_info):?>
+	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
+	        <?php endif;?>
+	         </div>
+	         <div class="mycol"> 
+	            <p>
+	        <?php 	        
+	        if($show_delivery_info){
+		        if ($delivery_fee>0){
+		             echo t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".Price_Formatter::formatNumber($delivery_fee);
+		        } else echo  t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".t("Free Delivery");
+	        }
+	        ?>
+	        </p>               
+	         </div>
+	         
+	         <?php if($show_delivery_info):?>
+	         <div class="mycol">	          
+	          <p><?php echo t("Minimum Order").": ".Price_Formatter::formatNumber($min_fees)?></p>
+	         </div>
+	         <?php endif;?>
+	         
+	         <div class="mycol">
+	            <?php if(method_exists('FunctionsV3','getOffersByMerchantNew')):?>
+	        <?php if ($offer=FunctionsV3::getOffersByMerchantNew($merchant_id)):?>
+	          <?php foreach ($offer as $offer_value):?>
+	            <p><?php echo $offer_value?></p>
+	          <?php endforeach;?>
+	        <?php endif;?>
+	        <?php endif;?>
+	        
+	        <p class="top15"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
+	         </div>
+	         
+	       </div> 
             
         <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>" 
         class="orange-button rounded3 medium">
