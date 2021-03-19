@@ -41,7 +41,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
           <div class="equal_table">
           
          <div class="col">
-            <div align="rigt"><?php echo FunctionsV3::merchantOpenTag($merchant_id)?></div>
+            <div align="right"><?php echo FunctionsV3::merchantOpenTag($merchant_id)?></div>
          </div>          
         </div>
           </div>
