@@ -43,7 +43,9 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	            <p><?php echo $ratings['votes']." ".t("Reviews")?></p>
 	            <?php endif;?>
 	         </div>
-	         
+	         <div class="mycol"> 
+	            <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>                
+	         </div>
 	         
 	         <?php if($show_delivery_info):?>
 	         <div class="mycol">	          
