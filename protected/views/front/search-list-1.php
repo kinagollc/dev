@@ -41,7 +41,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         </div>
          <!--mytable-->
 
-        <div class="mytable" style="margin-top:-20px;text-align:left!important;padding:5px">
+        <div class="mytable" style="margin-top:-20px;text-align:left!important;padding:5px;font-size:13px!important">
 	        <div class="mycol">
 	        <?php 	        
 	        if(!$search_by_location){		        
@@ -69,7 +69,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	         
 	         <?php if($show_delivery_info):?>
 	         <div class="mycol">	          
-	          <p><?php echo t("<i class='fa fa-cart-plus' aria-hidden='true'></i>Min").": ".Price_Formatter::formatNumber($min_fees)?></p>
+	          <p><?php echo t("<i class='fa fa-cart-plus' aria-hidden='true'></i> Min").": ".Price_Formatter::formatNumber($min_fees)?></p>
 	         </div>
 	         <?php endif;?>
 	         
