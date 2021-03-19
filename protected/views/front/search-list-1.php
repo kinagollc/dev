@@ -46,7 +46,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
           </div>
         </div> <!--mytable-->
 
-       <div class="mytable">
+        <div class="mytable">
 	        
 	         <div class="mycol">
 	            	        <?php if($show_delivery_info):?>
