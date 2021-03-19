@@ -58,10 +58,9 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	         </div>
 	         
 	       </div> <!--mytable-->
-	       
-	       	       	                 
-                                                       
-           <p>
+	       <div class="mytable">
+	         <div class="mycol">
+	            <p>
 	        <?php 	        
 	        if(!$search_by_location){		        
 		        echo Yii::t("default","<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance]",array(
@@ -70,13 +69,14 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	        }
 	        ?>
 	        </p>
-	        	        
-	        <?php if($show_delivery_info):?>
+	         </div>
+	         <div class="mycol">
+	            	        <?php if($show_delivery_info):?>
 	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
 	        <?php endif;?>
-	        
-	                                
-	        <p>
+	         </div>
+	         <div class="mycol"> 
+	            <p>
 	        <?php 	        
 	        if($show_delivery_info){
 		        if ($delivery_fee>0){
@@ -84,9 +84,17 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 		        } else echo  t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".t("Free Delivery");
 	        }
 	        ?>
-	        </p>
-	        
-	        <?php if(method_exists('FunctionsV3','getOffersByMerchantNew')):?>
+	        </p>               
+	         </div>
+	         
+	         <?php if($show_delivery_info):?>
+	         <div class="mycol">	          
+	          <p><?php echo t("Minimum Order").": ".Price_Formatter::formatNumber($min_fees)?></p>
+	         </div>
+	         <?php endif;?>
+	         
+	         <div class="mycol">
+	            <?php if(method_exists('FunctionsV3','getOffersByMerchantNew')):?>
 	        <?php if ($offer=FunctionsV3::getOffersByMerchantNew($merchant_id)):?>
 	          <?php foreach ($offer as $offer_value):?>
 	            <p><?php echo $offer_value?></p>
@@ -95,6 +103,19 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	        <?php endif;?>
 	        
 	        <p class="top15"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
+	         </div>
+	         
+	       </div>
+	       	       	                 
+                                                       
+           
+	        	        
+
+	        
+	                                
+	        
+	        
+	        
 	        
 	    
 	    </div> <!--col-->
