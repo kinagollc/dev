@@ -102,6 +102,7 @@ text-shadow: 2px 2px 2px rgba(0, 0, 0, 1);
 border:0px solid red;
 padding-bottom:20px;
 padding-top:20px;
+box-shadow: inset 0 0 0 50vw rgba(0,0,0,0.3);
 }
 
 .search-input-wraps{
@@ -468,6 +469,7 @@ border-top:0;
 {
 padding-bottom:10px;
 padding-top:10px;
+box-shadow: inset 0 0 0 50vw rgba(0,0,0,0.3);
 }
 
 .mobile-search-menu.mytable,
