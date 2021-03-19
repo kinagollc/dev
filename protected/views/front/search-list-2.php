@@ -35,7 +35,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	       <p class="merchant-address concat-text" style="margin-top:-10px"><?php echo $val['merchant_address']?>
 	        <?php 	        
 	        if(!$search_by_location){		        
-		        echo Yii::t("default","(<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance] away)",array(
+		        echo Yii::t("default","(<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance])",array(
 		          '[distance]'=>$distance
 		        ));
 	        }
