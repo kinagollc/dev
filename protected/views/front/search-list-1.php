@@ -35,7 +35,43 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 		          '[distance]'=>$distance
 		        ));
 	        }
-	        ?></div></div>
+	        ?></div>
+	         <div class="mycol">
+	            	        <?php if($show_delivery_info):?>
+	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
+	        <?php endif;?>
+	         </div>
+	         <div class="mycol"> 
+	            <p>
+	        <?php 	        
+	        if($show_delivery_info){
+		        if ($delivery_fee>0){
+		             echo t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".Price_Formatter::formatNumber($delivery_fee);
+		        } else echo  t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".t("Free Delivery");
+	        }
+	        ?>
+	        </p>               
+	         </div>
+	         
+	         <?php if($show_delivery_info):?>
+	         <div class="mycol">	          
+	          <p><?php echo t("Min").": ".Price_Formatter::formatNumber($min_fees)?></p>
+	         </div>
+	         <?php endif;?>
+	         
+	         
+	         <div class="mycol">
+	            <?php if(method_exists('FunctionsV3','getOffersByMerchantNew')):?>
+	        <?php if ($offer=FunctionsV3::getOffersByMerchantNew($merchant_id)):?>
+	          <?php foreach ($offer as $offer_value):?>
+	            <p><?php echo $offer_value?></p>
+	          <?php endforeach;?>
+	        <?php endif;?>
+	        <?php endif;?>
+	        
+	        <p class="top15"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
+	         </div>
+	        </div>
         
           <div class="mycol b">
           <div class="equal_table">
