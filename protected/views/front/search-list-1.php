@@ -25,10 +25,11 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         
         <div class="mytable">
           <div class="mycol a"><h4 class="concat-text2 shiftleft"><?php echo clearString($val['restaurant_name'])?></h2>
-        <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p></div>
+        <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p>
          <p class="top15 cuisine concat-text">
         <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
-        </p>          
+        </p>          </div>
+        
           <div class="mycol b">
           <div class="equal_table">
          <div class="col">
