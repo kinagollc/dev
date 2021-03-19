@@ -24,13 +24,13 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
        
         
         <div class="mytable">
-          <div class="mycol a"><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?> <?php 	        
+          <div class="mycol a"><div class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?></div> <?php 	        
 	        if(!$search_by_location){		        
 		        echo Yii::t("default","(<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance])",array(
 		          '[distance]'=>$distance
 		        ));
 	        }
-	        ?></p>
+	        ?>
          <p class="concat-text2 shiftleft">
         <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
         </p>          </div>
@@ -46,7 +46,6 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         </div>
              <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
              <?php if(is_array($ratings) && count($ratings)>=1):?>
-             <p><?php echo $ratings['votes']." ".t("Reviews")?></p>
              <?php endif;?>
           </div>
         </div> <!--mytable-->
