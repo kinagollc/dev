@@ -1056,13 +1056,13 @@ padding-right:8px;
 }
 .concat-text3
 {
-width: 50%;
+max-width: 70%;
 white-space: nowrap;
 overflow: hidden;
 text-overflow: ellipsis;
 display:block;
 padding-left:8px;
-padding-right:8px;
+padding-right:0px;
 }
 
 .result-merchant .concat-text{
