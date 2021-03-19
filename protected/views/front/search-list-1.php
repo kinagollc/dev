@@ -48,7 +48,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	        <div class="mycol">
 	         <?php 	        
 	        if(!$search_by_location){		        
-		        echo Yii::t("default","(<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance])",array(
+		        echo Yii::t("default","<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance]",array(
 		          '[distance]'=>$distance
 		        ));
 	        }
