@@ -1051,6 +1051,8 @@ white-space: nowrap;
 overflow: hidden;
 text-overflow: ellipsis;
 display:block;
+padding-left:8px;
+padding-right:8px;
 }
 
 .result-merchant .concat-text{
