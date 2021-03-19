@@ -35,8 +35,24 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 		          '[distance]'=>$distance
 		        ));
 	        }
-	        ?></div>
-	        <div class="mycol">
+	        ?></div> <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
+             <?php if(is_array($ratings) && count($ratings)>=1):?>
+             <?php endif;?>
+          </div></div>
+        
+          <div class="mycol b">
+          <div class="equal_table">
+         <div class="col">
+            <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>
+         </div>          
+                  
+        </div>
+            
+        </div> <!--mytable-->
+
+        <div class="mytable">
+	        
+	         <div class="mycol">
 	            	        <?php if($show_delivery_info):?>
 	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
 	        <?php endif;?>
@@ -70,21 +86,9 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	        <?php endif;?>
 	        
 	        <p class="top15"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
-	         </div></div>
-        
-          <div class="mycol b">
-          <div class="equal_table">
-         <div class="col">
-            <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>
-         </div>          
-                  
-        </div>
-             <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
-             <?php if(is_array($ratings) && count($ratings)>=1):?>
-             <?php endif;?>
-          </div>
-        </div> <!--mytable-->
-
+	         </div>
+	         
+	       </div> 
         
         
     </div> <!--inner-->
