@@ -24,18 +24,18 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p>
         
         <div class="mytable">
-          <div class="mycol a">
+          <?php if($show_delivery_info):?>
+          <div class="mycol a">             
+             <?php echo Price_Formatter::formatNumber($min_fees)?>
+             <p><?php echo t("Minimum Order")?></p>
+          </div>
+          <?php endif;?>
+          <div class="mycol b">
              <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
              <?php if(is_array($ratings) && count($ratings)>=1):?>
              <p><?php echo $ratings['votes']." ".t("Reviews")?></p>
              <?php endif;?>
           </div>
-          <?php if($show_delivery_info):?>
-          <div class="mycol b">             
-             <?php echo Price_Formatter::formatNumber($min_fees)?>
-             <p><?php echo t("Minimum Order")?></p>
-          </div>
-          <?php endif;?>
         </div> <!--mytable-->
 
         <div class="top25"></div>
