@@ -3274,11 +3274,12 @@ margin-top: 10px;
 }
 
 a.add_favorites:hover{
-color:#00b279;
+color:#df0b37;
 }
 
 a.add_favorites i{
 font-size:25px;
+color:#ffffff;
 }
 .equal_table {
 display:table;

@@ -19,7 +19,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
          <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
        
         <div style="background-image:url('<?php echo FunctionsV3::getMerchantHeader($merchant_id);?>');width:100%;height:100px;background-size:cover;background-position:center">
-        <div align="right" style="padding:5px;color:#fff">
+        <div align="right" style="padding:5px">
             <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>
          </div> 
         </div>
