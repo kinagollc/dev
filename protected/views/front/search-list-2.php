@@ -32,7 +32,14 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	       	       <p class="cuisine">
            <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
            </p>     
-	       <p class="merchant-address concat-text" style="margin-top:-10px"><?php echo $val['merchant_address']?></p> 
+	       <p class="merchant-address concat-text" style="margin-top:-10px"><?php echo $val['merchant_address']?>
+	        <?php 	        
+	        if(!$search_by_location){		        
+		        echo Yii::t("default","(<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance] away)",array(
+		          '[distance]'=>$distance
+		        ));
+	        }
+	        ?></p> 
 	         
 	       	       <div class="mytable" style="margin-top:5px;">
 	         <div class="mycol">
@@ -54,17 +61,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	         
 	       </div> <!--mytable-->
 	       <div class="mytable">
-	         <div class="mycol">
-	            <p>
-	        <?php 	        
-	        if(!$search_by_location){		        
-		        echo Yii::t("default","<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance]",array(
-		          '[distance]'=>$distance
-		        ));
-	        }
-	        ?>
-	        </p>
-	         </div>
+	        
 	         <div class="mycol">
 	            	        <?php if($show_delivery_info):?>
 	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
