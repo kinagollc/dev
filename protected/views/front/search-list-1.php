@@ -25,7 +25,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
        
         
         <div class="mytable">
-          <div class="mycol a"><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?><a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a></p>
+          <div class="mycol a"><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?></p>
          <p class="concat-text shiftleft">
         <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
         </p>          <div class="mycol">
@@ -50,7 +50,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         <div class="mytable">
 	        
 	         <div class="mycol">
-	            	        <?php if($show_delivery_info):?>
+	            	    <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>    <?php if($show_delivery_info):?>
 	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
 	        <?php endif;?>
 	         </div>
