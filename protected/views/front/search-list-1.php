@@ -24,7 +24,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
        
         
         <div class="mytable">
-          <div class="mycol a"><h2 class="concat-text"><?php echo clearString($val['restaurant_name'])?></h2>
+          <div class="mycol a"><h2 class="concat-text"><div class="class="concat-text"><?php echo clearString($val['restaurant_name'])?></div></h2>
         <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p></div>
           <div class="mycol b">
              <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
