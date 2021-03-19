@@ -28,19 +28,18 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
           <div class="mycol a"><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?></p>
          <p class="concat-text shiftleft">
         <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
-        </p>          </div>
-        
-          <div class="mycol b">
-          <div class="equal_table">
-         <div class="col">
-         <div style="padding:5px;">
-          <?php 	        
+        </p>          <div class="mycol">
+	         <?php 	        
 	        if(!$search_by_location){		        
 		        echo Yii::t("default","<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance]",array(
 		          '[distance]'=>$distance
 		        ));
 	        }
-	        ?></div>
+	        ?></div></div>
+        
+          <div class="mycol b">
+          <div class="equal_table">
+         <div class="col">
             <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>
          </div>          
                   
