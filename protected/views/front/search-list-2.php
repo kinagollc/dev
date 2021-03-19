@@ -22,12 +22,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	     <!--<a href="<?php echo Yii::app()->createUrl('store/menu/merchant/'.$val['restaurant_slug'])?>">-->
 	     <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
 	      <img class="logo-small"src="<?php echo FunctionsV3::getMerchantLogo($merchant_id);?>">
-	     </a>	    
-	     <div class="mytable">
-	     <div class="mycol"> 
-	            <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>                
-	         </div>
-	     </div>      
+	     </a>	          
 	    </div> <!--col-->
 	    
 	    <div class="col-md-7 border">
