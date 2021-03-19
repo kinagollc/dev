@@ -1063,6 +1063,7 @@ text-overflow: ellipsis;
 display:block;
 padding-left:8px;
 padding-right:0px;
+font-size:12px!important;
 }
 
 .result-merchant .concat-text{
