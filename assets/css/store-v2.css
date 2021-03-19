@@ -935,7 +935,7 @@ margin-top:25px;
 .result-merchant .infinite-item,
 .result-merchant .infinite-item-newest
 {
-margin-bottom:20px;
+margin-bottom:5px;
 }
 
 .result-merchant h2{
@@ -945,7 +945,7 @@ color:#df0b37;
 .result-merchant .inner
 {
 border:0px solid #c9c7c7;
-padding-top:20px;
+padding-top:5px;
 background:#fafafa;
 color:#5d5b5b;
 font-size:14px;
@@ -954,7 +954,7 @@ position:relative;
 }
 
 .result-merchant #search-listview .inner{
-min-height:600px;
+min-height:400px;
 }
 
 .result-merchant .inner.list-view,
