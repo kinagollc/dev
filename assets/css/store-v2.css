@@ -1040,19 +1040,20 @@ padding-right:8px;
 }
 
 .result-merchant .mytable .mycol{
-border:1px solid #c9c7c7;
+border:0px solid #c9c7c7;
 padding:2px;
 /*width:50%;*/
-width:40%;
 }
 
 .result-merchant .mytable .mycol.a{
 border-left:0;
 border-right:0;
+width:60%;
 }
 
 .result-merchant .mytable .mycol.b{
 border-right:0;
+width:30%;
 }
 
 .result-merchant a.orange-button,
