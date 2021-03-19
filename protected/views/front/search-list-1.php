@@ -39,8 +39,10 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         
           <div class="mycol b">
           <div class="equal_table">
+          <div class="col">
+          <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>
+          </div>
          <div class="col">
-         <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>
             <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>
          </div>          
                   
