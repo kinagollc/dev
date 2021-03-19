@@ -42,11 +42,8 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
          <div class="col">
             <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>
          </div>          
-             <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
-             <?php if(is_array($ratings) && count($ratings)>=1):?>
-             <?php endif;?>     
+                  
         </div>
-             
           </div>
         </div> <!--mytable-->
 
