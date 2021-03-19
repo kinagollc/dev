@@ -25,7 +25,8 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
        
         
         <div class="mytable">
-          <div class="mycol a"><div><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?></p> <?php 	        
+          <div class="mycol a"><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?></p><div class="mycol">
+	         <?php 	        
 	        if(!$search_by_location){		        
 		        echo Yii::t("default","<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance]",array(
 		          '[distance]'=>$distance
@@ -52,6 +53,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         </div> <!--mytable-->
 
         <div class="mytable">
+	        
 	         <div class="mycol">
 	            	        <?php if($show_delivery_info):?>
 	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
