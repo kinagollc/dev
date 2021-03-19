@@ -16,21 +16,32 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
         <?php endif;?>
 
         <!--<a href="<?php echo Yii::app()->createUrl('store/menu/merchant/'.$val['restaurant_slug'])?>" >-->
-        <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
+         <a href="<?php echo Yii::app()->createUrl("/menu/". trim($val['restaurant_slug']))?>">
         <img src="<?php echo FunctionsV3::getMerchantHeader($merchant_id);?>" style="width:100%;height:100px;object-fit:cover">
         </a>
         
         
+        <h2 class="concat-text"><?php echo clearString($val['restaurant_name'])?></h2>
+        <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p>
         
         <div class="mytable">
+          <div class="mycol a">
+             <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
+             <?php if(is_array($ratings) && count($ratings)>=1):?>
+             <p><?php echo $ratings['votes']." ".t("Reviews")?></p>
+             <?php endif;?>
+          </div>
           <?php if($show_delivery_info):?>
-          <div class="mycol a">             
-             <h2 class="concat-text"><?php echo clearString($val['restaurant_name'])?></h2>
-             <p class="merchant-address concat-text"><?php echo $val['merchant_address']?></p>
+          <div class="mycol b">             
+             <?php echo Price_Formatter::formatNumber($min_fees)?>
+             <p><?php echo t("Minimum Order")?></p>
           </div>
           <?php endif;?>
-          <div class="mycol b">
-           <div class="equal_table">
+        </div> <!--mytable-->
+
+        <div class="top25"></div>
+        
+        <div class="equal_table">
          <div class="col">
             <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>
          </div>          
@@ -38,15 +49,6 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
             <a href="javascript:;" data-id="<?php echo $val['merchant_id']?>"  title="<?php echo t("add to your favorite restaurant")?>" class="add_favorites <?php echo "fav_".$val['merchant_id']?>"><i class="ion-android-favorite-outline"></i></a>
          </div>          
         </div>
-             <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
-             <?php if(is_array($ratings) && count($ratings)>=1):?>
-             <p><?php echo $ratings['votes']." ".t("Reviews")?></p>
-             <?php endif;?>
-          </div>
-        </div> <!--mytable-->
-
-        <div class="top25"></div>
-        
                 
         
         <?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?>                        
