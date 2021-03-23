@@ -2249,6 +2249,10 @@ class ApiController extends CController
         	$this->t("invalid merchant id");
         	$this->output();
         }	
+        if($price<=0){
+        	$this->t("call");
+        	$this->output();
+        }	
         
         /*NEW DATA*/
         if($this->item_utility){        	
