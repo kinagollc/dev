@@ -449,7 +449,7 @@ class UpdateController extends CController
 			}
 		}
 	}	
-	
+	 
 	public function changeFieldStructure($table='', $field_name='', $old_type='', $new_type='')
 	{
 		$DbExt=new DbExt;

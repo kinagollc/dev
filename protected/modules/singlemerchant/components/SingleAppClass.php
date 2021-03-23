@@ -189,7 +189,7 @@ class SingleAppClass
 		if (!empty($image)){						
 			if (file_exists($path_to_upload."/$image")){							
 				$default=$image;				
-				$url = Yii::app()->getBaseUrl(true)."/cdn.php?height=320&image=/upload/$default";
+				$url = Yii::app()->getBaseUrl(true)."/upload/$default";
 			} else $url=self::moduleBaseUrl()."/assets/images/$default";
 		} else $url=self::moduleBaseUrl()."/assets/images/$default";
 		return $url;
@@ -202,7 +202,7 @@ class SingleAppClass
 		
 		if (!empty($image)){			
 			if (file_exists($path_to_upload."/$image")){														
-				$url = Yii::app()->getBaseUrl(true)."/cdn.php?height=20&image=/upload/$image";
+				$url = Yii::app()->getBaseUrl(true)."/upload/$image";
 			}
 		} 
 		return $url;
@@ -3513,6 +3513,31 @@ class SingleAppClass
 				break;
 		}	
 	}
+
+    public static function sticPrettyDate($date='')
+    {
+        if (!empty($date)){
+            $date_format=getOptionA('website_date_format');
+            if (empty($date_format)){
+                $date_format="l, M j";
+            }
+            $date = date($date_format,strtotime($date));
+            return Yii::app()->functions->translateDate($date);
+        }
+        return false;
+    }
+    
+    public static function sticPrettyTime($time='')
+    {
+        if (!empty($time)){
+            $format=getOptionA('website_time_format');          
+            if(empty($format)){
+                $format="g:i a";
+            }
+            return date($format,strtotime($time));
+        }
+        return false;
+    }
 
 }
 /*END CLASS*/

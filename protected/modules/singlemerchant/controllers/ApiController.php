@@ -1674,8 +1674,8 @@ class ApiController extends CController
 					  'min_delivery_order'=>(float)$resp['min_order'],
 					  'distance'=>$resp['distance'],
 					  'distance_unit'=>$resp['unit'],
-					);			
-					
+					);		
+										
 					Yii::app()->db->createCommand()->update("{{singleapp_cart}}",$params,
 		      	     'cart_id=:cart_id',
 		      	     array(
@@ -3143,7 +3143,7 @@ class ApiController extends CController
 	        if(isset($_GET['debug'])){
 	        	dump($stmt);
 	        }		
-			
+	        	        
 	        $db=new DbExt;    
 			if ( $res = $db->rst($stmt)){
 				
@@ -3446,8 +3446,8 @@ class ApiController extends CController
 					  '[order_id]'=>t($val['order_id']),
 					));
 					$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
-					$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
-					$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
+					$val['stic_date_created'] = SingleAppClass::sticPrettyDate($val['date_created']);
+					$val['stic_time_created'] = SingleAppClass::sticPrettyTime($val['date_created']);
 					$val['total_w_tax'] = FunctionsV3::prettyPrice($val['total_w_tax']);
 					$val['payment_type'] = st(FunctionsV3::prettyPaymentTypeTrans($val['trans_type'],$val['payment_type']));
 					$val['logo']=SingleAppClass::getImage($val['logo']);
@@ -4471,10 +4471,12 @@ class ApiController extends CController
 					  '[booking_id]'=> $val['booking_id']
 					));
 					$val['date_created'] = FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created']);
-					$val['stic_date_created'] = FunctionsV3::sticPrettyDate($val['date_created']);
-					$val['stic_time_created'] = FunctionsV3::sticPrettyTime($val['date_created']);
+					$val['stic_date_created'] = SingleAppClass::sticPrettyDate($val['date_created']);
+					$val['stic_time_created'] = SingleAppClass::sticPrettyTime($val['date_created']);
 					$val['logo']=SingleAppClass::getImage($val['logo']);
+					
 					$ratings = Yii::app()->functions->getRatings($val['merchant_id']);
+					
 					$ratings['review_count'] = st("[count] reviews",array(
 		 			  '[count]'=>$ratings['votes']
 		 			));
