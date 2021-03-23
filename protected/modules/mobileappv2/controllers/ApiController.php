@@ -2250,8 +2250,9 @@ class ApiController extends CController
         	$this->output();
         }	
         if($price<=0){
-        	$this->t("call");
-        	$this->output();
+        	$this->msg = $this->t("This restaurant has not published their menu yet");
+					$this->details = array();
+				}
         }	
         
         /*NEW DATA*/
