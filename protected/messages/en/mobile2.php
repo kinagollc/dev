@@ -561,7 +561,6 @@ $lang['successfully added to your favorite list'] = '';
 $lang['successfully remove to your favorite list'] = '';
 $lang['You need to login to add this restaurant to your favorites'] = 'You need to login to add this place to your favorites';
 $lang['Sponsored'] = '';
-$lang['$0.00'] = 'call';
 $lang['Find this restaurant on'] = 'Find this place on';
 $lang['This order earned {points}'] = '';
 $lang['Your available points [points]'] = '';
