@@ -2248,11 +2248,7 @@ class ApiController extends CController
         if($merchant_id<=0){
         	$this->t("invalid merchant id");
         	$this->output();
-        }	
-        if($price<=0){
-        	$this->msg = $this->t("no item found on this category");				
-			$this->output();
-						}		
+        }			
         
         /*NEW DATA*/
         if($this->item_utility){        	
