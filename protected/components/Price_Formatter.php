@@ -139,6 +139,9 @@ class Price_Formatter
 	
 	public static function formatNumber($value=0)
 	{				
+	if($value<=0){
+            return '';
+        }
 		$formatted_number = number_format( (float) $value ,
 		   !empty(Price_Formatter::$number_format['decimals'])?Price_Formatter::$number_format['decimals']:2,
 		   Price_Formatter::$number_format['decimal_separator'],
