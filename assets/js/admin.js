@@ -1373,10 +1373,7 @@ jQuery(document).ready(function() {
    if ( $("#merchant").exists() ){
         getGoogleCordinateStatus();
    }
-   
-   if ( $(".big-textarea").exists() ){
-   	    $(".big-textarea").jqte();
-   }
+
       
    $( document ).on( "click", ".add_new_holiday", function() {    	  
        var t='';
