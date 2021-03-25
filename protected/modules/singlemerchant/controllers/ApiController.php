@@ -28,7 +28,9 @@ class ApiController extends CController
 	    	    
 	    
 	    FunctionsV3::handleLanguage();
-	    $lang=Yii::app()->language;	    
+	    $lang=Yii::app()->language;	  
+	    $used_currency = FunctionsV3::getCurrencyCode();
+        Price_Formatter::init( $used_currency );  
 	}
 		
 	private function getGETData()
