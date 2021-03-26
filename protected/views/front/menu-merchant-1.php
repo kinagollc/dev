@@ -50,7 +50,7 @@
      
      <div class="row <?php echo $x%2?'odd':'even'?>">
       <div class="col-md-3 col-xs-3 border">
-    <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" target="_blank" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
+    <a href="javascript:;" target="_blank" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
             rel="<?php echo $val_item['item_id']?>"
             data-single="<?php echo $val_item['single_item']?>" 
             <?php echo $atts;?>
@@ -69,7 +69,7 @@
             data-category_id="<?php echo $val['category_id']?>"
            >
            <div style="font-size:14px;font-weight:600;!important"><?php echo $val_item['item_name']?></div>
-           
+          </a>   
           <?php else :?> 
           <div style="font-size:14px;font-weight:600;!important"><?php echo $val_item['item_name']?></div>
           <?php endif;?> 
@@ -119,7 +119,7 @@
            >
            <i class="ion-ios-plus-outline green-color bold"></i>
           </a>
-           </a> 
+          
           <?php endif;?>
         </div>
      </div> <!--row-->
