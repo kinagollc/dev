@@ -70,45 +70,7 @@ data-image-src="<?php echo assetsURL()."/images/b6.jpg"?>">
 <?php endif;?>
 
 <?php if ($theme_hide_how_works<>2):?>
-<!--HOW IT WORKS SECTIONS-->
-<div class="sections section-how-it-works">
-<div class="container">
- <h2><?php echo t("How it works")?></h2>
- <p class="center"><?php echo t("Get your favourite items in 4 simple steps")?></p>
- 
- <div class="row">
-   <div class="col-md-3 col-sm-3 center">
-      <div class="steps step1-icon">
-        <img src="<?php echo assetsURL()."/images/step1.png"?>">
-      </div>
-      <h3><?php echo t("Search")?></h3>
-      <p><?php echo t("Find all restaurants available near you")?></p>
-   </div>
-   <div class="col-md-3 col-sm-3 center">
-      <div class="steps step2-icon">
-         <img src="<?php echo assetsURL()."/images/step2.png"?>">
-      </div>
-      <h3><?php echo t("Choose")?></h3>
-      <p><?php echo t("Browse hundreds of menus to find the food you like")?></p>
-   </div>
-   <div class="col-md-3 col-sm-3  center">
-      <div class="steps step2-icon">
-        <img src="<?php echo assetsURL()."/images/step3.png"?>">
-      </div>
-      <h3><?php echo t("Pay")?></h3>
-      <p><?php echo t("It's quick, secure and easy")?></p>
-   </div>
-   <div class="col-md-3 col-sm-3  center">
-     <div class="steps step2-icon">
-       <img src="<?php echo assetsURL()."/images/step4.png"?>">
-     </div>
-      <h3><?php echo t("Enjoy")?></h3>
-      <p><?php echo t("Food is prepared & delivered to your door")?></p>
-   </div>   
- </div>
-
- </div> <!--container-->
-</div> <!--section-how-it-works-->
+<!--HOW IT WORKS SECTIONS--><div class="sections section-how-it-works"><div class="container" style="padding-top:10px;"><!-- <h2>How it works</h2> <p class="center">Get your favourite food in 4 simple steps</p> --> <div class="row"> <div class="col-md-4 col-sm-4 center"> <div class="steps step1-icon"> <img src="/assets/update/images/2.png"> </div> <h4 style="font-size:18PX !important;font-weight:600;padding:2px !important;color:#000 !important;">BROWSE SHOPS</h4> <p style=" font-style: italic; margin-top: 15px; ">Order from the best collection of your favorite shops</p> </div> <div class="col-md-4 col-sm-4 center"> <div class="steps step2-icon"> <img src="/assets/update/images/1.png"> </div> <h4 style="font-size:18PX !important;font-weight:600;padding:2px !important;color:#000 !important;">VIEW & ORDER</h4> <p style=" font-style: italic; margin-top: 15px; ">Delivery, Pickup, Stay-in or Pre-order.</p> </div> <div class="col-md-4 col-sm-4 center"> <div class="steps step2-icon"> <img src="/assets/update/images/3.png"> </div> <h4 style="font-size:18PX !important;font-weight:600;padding:2px !important;color:#000 !important;">PAY HOW YOU WANT</h4> <p style=" font-style: italic; margin-top: 15px; ">Debit/Credit, PayPal, Cash, Bitcoin... you name it!</p> </div> </div></div> <!--container--></div> <!--section-how-it-works-->
 <?php endif;?>
 
 
