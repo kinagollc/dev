@@ -38,15 +38,21 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     
 	   </div>
-	   
-	   <?php if (getOptionA('disabled_website_ordering')!="yes"):?>
-	   <div class="mytable <?php echo $disabled_addcart=="yes"?"hide":''?>">
+	   <div class="mytable">
 	     <div class="mycol">
 	       <p class="small"> <?php echo ("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo FunctionsV3::getDeliveryEstimation($merchant_id)?>  </p>
 	     </div>
 	     <div class="mycol">
 	        <p class="small">
-	        <i class='fa fa-location-arrow' aria-hidden='true'></i> 
+	        <p class="delivery-fee-wrap">
+	        <?php 
+	        if(!$search_by_location){
+		        if($merchant_delivery_distance>0){
+		        	echo t("Delivery Distance Covered").": ".$merchant_delivery_distance." $unit_pretty";
+		        } else echo  t("Delivery Distance Covered").": ".t("not available");
+	        }
+	        ?>
+	        </p>
 	        </p>
 	     </div>	        
 	     <div class="mycol">
@@ -66,7 +72,6 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	   
 		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
 	 <!--mytable-->
-	 <?php endif;?>
 
 	
 	<?php if(!empty($social_facebook_page) || !empty($social_twitter_page) || !empty($social_google_page)):?>
