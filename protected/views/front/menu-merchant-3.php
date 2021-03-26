@@ -59,7 +59,7 @@
              <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
             
   </div>
-   <div class="col-md-4 col-xs-4 border">
+   <div class="col-md-6 col-xs-6 border">
           <?php if ( $disabled_addcart==""):?>
           
           <a href="javascript:;" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
