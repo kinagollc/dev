@@ -432,14 +432,14 @@ padding: 5px 8px;
 color:#df0b37;
 }
 .green-text{
-color:#00b279;
+color:#df0b37;
 }
 
 .section-address-book .table > thead > tr > th,
 .section-credit-card .table > thead > tr > th,
 .section-order-history .table > thead > tr > th
 {
-border-bottom:1px solid #00b279;
+border-bottom:1px solid #df0b37;
 }
 
 .orange-button.medium,
@@ -466,8 +466,8 @@ border:1px solid #ff4e41;
 
 .green-button{
 /*background:#26d469 ;*/
-background:#00b279;
-border:1px solid #00b279;
+background:#df0b37;
+border:1px solid #df0b37;
 color:#fff;
 padding: 5px 8px;
 }
@@ -681,14 +681,14 @@ font-size:15px;
 .clear-cart,
 .section-checkout .i-big.green-color
 {
-color:#00B279;
+color:#df0b37;
 }
 
 .menu-1.box-grey,
 .top-line-green,
 .box-grey.top-line-green
 {
-border-top:2px solid #00B279;
+border-top:2px solid #df0b37;
 }
 
 .section-feature-resto a
@@ -1696,7 +1696,7 @@ padding-left:30px;
 
 #merchant-map{
 border:1px solid #c9c7c7;
-border-top:2px solid #00B279;
+border-top:2px solid #df0b37;
 max-width:100%;
 min-height:400px;
 max-height:400px;
@@ -2046,7 +2046,7 @@ margin-bottom:15px;
 
 .connected-wrap .col-1{
 width:25%;
-background:#00b279;
+background:#df0b37;
 color:#fff;
 vertical-align:middle;
 }
@@ -2869,7 +2869,7 @@ font-size: 23px;
 position: absolute;
 right: 0;
 z-index: 1;
-color:#00b279;
+color:#df0b37;
 top:4px;
 }
 .collapse-parent a:hover{
@@ -3186,7 +3186,7 @@ padding-top:20px;
 font-weight:bold;
 }
 .stripe_ideal_receipt i{
-color:#00b279;
+color:#df0b37;
 font-size:100px;
 }
 /*END STRIPE IDEAL RECEIPT*/
