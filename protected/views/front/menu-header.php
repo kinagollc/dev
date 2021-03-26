@@ -38,7 +38,70 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     
 	   </div>
-		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
+	   <div class="mytable">
+          <div class="mycol a"><p class="buzname concat-text shiftleft"><?php echo clearString($val['restaurant_name'])?></p>
+         <p class="concat-text3 shiftleft">
+        <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
+        </p></div>
+        
+          <div class="mycol b">
+          <div class="equal_table">
+          
+         <div class="col">
+            <div align="right"><?php echo FunctionsV3::merchantOpenTag($merchant_id)?></div>
+         </div>          
+        </div>
+          </div>
+        </div>
+         <!--mytable-->
+
+        <div class="mytable" style="margin-top:-20px;text-align:left!important;padding:5px">
+	        <div class="mycol">
+	        <?php 	        
+	        if(!$search_by_location){		        
+		        echo Yii::t("default","<i class='fa fa-location-arrow' aria-hidden='true'></i> [distance]",array(
+		          '[distance]'=>$distance
+		        ));
+	        }
+	        ?></div>
+	         <div class="mycol">
+	            	        <?php if($show_delivery_info):?>
+	        <p><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
+	        <?php endif;?>
+	         </div>
+	         <div class="mycol"> 
+	            <p>
+	        <?php 	        
+	        if($show_delivery_info){
+		        if ($delivery_fee>0){
+		             echo t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".Price_Formatter::formatNumber($delivery_fee);
+		        } else echo  t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".t("Free Delivery");
+	        }
+	        ?>
+	        </p>               
+	         </div>
+	         
+	         <?php if($show_delivery_info):?>
+	         <div class="mycol">	          
+	          <p><?php echo t("<i class='fa fa-cart-plus' aria-hidden='true'></i> Min").": ".Price_Formatter::formatNumber($min_fees)?></p>
+	         </div>
+	         <?php endif;?>
+	         
+	         
+	         <div class="mycol">
+	            <?php if(method_exists('FunctionsV3','getOffersByMerchantNew')):?>
+	        <?php if ($offer=FunctionsV3::getOffersByMerchantNew($merchant_id)):?>
+	          <?php foreach ($offer as $offer_value):?>
+	            <p><?php echo $offer_value?></p>
+	          <?php endforeach;?>
+	        <?php endif;?>
+	        <?php endif;?>
+	        
+	        <p class="top15"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
+	         </div>
+	         
+	       </div> 
+        
 	 <!--mytable-->
 
 	
