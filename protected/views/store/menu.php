@@ -599,7 +599,7 @@ if ($food_viewing_private==2){
         }     
         ?>
         <div class="inner line-top relative center opt_contact_delivery_wrap">
-         <div class="box_green">           
+                    
            <div class="row">
              <div class="col-md-2">
                 <?php echo CHtml::checkBox('opt_contact_delivery',$opt_contact_delivery==1?true:false,array(
@@ -611,7 +611,7 @@ if ($food_viewing_private==2){
               <?php echo t("Our delivery executive will leave the order at your door/gate (not applicable for offline payment like COD)")?>
              </div>
            </div>
-         </div> <!--box_green-->   
+          <!--box_green-->   
         </div>
         <?php endif;?>
         <!--CONTACT LESS DELIVERY-->
