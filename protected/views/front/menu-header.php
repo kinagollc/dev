@@ -40,7 +40,7 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	   </div>
 	   <div class="mytable">
 	     <div class="mycol">
-	        <?php echo t("Delivery Est")?>: <?php echo FunctionsV3::getDeliveryEstimation($merchant_id)?>  
+	        <?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?>: <?php echo FunctionsV3::getDeliveryEstimation($merchant_id)?>  
 	     </div>
 	     <div class="mycol">
 	        <p class="small">
