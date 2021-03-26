@@ -90,7 +90,7 @@
     <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
     </p></div>
         </div>     
-         <div class="col-md-3 col-xs-3 food-price-wrap border"> 
+         <div class="col-md-3 col-xs-3 food-price-wrap border foodsz"> 
           <?php 
            $this->widget('application.components.Widget_price',array(
              'price'=> $val_item['prices']
@@ -98,9 +98,9 @@
            ?>        
         </div>
                    
-         <?php if ( $disabled_addcart==""):?>          
+                   
         <div class="col-md-1 col-xs-1 relative food-price-wrap border">
-          
+          <?php if ( $disabled_addcart==""):?>
           
           <a href="javascript:;" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
             rel="<?php echo $val_item['item_id']?>"
@@ -120,8 +120,8 @@
            <i class="ion-ios-plus-outline green-color bold"></i>
           </a>
           
-         
-        </div> <?php endif;?>
+          <?php endif;?>
+        </div>
      </div> <!--row-->
      <?php $x++?>
      <?php endforeach;?>

@@ -42,6 +42,9 @@ top:0;
 transition:all .3s ease-in;
 }
 
+.foodsz {
+font-size:12px;
+}
 
 .top-menu-wrapper img.logo{
 max-width:180px;
