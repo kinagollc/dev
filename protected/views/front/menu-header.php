@@ -38,6 +38,8 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     
 	   </div>
+	   
+	   <?php if (getOptionA('disabled_website_ordering')!="yes"):?>
 	   <div class="mytable <?php echo $disabled_addcart=="yes"?"hide":''?>">
 	     <div class="mycol">
 	       <p class="small"> <?php echo ("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo FunctionsV3::getDeliveryEstimation($merchant_id)?>  </p>
@@ -61,9 +63,10 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     
 	   </div>
-	   
+	   	 <?php endif;?>
 		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
 	 <!--mytable-->
+
 
 	
 	<?php if(!empty($social_facebook_page) || !empty($social_twitter_page) || !empty($social_google_page)):?>
