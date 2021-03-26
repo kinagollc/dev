@@ -288,10 +288,10 @@ $merchant_info=(array)Yii::app()->functions->getMerchantInfo();
 
 <!--MENU OPTIONS SETTINGS FOR MERCHANT-->
 <?php if (getOptionA('admin_menu_allowed_merchant')==2):?>
-<h2><?php echo t("Menu Options")?></h2>
+<h2><?php echo t("Menu Style")?></h2>
 
 <div class="uk-form-row">
-  <label class="uk-form-label"><?php echo Yii::t("default","Default Menu")?></label>
+  <label class="uk-form-label"><?php echo Yii::t("default","Menu + Ordering")?></label>
   <?php 
   echo CHtml::radioButton('merchant_activated_menu',
   Yii::app()->functions->getOption("merchant_activated_menu",$merchant_id)=="3"?true:false
@@ -303,7 +303,7 @@ $merchant_info=(array)Yii::app()->functions->getMerchantInfo();
 </div>
 
 <div class="uk-form-row">
-  <label class="uk-form-label"><?php echo Yii::t("default","Activate Menu 1")?></label>
+  <label class="uk-form-label"><?php echo Yii::t("default","No Prices + Ordering Disabled")?></label>
   <?php 
   echo CHtml::radioButton('merchant_activated_menu',
   Yii::app()->functions->getOption("merchant_activated_menu",$merchant_id)=="1"?true:false
@@ -314,7 +314,7 @@ $merchant_info=(array)Yii::app()->functions->getMerchantInfo();
   ?> 
 </div>
 
-<div class="uk-form-row">
+<!--<div class="uk-form-row">
   <label class="uk-form-label"><?php echo Yii::t("default","Activate Menu 2")?></label>
   <?php 
   echo CHtml::radioButton('merchant_activated_menu',
@@ -324,7 +324,7 @@ $merchant_info=(array)Yii::app()->functions->getMerchantInfo();
     'class'=>"icheck"
   ))
   ?> 
-</div>
+</div>-->
 
 
 <div class="uk-form-row">
