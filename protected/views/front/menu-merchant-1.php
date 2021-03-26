@@ -91,11 +91,11 @@
     </p></div>
         </div>     
          <div class="col-md-3 col-xs-3 food-price-wrap border foodsz"> 
-          <p class="foodsz"><?php 
+          <?php 
            $this->widget('application.components.Widget_price',array(
              'price'=> $val_item['prices']
            ));
-           ?>  </p>      
+           ?>      
         </div>
                    
                    
