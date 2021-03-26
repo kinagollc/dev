@@ -638,7 +638,7 @@ $lang['Notify Mobile Number'] = '';
 $lang['Email address that will receive invoice'] = 'Email address that will be receiving the invoices';
 
 /*1.0.2*/
-$lang['estimated food ready in [minute] mins'] = '';
+$lang['estimated food ready in [minute] mins'] = 'estimated order ready in [minute] mins';
 $lang['[min] minutes delayed'] = '';
 $lang['BACK TO MERCHANT MENU'] = '';
 $lang['Or below to minimize the cron jobs in your cpanel'] = '';
