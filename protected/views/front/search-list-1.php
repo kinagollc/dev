@@ -49,7 +49,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 		          '[distance]'=>$distance
 		        ));
 	        }
-	        ?></div>
+	        ?></div> 
 	         <div class="mycol">
 	            	        <?php if($show_delivery_info):?>
 	        <p style="font-size:12px!important;"><?php echo t("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo !empty($val['delivery_estimation'])?$val['delivery_estimation']:t("not available")?></p>
