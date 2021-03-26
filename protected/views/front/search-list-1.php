@@ -85,6 +85,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	        
 	       
 	         </div>
+	          <p class="top15"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
 	       </div> 
         
         
