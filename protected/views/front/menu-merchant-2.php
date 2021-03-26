@@ -59,7 +59,7 @@
              <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
             
   </div>
-   <div class="col-md-4 col-xs-4 border">
+   <div class="col-md-9 col-xs-9 border">
           <?php if ( $disabled_addcart==""):?>
           
           <a href="javascript:;" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
@@ -90,38 +90,10 @@
     <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
     </p></div>
         </div>     
-         <div class="col-md-3 col-xs-3 food-price-wrap border foodsz"> 
-          <?php 
-           $this->widget('application.components.Widget_price',array(
-             'price'=> $val_item['prices']
-           ));
-           ?>      
-        </div>
+        
                    
                    
-        <div class="col-md-1 col-xs-1 relative food-price-wrap border">
-          <?php if ( $disabled_addcart==""):?>
-          
-          <a href="javascript:;" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
-            rel="<?php echo $val_item['item_id']?>"
-            data-single="<?php echo $val_item['single_item']?>" 
-            <?php echo $atts;?>
-            data-category_id="<?php echo $val['category_id']?>"
-           >
-           <i class="ion-ios-plus-outline green-color bold"></i>
-          </a>
-         
-          <a href="javascript:;" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
-            rel="<?php echo $val_item['item_id']?>"
-            data-single="<?php echo $val_item['single_item']?>" 
-            <?php echo $atts;?>
-            data-category_id="<?php echo $val['category_id']?>"
-           >
-           <i class="ion-ios-plus-outline green-color bold"></i>
-          </a>
-          
-          <?php endif;?>
-        </div>
+        
      </div> <!--row-->
      <?php $x++?>
      <?php endforeach;?>
