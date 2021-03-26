@@ -69,7 +69,7 @@
             data-category_id="<?php echo $val['category_id']?>"
            >
            <div style="font-size:14px;font-weight:600;!important"><?php echo $val_item['item_name']?></div>
-          </a>   
+           
           <?php else :?> 
           <div style="font-size:14px;font-weight:600;!important"><?php echo $val_item['item_name']?></div>
           <?php endif;?> 
@@ -119,7 +119,7 @@
            >
            <i class="ion-ios-plus-outline green-color bold"></i>
           </a>
-          
+           </a> 
           <?php endif;?>
         </div>
      </div> <!--row-->
