@@ -29,7 +29,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
          <p class="concat-text3 shiftleft">
         <?php echo FunctionsV3::displayCuisine($val['cuisine']);?>
         </p></div>
-        
+        <p class="top15"></p>
           <div class="mycol b">
           <div class="equal_table">
           
@@ -85,7 +85,7 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	        
 	       
 	         </div>
-	          <p class="top15"></p>
+	          
 	       </div> 
         
         
