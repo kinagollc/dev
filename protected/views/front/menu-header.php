@@ -38,15 +38,13 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     
 	   </div>
-	   <div class="mytable">
+	   <div class="mytable <?php echo $disabled_addcart=="yes"?"hide":''?>">
 	     <div class="mycol">
 	       <p class="small"> <?php echo ("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo FunctionsV3::getDeliveryEstimation($merchant_id)?>  </p>
 	     </div>
 	     <div class="mycol">
 	        <p class="small">
-	        <a href="javascript:;"class="goto-reviews-tab">
-	        <?php echo $ratings['votes']." ".t("Reviews")?>
-	        </a>
+	        <i class='fa fa-location-arrow' aria-hidden='true'></i> 
 	        </p>
 	     </div>	        
 	     <div class="mycol">
