@@ -98,9 +98,9 @@
            ?>        
         </div>
                    
-                   
+         <?php if ( $disabled_addcart==""):?>          
         <div class="col-md-1 col-xs-1 relative food-price-wrap border">
-          <?php if ( $disabled_addcart==""):?>
+          
           
           <a href="javascript:;" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
             rel="<?php echo $val_item['item_id']?>"
@@ -120,8 +120,8 @@
            <i class="ion-ios-plus-outline green-color bold"></i>
           </a>
           
-          <?php endif;?>
-        </div>
+         
+        </div> <?php endif;?>
      </div> <!--row-->
      <?php $x++?>
      <?php endforeach;?>
