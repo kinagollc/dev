@@ -1276,15 +1276,14 @@ font-family:arial;
 .tabs-wrapper,
 .connected-wrap
 {
-border:1px solid #c9c7c7;
+border:0px solid #c9c7c7;
 }
 
 ul#tabs {
 list-style-type: none;
 padding: 0;
 text-align: center;
-background:#fff;
-border-bottom:1px solid #c9c7c7;
+border-bottom:0px solid #c9c7c7;
 }
 
 ul#tabs li {
