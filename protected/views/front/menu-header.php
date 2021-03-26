@@ -38,36 +38,6 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     
 	   </div>
-	   <div class="mytable">
-	     <div class="mycol">
-	       <p class="small"> <?php echo ("<i class='fa fa-clock-o' aria-hidden='true'></i> ")?><?php echo FunctionsV3::getDeliveryEstimation($merchant_id)?>  </p>
-	     </div>
-	     <div class="mycol">
-	        <p class="small">
-	        <i class='fa fa-location-arrow' aria-hidden='true'></i> <?php 	        
-	        if($show_delivery_info){
-		        if ($delivery_fee>0){
-		             echo t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".Price_Formatter::formatNumber($delivery_fee);
-		        } else echo  t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".t("Free Delivery");
-	        }
-	        ?>
-	        </p>
-	     </div>	        
-	     <div class="mycol">
-	        <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>             
-	     </div>
-	     <div class="mycol">
-	        <?php if($minimum_order>0):?>
-            <p class="small"><?php echo t("Minimum Order").": ".Price_Formatter::formatNumber($minimum_order)?></p>
-            <?php endif;?>
-	     </div>
-	     
-	     <div class="mycol">
-	        <a href="javascript:;" data-id="<?php echo $merchant_id?>"  title="<?php echo t("add to your favorite places")?>" class="add_favorites <?php echo "fav_".$merchant_id?>"><i class="ion-android-favorite-outline"></i></a>
-	     </div>
-	     
-	   </div>
-	   
 		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
 	 <!--mytable-->
 
