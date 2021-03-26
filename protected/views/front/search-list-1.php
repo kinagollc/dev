@@ -82,15 +82,16 @@ if($val['service']==1 || $val['service']==2  || $val['service']==4  || $val['ser
 	          <?php endforeach;?>
 	        <?php endif;?>
 	        <?php endif;?>
-	        <div class="mytable">
-	        <div class="mycol">
-	        <p class="top15"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
-	        </div>
-	        </div>
+	        
 	    
 	         </div>
 	         
 	       </div> 
+	       <div class="mytable">
+	        <div class="mycol">
+	        <p><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
+	        </div>
+	        </div>
         
         
     </div> <!--inner-->
