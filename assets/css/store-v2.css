@@ -567,7 +567,7 @@ background:#fafafa;
 }
 
 .section-grey2{
-background:#eff2f5;
+background:#fff;
 }
 
 .section-feature-resto,
@@ -1427,7 +1427,7 @@ width:65%;
 
 .category a{
 display:block;
-border:1px solid #c9c7c7;
+border:0px solid #c9c7c7;
 border-bottom:0;
 color:#030303;
 padding:10px 8px;
@@ -1455,7 +1455,7 @@ font-size:11px;
 .category a:last-child,
 .items-row .row.even
 {
-border-bottom:1px solid #c9c7c7;
+border-bottom:0px solid #c9c7c7;
 }
 
 .items-row{
