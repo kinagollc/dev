@@ -43,7 +43,7 @@ transition:all .3s ease-in;
 }
 
 .foodsz {
-font-size:12px;
+font-size:12px!important;
 }
 
 .top-menu-wrapper img.logo{
