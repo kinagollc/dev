@@ -44,15 +44,13 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     <div class="mycol">
 	        <p class="small">
-	        <p class="delivery-fee-wrap">
-	        <?php 
-	        if(!$search_by_location){
-		        if($merchant_delivery_distance>0){
-		        	echo t("Delivery Distance Covered").": ".$merchant_delivery_distance." $unit_pretty";
-		        } else echo  t("Delivery Distance Covered").": ".t("not available");
+	        <i class='fa fa-location-arrow' aria-hidden='true'></i> <?php 	        
+	        if($show_delivery_info){
+		        if ($delivery_fee>0){
+		             echo t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".Price_Formatter::formatNumber($delivery_fee);
+		        } else echo  t("<i class='fa fa-motorcycle' aria-hidden='true'></i> ")." ".t("Free Delivery");
 	        }
 	        ?>
-	        </p>
 	        </p>
 	     </div>	        
 	     <div class="mycol">
