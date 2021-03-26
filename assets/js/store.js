@@ -2012,11 +2012,11 @@ function load_item_cart()
 		//
 	} else { 
 		$transaction_type = $("#delivery_type").val();				
-		if($transaction_type=="delivery"){
-			$(".opt_contact_delivery_wrap").show();
-		} else {
-			$(".opt_contact_delivery_wrap").hide();
-		}
+		if($transaction_type=="delivery" || $transaction_type=="pickup"){
+            $(".opt_contact_delivery_wrap").show();
+        } else {
+            $(".opt_contact_delivery_wrap").hide();
+        }
 	}
 		
 	busy(true);
