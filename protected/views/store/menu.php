@@ -489,9 +489,9 @@ if ($food_viewing_private==2){
          </button> 
                    
             <?php if ($data['service']==3):?>
-            <p class="bold"><?php echo t("Distance Information")?></p>
+            <p class="bold"><?php echo t("Information")?></p>
             <?php else :?>
-	        <p class="bold"><?php echo t("Delivery Information")?></p>
+	        <p class="bold"><?php echo t("Information")?></p>
 	        <?php endif;?>
 	        
 	        <p>
