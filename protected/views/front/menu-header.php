@@ -40,7 +40,7 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	   </div>
 	   <div class="mytable">
 	     <div class="mycol">
-	        <div class="rating-stars" data-score="<?php echo $ratings['ratings']?>"></div>   
+	        <?php echo t("Delivery Est")?>: <?php echo FunctionsV3::getDeliveryEstimation($merchant_id)?>  
 	     </div>
 	     <div class="mycol">
 	        <p class="small">
@@ -63,8 +63,6 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     
 	   </div>
-	   
-	   
 	   
 		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
 	 <!--mytable-->
