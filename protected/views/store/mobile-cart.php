@@ -117,6 +117,30 @@ if($data['service']==3 || $data['service']==6 || $data['service']==7 ){
 <div class="container">
 
 <div style="padding:10px;padding-bottom:30px;">
+
+<p class="bold center"><?php echo t("Information")?></p>
+
+<p class="delivery-fee-wrap">
+	        <?php echo t("Delivery Est")?>: <?php echo FunctionsV3::getDeliveryEstimation($merchant_id)?></p>
+	        
+	        <p class="delivery-fee-wrap">
+	        <?php 
+	        if(!$search_by_location){
+		        if($merchant_delivery_distance>0){
+		        	echo t("Delivery Distance Covered").": ".$merchant_delivery_distance." $unit_pretty";
+		        } else echo  t("Delivery Distance Covered").": ".t("not available");
+	        }
+	        ?>
+	        </p>
+	        
+	        <p class="delivery-fee-wrap">
+	        <?php 
+	        if ($delivery_fee>0){
+	             echo t("Delivery Fee").": ".Price_Formatter::formatNumber( ((float)$delivery_fee*(float)$exchange_rate) );
+	        } else echo  t("Delivery Fee").": ".t("Free Delivery");
+	        ?>
+	        </p>
+
   <p class="bold center"><?php echo t("Your Order")?></p>
   <div class="item-order-wrap"></div>
   
@@ -207,6 +231,9 @@ if($data['service']==3 || $data['service']==6 || $data['service']==7 ){
                                                                 
         </div> <!--inner-->
         <!--END DELIVERY OPTIONS-->
+        
+        
+        
   
 </div> <!--padding-->
 
