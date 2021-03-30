@@ -547,22 +547,6 @@ if ($food_viewing_private==2){
 	        
         </div>
         <!--END DELIVERY INFO-->
-        <?php else :?>
-        
-        <?php endif;?>
-        
-        <!--CART-->
-        <div class="inner line-top relative">
-        
-           <i class="order-icon your-order-icon"></i>
-           
-           <p class="bold center"><?php echo t("Your Order")?></p>
-           
-           <div class="item-order-wrap"></div>
-           
-	         
-           </div><!-- delivery_asap_wrap-->
-           
                                              
         </div> <!--inner-->
         <!--END DELIVERY OPTIONS-->
