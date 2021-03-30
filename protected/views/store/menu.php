@@ -712,7 +712,7 @@ if ($food_viewing_private==2){
      <?php endif;?>
      
      <!--noordering menu-->
-     <?php if (getOptionA('disabled_website_ordering')!="no"):?>
+     <?php if (getOptionA('disabled_website_ordering')!="yes"):?>
      <div id="menu-right-content" class="col-md-4 border menu-right-content <?php echo $disabled_addcart=="no"?"hide":''?>" >
      
      <div class="theiaStickySidebar">
