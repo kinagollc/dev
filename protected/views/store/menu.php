@@ -193,12 +193,12 @@ if ($food_viewing_private==2){
 	    <ul id="tabs">
 		    <li class="active">
 		       <span><?php echo t("Menu")?></span>
-		       <i class="ion-fork"></i>
+		       <i class="ion-clipboard"></i>
 		    </li>
 		    
 		    <?php if ($theme_hours_tab==""):?>
 		    <li>
-		       <span><?php echo t("Opening Hours")?></span>
+		       <span><?php echo t("Hours")?></span>
 		       <i class="ion-clock"></i>
 		    </li>
 		    <?php endif;?>
@@ -220,7 +220,7 @@ if ($food_viewing_private==2){
 		    
 		    <?php if ($booking_enabled):?>
 		      <li>
-		      <span><?php echo t("Book a Table")?></span>
+		      <span><?php echo t("Reservations")?></span>
 		      <i class="ion-coffee"></i>
 		      </li>
 		    <?php endif;?>
