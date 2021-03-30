@@ -475,95 +475,6 @@ if ($food_viewing_private==2){
      </div> <!-- menu-left-content-->
      
      <?php if (getOptionA('disabled_website_ordering')!="yes"):?>
-     <div id="menu-right-content" class="col-md-4 border menu-right-content <?php echo $disabled_addcart=="no"?"hide":''?>" >
-     
-     
-      <div class="box-grey rounded  relative">
-              
-        <!--DELIVERY INFO-->
-        <?php if ($remove_delivery_info==false):?>
-        <div class="star-float"></div>
-        <div class="inner center">
-         <button type="button" class="close modal-close-btn" data-dismiss="modal" aria-label="Close">
-           <span aria-hidden="true">&times;</span>
-         </button> 
-                   
-            <?php if ($data['service']==3):?>
-            <p class="bold"><?php echo t("Information")?></p>
-            <?php else :?>
-	        <p class="bold"><?php echo t("Information")?></p>
-	        <?php endif;?>
-	        
-	        <p>
-	        <?php 
-	        if(!$search_by_location){		    
-	        	if(!empty($distance_pretty)){
-		           echo t("Distance")." $distance_pretty";
-	        	} else echo  t("Distance").": ".t("not available");
-	        }
-	        ?>
-	        </p>
-	        
-	        <p class="delivery-fee-wrap">
-	        <?php echo t("Delivery Est")?>: <?php echo FunctionsV3::getDeliveryEstimation($merchant_id)?></p>
-	        
-	        <p class="delivery-fee-wrap">
-	        <?php 
-	        if(!$search_by_location){
-		        if($merchant_delivery_distance>0){
-		        	echo t("Delivery Distance Covered").": ".$merchant_delivery_distance." $unit_pretty";
-		        } else echo  t("Delivery Distance Covered").": ".t("not available");
-	        }
-	        ?>
-	        </p>
-	        
-	        <p class="delivery-fee-wrap">
-	        <?php 
-	        if ($delivery_fee>0){
-	             echo t("Delivery Fee").": ".Price_Formatter::formatNumber( ((float)$delivery_fee*(float)$exchange_rate) );
-	        } else echo  t("Delivery Fee").": ".t("Free Delivery");
-	        ?>
-	        </p>
-	        
-	        <?php if($min_fees>0):?>
-	         <p>	    
-	         <p><?php echo tt("Minimum Order : [fee]",array(
-	          '[fee]'=>Price_Formatter::formatNumber( ((float)$min_fees*$exchange_rate) )
-	         ))?></p>    
-	        </p>
-	        <?php endif;?>
-	        
-	        	        
-	        <?php if($search_by_location):?>
-	        <a href="javascript:;" class="top10 green-color change-location block text-center">
-	        [<?php echo t("Change Location here")?>]
-	        </a>
-	        <?php else:?>
-	        <a href="javascript:;" class="top10 green-color change-address block text-center">
-	        [<?php echo t("Change Your Address here")?>]
-	        </a>
-	        <?php endif;?>
-	        
-	        
-        </div>
-        <!--END DELIVERY INFO-->
-        <?php else :?>
-        
-        <?php endif;?>
-        
-        
-      </div> <!-- box-grey-->
-       <!--end theiaStickySidebar-->
-     
-     </div> <!--menu-right-content--> 
-     <?php endif;?>
-     
-     
-     
-     
-     
-     <!--noordering menu-->
-  <?php if (getOptionA('disabled_website_ordering')!="yes"):?>
      <div id="menu-right-content" class="col-md-4 border menu-right-content <?php echo $disabled_addcart=="yes"?"hide":''?>" >
      
      <div class="theiaStickySidebar">
@@ -578,9 +489,9 @@ if ($food_viewing_private==2){
          </button> 
                    
             <?php if ($data['service']==3):?>
-            <p class="bold"><?php echo t("Information")?></p>
+            <p class="bold"><?php echo t("Distance Information")?></p>
             <?php else :?>
-	        <p class="bold"><?php echo t("Information")?></p>
+	        <p class="bold"><?php echo t("Delivery Information")?></p>
 	        <?php endif;?>
 	        
 	        <p>
@@ -688,7 +599,7 @@ if ($food_viewing_private==2){
         }     
         ?>
         <div class="inner line-top relative center opt_contact_delivery_wrap">
-                    
+         <div class="box_green">           
            <div class="row">
              <div class="col-md-2">
                 <?php echo CHtml::checkBox('opt_contact_delivery',$opt_contact_delivery==1?true:false,array(
@@ -700,7 +611,7 @@ if ($food_viewing_private==2){
               <?php echo t("Our delivery executive will leave the order at your door/gate (not applicable for offline payment like COD)")?>
              </div>
            </div>
-          <!--box_green-->   
+         </div> <!--box_green-->   
         </div>
         <?php endif;?>
         <!--CONTACT LESS DELIVERY-->
@@ -798,8 +709,7 @@ if ($food_viewing_private==2){
       </div> <!--end theiaStickySidebar-->
      
      </div> <!--menu-right-content--> 
-    <?php endif;?>
-     <!--noordering menu dunzo-->
+     <?php endif;?>
   
   </div> <!--row-->
 </div> <!--container-->
