@@ -475,7 +475,7 @@ if ($food_viewing_private==2){
      </div> <!-- menu-left-content-->
      
      <?php if (getOptionA('disabled_website_ordering')!="yes"):?>
-     <div id="menu-right-content" class="col-md-4 border menu-right-content <?php echo $disabled_addcart=="yes"?"hide":''?>" >
+     <div id="menu-right-content" class="col-md-4 border menu-right-content <?php echo $disabled_addcart=="no"?"hide":''?>" >
      
      <div class="theiaStickySidebar">
       <div class="box-grey rounded  relative">
@@ -557,6 +557,10 @@ if ($food_viewing_private==2){
      
      </div> <!--menu-right-content--> 
      <?php endif;?>
+     
+     
+     
+     
      
      <!--noordering menu-->
   <?php if (getOptionA('disabled_website_ordering')!="yes"):?>
