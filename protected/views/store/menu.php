@@ -723,13 +723,13 @@ if ($food_viewing_private==2){
            <i class="order-icon delivery-option-icon"></i>
            
 
-             <p class="bold"><?php echo t("View Only")?></p>
+             <p class="bold"><?php echo t("Browse Only")?></p>
 
            
            <!-- delivery_asap_wrap-->
            
 
-                 <p class="text-danger">ordering not available</p>
+                 <p class="text-danger">Ordering not available</p>
 
                                                                 
         </div> <!--inner-->
