@@ -553,45 +553,6 @@ if ($food_viewing_private==2){
         
         <?php endif;?>
         
-        <!--CART-->
-        <div class="inner line-top relative">
-        
-           <i class="order-icon your-order-icon"></i>
-           
-           <p class="bold center"><?php echo t("Your Order")?></p>
-           
-           <div class="item-order-wrap"></div>
-           
-           <!--VOUCHER STARTS HERE-->
-           <?php //Widgets::applyVoucher($merchant_id);?>
-           <!--VOUCHER STARTS HERE-->
-           
-           <!--MAX AND MIN ORDR-->
-           <?php if ($minimum_order>0):?>
-           <div class="delivery-min">
-              <p class="small center"><?php echo Yii::t("default","Subtotal must exceed")?> 
-              <?php echo Price_Formatter::formatNumber($minimum_order);?>
-           </div>
-           <?php endif;?>
-           
-           <?php if ($merchant_minimum_order_pickup>0):?>
-           <div class="pickup-min">
-              <p class="small center"><?php echo Yii::t("default","Subtotal must exceed")?> 
-              <?php echo Price_Formatter::formatNumber($merchant_minimum_order_pickup);?>
-           </div>
-           <?php endif;?>
-                      
-           <?php if($minimum_order_dinein>0):?>
-           <div class="dinein-min">
-              <p class="small center"><?php echo Yii::t("default","Subtotal must exceed")?> 
-              <?php echo Price_Formatter::formatNumber($minimum_order_dinein)?>
-           </div>
-           <?php endif;?>
-              
-	        <a href="javascript:;" class="clear-cart">[<?php echo t("Clear Order")?>]</a>
-           
-        </div> <!--inner-->
-        <!--END CART-->
         
     
         
