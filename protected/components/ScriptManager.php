@@ -131,6 +131,9 @@ class ScriptManager
 		,CClientScript::POS_END); 
 		
 		$cs->registerScriptFile($baseUrl."/assets/vendor/readmore.min.js"
+		,CClientScript::POS_END);
+		
+		$cs->registerScriptFile($baseUrl."/assets/vendor/featherlight-1.7.13/release/featherlight.min.js"
 		,CClientScript::POS_END); 
 		
 		$cs->registerScriptFile($baseUrl."/assets/vendor/justified-gallery/js/jquery.justifiedGallery.min.js"
@@ -186,6 +189,8 @@ class ScriptManager
 		$cs->registerCssFile("//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.9.4/css/bootstrap-select.min.css");	
 		
 		$cs->registerCssFile($baseUrl."/assets/vendor/nprogress/nprogress.css");
+		
+		$cs->registerCssFile($baseUrl."/assets/vendor/featherlight-1.7.13/release/featherlight.min.css");
 		
 		$cs->registerCssFile($baseUrl."/assets/vendor/justified-gallery/css/justifiedGallery.min.css");
 		
