@@ -198,7 +198,7 @@ data-image-src="<?php echo assetsURL()."/images/b6.jpg"?>">
        <img class="app-phone" src="<?php echo assetsURL()."/images/getapp-2.jpg"?>">
      </div> <!--col-->
      <div class="col-xs-7 into-row border">
-       <h2><?php echo getOptionA('website_title')." ".t("in your mobile")?>! </h2>
+       <h2><?php echo getOptionA('website_title')." ".t("in your mobile")?></h2>
        <h3 class="green-text"><?php echo t("Get our app, it's the fastest way to order food on the go")?>.</h3>
        
        <div class="row border" id="getapp-wrap">
