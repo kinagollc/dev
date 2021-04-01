@@ -820,7 +820,7 @@ $lang['Barbershop Title 2'] = 'Make your appointment';
 $lang['Barbershop Subtitle 2'] = 'or reservation blah blah';
 $lang['Barbershop Title 3'] = 'Get news and updates';
 $lang['Barbershop Subtitle 3'] = 'soon as they come!';
-$lang['Barbershop TopBanner Title'] = 'Limited time offers';
+$lang['Barbershop TopBanner Title'] = 'Limited Time Promos';
 $lang['Barbershop TopBanner Subtitle'] = 'enjoy before its over';
 
 
