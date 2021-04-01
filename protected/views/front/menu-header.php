@@ -74,8 +74,7 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	
 	<?php if (!empty($merchant_website)):?>
 	<p class="small">
-	<?php echo t("Website").": "?>
-	<a target="_blank" href="<?php echo FunctionsV3::fixedLink($merchant_website)?>">
+	<?php echo FunctionsV3::fixedLink($merchant_website)?>
 	  <?php echo $merchant_website;?>
 	</a>
 	</p>
