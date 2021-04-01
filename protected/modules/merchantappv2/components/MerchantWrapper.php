@@ -252,6 +252,14 @@ class MerchantWrapper
 		 'access_id'=>'gallerysettings'
 		);
 		
+		$data[] = array(
+		 'section'=>'1',
+		 'stic_icon'=>"banner",	
+		 'icon'=>"2.png",
+		 'label'=>translate("Banner"),
+		 'page'=>"banner_settings.html",
+		 'access_id'=>'banner_settings'
+		);
 		
 		$data[] = array(
 		 'section'=>'3',
