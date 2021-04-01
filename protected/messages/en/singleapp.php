@@ -814,4 +814,13 @@ $lang['Enter Order ID or Transaction Type'] = '';
 $lang['For furure order delivery time is required'] = '';
 $lang['This order is for another day. Continue?'] = '';
 
+$lang['Barbershop Title 1'] = 'Browse your newest style';
+$lang['Barbershop Subtitle 1'] = 'visit our gallery blah blah';
+$lang['Barbershop Title 2'] = 'Make your appointment';
+$lang['Barbershop Subtitle 2'] = 'or reservation blah blah';
+$lang['Barbershop Title 3'] = 'Get news and updates';
+$lang['Barbershop Subtitle 3'] = 'soon as they come!';
+
+
+
 return $lang;
