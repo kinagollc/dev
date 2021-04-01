@@ -8,6 +8,7 @@ height:100%;
 font-size:14px;
 /*background:#fff;*/
 color:#474d5d;
+touch-action: pan-x pan-y;
 }
 
 body p.small,
