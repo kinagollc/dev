@@ -4,8 +4,10 @@
 $lang['Delicious food nearby'] = 'Order what you want...';
 $lang['Order delicious food from your favorite restaurants with just a few clicks'] = 'with just a few clicks without ever leaving';
 $lang['Order delicious food from your favourite restaurants with a few clicks'] = 'with just a few clicks without ever leaving';
-$lang['Secure and private'] = 'Pay how you want...';
-$lang['We take it to you'] = 'When you want it!';
+$lang['Secure and private'] = 'Just ask...';
+$lang['Paying trought the app is easy, fast and safe. Here your info are private'] = 'See something you like? Give us a call';
+$lang['We take it to you'] = 'Offers and Promos';
+$lang['Get the order at home. You don\t even have to get up off the couch.'] = 'Join below to get updates as they come';
 $lang['Your credit cards'] = '';
 $lang['Your address book'] = '';
 $lang['Booking history'] = '';
