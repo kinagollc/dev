@@ -59,7 +59,7 @@
              <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
             
   </div>
-   <div class="col-md-4 col-xs-4 border">
+   <div class="col-md-4 col-xs-3 border">
           <?php if ( $disabled_addcart==""):?>
           
           <a href="javascript:;" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
@@ -90,12 +90,12 @@
     <?php echo qTranslate($val_item['item_description'],'item_description',$val_item)?>
     </p></div>
         </div>     
-         <div class="col-md-3 col-xs-3 food-price-wrap border foodsz"> 
-          <?php 
+         <div class="col-md-3 col-xs-4 food-price-wrap border foodsz"> 
+          <p class=""><?php 
            $this->widget('application.components.Widget_price',array(
              'price'=> $val_item['prices']
            ));
-           ?>      
+           ?>  </p>      
         </div>
                    
                    
