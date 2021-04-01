@@ -22,6 +22,7 @@ $lang['Location'] = '';
 $lang['Book a table'] = 'Make a Reservation';
 $lang['Photos'] = '';
 $lang['Promos'] = '';
+$lang['Order your favorite dishes again'] = 'Browse your favorite items again';
 $lang['REVIEWS'] = '';
 $lang['ORDERS'] = '';
 $lang['Enter Order ID'] = '';
