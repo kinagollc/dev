@@ -3,7 +3,7 @@
 
 $lang['Delicious food nearby'] = 'Order what you want...';
 $lang['Order delicious food from your favorite restaurants with just a few clicks'] = 'with just a few clicks without ever leaving';
-$lang['Order delicious food from your favorite restaurants with a few clicks'] = 'with just a few clicks without ever leaving';
+$lang['Order delicious food from your favourite restaurants with a few clicks'] = 'with just a few clicks without ever leaving';
 $lang['Secure and private'] = 'Pay how you want...';
 $lang['We take it to you'] = 'When you want it!';
 $lang['Your credit cards'] = '';
