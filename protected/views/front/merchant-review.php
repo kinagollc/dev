@@ -8,15 +8,15 @@ if(empty($website_review_type)){
 </div>
 
 <div class="text-right">
-<?php if($website_review_type==1):?>
+<!--<?php if($website_review_type==1):?>
 <a href="javascript:;" class="write-review-new green-button inline bottom10 upper">
 <?php echo t("write a review")?>
 </a>
-<?php else :?>
+<?php else :?>-->
 <a href="<?php echo Yii::app()->createUrl('/store/profile',array('tab'=>3))?>" class="green-button inline bottom10 upper">
 <?php echo t("write a review")?>
 </a>
-<?php endif;?>
+<!--<?php endif;?>-->
 </div>
 
 
