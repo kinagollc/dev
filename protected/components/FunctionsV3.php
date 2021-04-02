@@ -6988,7 +6988,7 @@ public static function sticPrettyTime($time='')
     		$review_baseon_status = getOptionA('review_baseon_status');    		
     		if(!empty($review_baseon_status)){
     		   $review_baseon_status = json_decode($review_baseon_status,true);
-    		   if (is_array($review_baseon_status) && count($review_baseon_status)>=1){
+    		   if (is_array($review_baseon_status) && count($review_baseon_status)>=2){
     		   	  if (in_array($order_status,$review_baseon_status)){
     		   	  	  return true;
     		   	  }
