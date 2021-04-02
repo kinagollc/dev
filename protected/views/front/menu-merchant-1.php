@@ -50,7 +50,7 @@
      
      <div class="row <?php echo $x%2?'odd':'even'?>">
       <div class="col-md-3 col-xs-3 border">
-    <a href="#" data-featherlight="#mylightbox"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
+    <a href="#" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>">Main image</a>
             
              <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
             
