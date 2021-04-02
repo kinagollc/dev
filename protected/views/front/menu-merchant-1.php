@@ -52,8 +52,7 @@
       <div class="col-md-3 col-xs-3 border">
     <a href="#" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
             
-             <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
-            
+             <a href="#" class="mbile" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
   </div>
    <div class="col-md-4 col-xs-3 border">
           <?php if ( $disabled_addcart==""):?>
