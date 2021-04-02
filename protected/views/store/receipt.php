@@ -511,7 +511,7 @@ $transaction_type=$data['trans_type'];
 	       
 	       <?php endif;?>
 	       
-	       <?php if($transaction_type=="delivery" && $transaction_type=="pickup" && $data['opt_contact_delivery']==1):?>
+	       <?php if($transaction_type=="delivery" || $transaction_type=="pickup" && $data['opt_contact_delivery']==1):?>
 	       <tr>
 	        <td><?php echo t("Contactless Option")?></td>
 	        <td class="text-right"><?php echo t("Leave order at the door or gate")?></td>
