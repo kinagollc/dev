@@ -11,9 +11,6 @@ if(empty($website_review_type)){
 <a href="javascript:;" class="write-review-new green-button inline bottom10 upper">
 <?php echo t("write a review")?>
 </a>
-<a href="<?php echo Yii::app()->createUrl('/store/profile',array('tab'=>3))?>" class="green-button inline bottom10 upper">
-<?php echo t("write a review")?>
-</a>
 </div>
 
 
