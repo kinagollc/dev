@@ -197,7 +197,7 @@
 	       	  
 	       }
 	       
-	       if ($data['trans_type']=="delivery" || $data['trans_type']=="pickup" && $data['opt_contact_delivery']==1){
+	       if ($data['trans_type']=="delivery" && $data['trans_type']=="pickup" && $data['opt_contact_delivery']==1){
 	       	  FunctionsV3::receiptTableRow( t("Delivery options") ,t("Leave order at the door or gate"));	       	  
 	       }	       	 
 	       ?>   
