@@ -50,7 +50,7 @@
      
      <div class="row <?php echo $x%2?'odd':'even'?>">
       <div class="col-md-3 col-xs-3 border">
-    <a href="#" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
+    <a href="#" class="desktop" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
             
              <a href="#" class="mbile" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
   </div>
