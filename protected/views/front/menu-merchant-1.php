@@ -53,7 +53,6 @@
     <a href="#" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
             rel="<?php echo $val_item['item_id']?>"
             data-single="<?php echo $val_item['single_item']?>" 
-            <?php echo $atts;?>
             data-category_id="<?php echo $val['category_id']?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
             
              <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
