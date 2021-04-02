@@ -50,14 +50,8 @@
      
      <div class="row <?php echo $x%2?'odd':'even'?>">
       <div class="col-md-3 col-xs-3 border">
-    <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" class="dsktop menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>" 
-            rel="<?php echo $val_item['item_id']?>"
-            data-single="<?php echo $val_item['single_item']?>" 
-            <?php echo $atts;?>
-            data-category_id="<?php echo $val['category_id']?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
-            
-             <a href="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" class="mbile menu-item <?php echo $val_item['not_available']==2?"item_not_available":''?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
-            
+    <a href="#" class="dsktop" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
+    <a href="#" class="mbile" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($val_item['photo'],false)?>" style="border-radius:10px;"></a>
   </div>
    <div class="col-md-6 col-xs-6 border">
           <?php if ( $disabled_addcart==""):?>
