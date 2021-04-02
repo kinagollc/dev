@@ -6995,7 +6995,7 @@ public static function sticPrettyTime($time='')
     		   }
     		} else return true;
     	}
-    	return true;
+    	return false;
     }
     
     public static function getReviewByOrder($client_id='', $order_id='')
