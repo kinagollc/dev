@@ -75,7 +75,7 @@ if ($data['two_flavors']==2){
   <!--ITEM NAME & DESCRIPTION-->
   <div class="row">
     <div class="col-md-3 ">              
-       <img src="<?php echo FunctionsV3::getFoodDefaultImage($data['photo']);?>" alt="<?php echo $data['item_name']?>" title="<?php echo $data['item_name']?>" class="logo-small">
+       <a href="#" data-featherlight="<?php echo FunctionsV3::getFoodDefaultImage($data['photo']);?>"><img src="<?php echo FunctionsV3::getFoodDefaultImage($data['photo']);?>" alt="<?php echo $data['item_name']?>" title="<?php echo $data['item_name']?>" class="logo-small"></a>
     </div> <!--col-->
     <div class="col-md-9 ">
        <p class="bold"><?php echo qTranslate($data['item_name'],'item_name',$data)?></p>
