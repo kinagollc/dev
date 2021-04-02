@@ -398,7 +398,7 @@ $full_merchant_address=$merchant_info['street']." ".$merchant_info['city']. " ".
 	       
 	       <?php endif;?>
 	       
-	       <?php if ($transaction_type=="delivery" || $transaction_type=="pickup" && $data['opt_contact_delivery']==1):?>
+	       <?php if ($transaction_type=="delivery" && $data['opt_contact_delivery']==1):?>
 	       <div class="input-block">
 	         <div class="label"><?php echo t("Delivery options")?> :</div>
 	         <div class="value"><?php echo t("Leave order at the door or gate")?></div>
