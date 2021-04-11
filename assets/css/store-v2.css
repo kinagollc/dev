@@ -43,6 +43,12 @@ top:0;
 transition:all .3s ease-in;
 }
 
+#qrcode {
+  width:160px;
+  height:160px;
+  margin-top:15px;
+}
+
 .foodsz {
 font-size:12px!important;
 }
