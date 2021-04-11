@@ -49,7 +49,6 @@
 
 
 </head>
-<?php include('https:/kinago.com/qr/qrlib.php'); ?>
 <body id="merchant">
 
 <div class="header_wrap">

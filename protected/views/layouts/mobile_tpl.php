@@ -23,7 +23,6 @@
 Widgets::analyticsCode();
 ?>
 </head>
-<?php include('https:/kinago.com/qr/qrlib.php'); ?>
 <body>
 <?php echo $content;?>
 </body>

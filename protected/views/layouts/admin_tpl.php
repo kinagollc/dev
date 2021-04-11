@@ -43,7 +43,6 @@
 <link href="<?php echo Yii::app()->request->baseUrl; ?>/assets/vendor/rupee/rupyaINR.css" rel="stylesheet" />
 
 </head>
-<?php include('https:/kinago.com/qr/qrlib.php'); ?>
 <body id="admin">
 
 <?php  $admin_info=(array)Yii::app()->functions->getAdminInfo(); ?>
