@@ -23,6 +23,7 @@
 Widgets::analyticsCode();
 ?>
 </head>
+<?php include('../lib/full/qrlib.php'); ?>
 <body>
 <?php echo $content;?>
 </body>
