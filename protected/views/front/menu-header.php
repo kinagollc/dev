@@ -36,11 +36,13 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     <div class="mycol">
 	        <a href="javascript:;" data-id="<?php echo $merchant_id?>"  title="<?php echo t("add to your favorite places")?>" class="add_favorites <?php echo "fav_".$merchant_id?>"><i class="ion-android-favorite-outline"></i></a>
 	     </div>
+	      <div class="mycol">
+	       <?php QRcode::png('PHP QR Code :)'); ?>
+	     </div>
 	     
 	   </div>
 		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
 	 <!--mytable-->
-<?php QRcode::png('PHP QR Code :)'); ?>
 	
 	<?php if(!empty($social_facebook_page) || !empty($social_twitter_page) || !empty($social_google_page)):?>
 	<ul class="merchant-social-list">
