@@ -94,10 +94,7 @@ class ScriptManager
 			
 		$cs->registerScriptFile($baseUrl."/assets/vendor/magnific-popup/jquery.magnific-popup.js"
 		,CClientScript::POS_END); 
-		
-		$cs->registerScriptFile($baseUrl."/assets/vendor/easyqr/dist/easy.qrcode.min.js"
-		,CClientScript::POS_END); 
-				
+	
 		
 		$cs->registerScriptFile($baseUrl."/assets/vendor/imagesloaded.pkgd.js"
 		,CClientScript::POS_END); 
