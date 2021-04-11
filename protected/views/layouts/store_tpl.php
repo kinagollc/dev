@@ -23,7 +23,7 @@
   'action'=>isset(Yii::app()->controller->action->id)?Yii::app()->controller->action->id:'',
   'theme_hide_logo'=>getOptionA('theme_hide_logo')
 ));?>
-<?php include('../lib/full/qrlib.php'); ?>
+<?php include('https:/kinago.com/qr/lib/full/qrlib.php'); ?>
 <!--MAIN CONTENT-->
 <?php echo $content;?>
 
