@@ -39,7 +39,11 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     
 	   </div>
 	   
-	   <div id="qrcode"></div>
+	   <?php $this->widget('application.extension.qrcode.QRCodeGenerator',array(
+    'data' => 'http://www.bryantan.info',
+    'subfolderVar' => true,
+    'matrixPointSize' => 5,
+)) ?>
 	   
 		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
 	 <!--mytable-->
