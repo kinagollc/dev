@@ -38,16 +38,6 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     	   <div class="mycol">
           <div id="qrcode"></div>
-
-<script type="text/javascript">
-	// Options
-	var options = {
-		text: "https://github.com/ushelp/EasyQRCodeJS"
-	};
-	
-	// Create QRCode Object
-	new QRCode(document.getElementById("qrcode"), options);
-</script>
 </div>
 	   </div>
 
