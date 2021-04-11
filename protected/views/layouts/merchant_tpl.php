@@ -113,7 +113,7 @@
   </div>
      <div class="right">
   <a target="_blank" class="uk-button" 
-  href="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=https://kinago.com<?php echo Yii::app()->request->baseUrl."/menu-".$merchant_info[0]->restaurant_slug;?>">
+  href="https://api.qrserver.com/v1/create-qr-code/?size=1024x1024&data=https://kinago.com<?php echo Yii::app()->request->baseUrl."/menu-".$merchant_info[0]->restaurant_slug;?>">
   <i class="fa fa-qrcode"></i> <?php echo t("QR Code")?></a>
   </div>
   <div class="right">
