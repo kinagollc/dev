@@ -37,7 +37,15 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	        <a href="javascript:;" data-id="<?php echo $merchant_id?>"  title="<?php echo t("add to your favorite places")?>" class="add_favorites <?php echo "fav_".$merchant_id?>"><i class="ion-android-favorite-outline"></i></a>
 	     </div>
 	     	   <div class="mycol">
-<div id="qrcode"></div>
+<div class="QRWrapper">
+      <div class="QRWrapperInner">
+        
+        <div class="qr-code-result">
+          <canvas id="qr-code"></canvas>
+        </div>
+      </div>
+
+
 </div>
 	   </div>
 
