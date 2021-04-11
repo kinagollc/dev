@@ -17,6 +17,7 @@ $merchant_info=array(
   'merchant_address'=>$data['merchant_address'],
   'cuisine'=>$data['cuisine'],
   'restaurant_name'=>$data['restaurant_name'],
+  'restaurant_slug'=>$data['restaurant_slug'],
   'background'=>$merchant_photo_bg,
   'merchant_website'=>$merchant_website,
   'merchant_logo'=>FunctionsV3::getMerchantLogo($merchant_id),
