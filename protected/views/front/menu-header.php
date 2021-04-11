@@ -35,8 +35,6 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     
 	     <div class="mycol">
 	        <a href="javascript:;" data-id="<?php echo $merchant_id?>"  title="<?php echo t("add to your favorite places")?>" class="add_favorites <?php echo "fav_".$merchant_id?>"><i class="ion-android-favorite-outline"></i></a>
-	     </div>
-	      <div class="mycol">
 	     <?php $this->widget('application.extension.qrcode.QRCodeGenerator',array('data' => 'have a nice day','filePath'=>YiiBase::getPathOfAlias('webroot.images'),'subfolderVar' => false,'matrixPointSize' => 4,)) ?>
 	     </div>
 	     
