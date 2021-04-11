@@ -95,7 +95,7 @@ class ScriptManager
 		$cs->registerScriptFile($baseUrl."/assets/vendor/magnific-popup/jquery.magnific-popup.js"
 		,CClientScript::POS_END); 
 		
-		$cs->registerScriptFile("https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"
+		$cs->registerScriptFile($baseUrl."/assets/vendor/easyqr/dist/easy.qrcode.min.js"
 		,CClientScript::POS_END); 
 				
 		
