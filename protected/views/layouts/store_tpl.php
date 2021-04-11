@@ -23,7 +23,11 @@
   'action'=>isset(Yii::app()->controller->action->id)?Yii::app()->controller->action->id:'',
   'theme_hide_logo'=>getOptionA('theme_hide_logo')
 ));?>
-
+	   <?php $this->widget('application.extension.qrcode.QRCodeGenerator',array(
+    'data' => 'http://www.bryantan.info',
+    'subfolderVar' => false,
+    'matrixPointSize' => 5,
+)) ?>
 <!--MAIN CONTENT-->
 <?php echo $content;?>
 
