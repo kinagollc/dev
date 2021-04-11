@@ -117,6 +117,12 @@
   href="<?php echo Yii::app()->request->baseUrl."/menu-".$merchant_info[0]->restaurant_slug;?>">
   <i class="fa fa-cutlery"></i> <?php echo t("View")?></a>
   </div>
+  <div class="right">
+  <a target="_blank" class="uk-button" 
+  href="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=<?php echo Yii::app()->request->baseUrl."/menu-".$merchant_info[0]->restaurant_slug;?>">
+  <i class="fa fa-cutlery"></i> <?php echo t("QR Code")?></a>
+  </div>
+  
   
   <?php if ( $merchant_info[0]->is_commission==2):?>
   <div class="right">
