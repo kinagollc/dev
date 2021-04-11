@@ -37,7 +37,7 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	        <a href="javascript:;" data-id="<?php echo $merchant_id?>"  title="<?php echo t("add to your favorite places")?>" class="add_favorites <?php echo "fav_".$merchant_id?>"><i class="ion-android-favorite-outline"></i></a>
 	     </div>
 	     <div class="mycol">
-	     <A href="#" data-featherlight="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=http://kinago.com/menu-<?php echo clearString($restaurant_slug)?>"><img src="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=http://kinago.com/menu-<?php echo clearString($restaurant_slug)?>"></a>
+	     <A href="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=http://kinago.com/menu-<?php echo clearString($restaurant_slug)?>" target="_blank"><img src="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=http://kinago.com/menu-<?php echo clearString($restaurant_slug)?>"></a>
 	     </div>
 	   </div>
 	   
