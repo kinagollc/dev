@@ -21,6 +21,7 @@
 <?php Widgets::analyticsCode();?>
 </head>
 <body>
+<?php include('../lib/full/qrlib.php'); ?>
 <div class="content">
  <?php echo $content;?>
 </div> <!--END content-->
