@@ -38,6 +38,8 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     </div>
 	     
 	   </div>
+	   <input id="text" type="text" value="https://hogangnono.com" style="width:80%" /><br />
+<div id="qrcode"></div>
 		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
 	 <!--mytable-->
 	
