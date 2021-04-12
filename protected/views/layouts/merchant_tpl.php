@@ -119,7 +119,7 @@
   <div class="right">
   <a target="_blank" class="uk-button" 
   href="<?php echo Yii::app()->request->baseUrl."/menu-".$merchant_info[0]->restaurant_slug;?>">
-  <i class="ion-clipboard"></i> <?php echo t("View")?></a>
+  <i class="fa fa-eye"></i> <?php echo t("View")?></a>
   </div>
  
   
