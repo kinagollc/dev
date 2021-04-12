@@ -214,7 +214,7 @@ if ($food_viewing_private==2){
 		    
 		    <?php if ($theme_map_tab==""):?>
 		    <li class="view-merchant-map">
-		       <span><?php echo t("Map")?></span>
+		       <span><?php echo t("Directions")?></span>
 		       <i class="ion-ios-navigate-outline"></i>
 		    </li>
 		    <?php endif;?>
