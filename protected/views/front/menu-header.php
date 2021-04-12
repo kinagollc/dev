@@ -44,7 +44,7 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	   
 	   
 		<p style="padding-bottom:5px;padding-top:15px;"><?php echo FunctionsV3::getFreeDeliveryTag($merchant_id)?></p>
-	 <!--mytable-->
+	 <!--mytable
 	
 	<?php if(!empty($social_facebook_page) || !empty($social_twitter_page) || !empty($social_google_page)):?>
 	<ul class="merchant-social-list">
@@ -74,7 +74,7 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	 
 	</ul>
 	<?php endif;?>
-	
+	-->
 	
 	<!--<?php if (!empty($merchant_website)):?>
 	<p class="small">
