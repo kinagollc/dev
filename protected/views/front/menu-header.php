@@ -9,6 +9,9 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 <div class="search-wraps center menu-header">
 
       <img class="logo-medium bottom15" src="<?php echo $merchant_logo;?>">
+       <div class="mycol">
+	        <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>             
+	     </div>
       <h1><?php echo clearString($restaurant_name)?></h1>
       
 	<p><i class="fa fa-map-marker"></i> <?php echo $merchant_address?></p>
@@ -24,9 +27,6 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	        </a>
 	        </p>
 	     </div>	        
-	     <div class="mycol">
-	        <?php echo FunctionsV3::merchantOpenTag($merchant_id)?>             
-	     </div>
 	     <div class="mycol">
 	        <?php if($minimum_order>0):?>
             <p class="small"><?php echo t("Minimum Order").": ".Price_Formatter::formatNumber($minimum_order)?></p>
