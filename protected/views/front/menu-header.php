@@ -75,11 +75,11 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	<?php endif;?>
 	
 	
-	<?php if (!empty($merchant_website)):?>
+	<!--<?php if (!empty($merchant_website)):?>
 	<p class="small">
 	  <?php echo $merchant_website;?>
 	</p>
-	<?php endif;?>
+	<?php endif;?>-->
 			
 </div> <!--search-wraps-->
 
