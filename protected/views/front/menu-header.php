@@ -26,7 +26,10 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	        <?php echo $ratings['votes']." ".t("Reviews")?>
 	        </a>
 	        </p>
-	     </div>	        
+	     </div>	     
+	     <div class="mycol">
+	     <A href="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=http://kinago.com/menu-<?php echo clearString($restaurant_slug)?>" target="_blank"><img src="https://api.qrserver.com/v1/create-qr-code/?size=25x25&data=http://kinago.com/menu-<?php echo clearString($restaurant_slug)?>"></a>
+	     </div>   
 	     <div class="mycol">
 	        <?php if($minimum_order>0):?>
             <p class="small"><?php echo t("Minimum Order").": ".Price_Formatter::formatNumber($minimum_order)?></p>
@@ -36,9 +39,7 @@ data-image-src="<?php echo empty($background)?assetsURL()."/images/b-2.jpg":uplo
 	     <div class="mycol">
 	        <a href="javascript:;" data-id="<?php echo $merchant_id?>"  title="<?php echo t("add to your favorite places")?>" class="add_favorites <?php echo "fav_".$merchant_id?>"><i class="ion-android-favorite-outline"></i></a>
 	     </div>
-	     <div class="mycol">
-	     <A href="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=http://kinago.com/menu-<?php echo clearString($restaurant_slug)?>" target="_blank"><img src="https://api.qrserver.com/v1/create-qr-code/?size=25x25&data=http://kinago.com/menu-<?php echo clearString($restaurant_slug)?>"></a>
-	     </div>
+	     
 	   </div>
 	   
 	   
