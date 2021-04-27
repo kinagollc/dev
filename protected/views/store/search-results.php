@@ -106,40 +106,7 @@ echo CHtml::hiddenField('clien_long',$data['client']['long']);
 	           </ul>
            </div> <!--filter-box-->
            <!--END FILTER MERCHANT NAME-->           
-           <!--FILTER CUISINE-->
-           <?php if (!empty($filter_cuisine)):?>                      
-           <a href="<?php echo FunctionsV3::clearSearchParams('filter_cuisine')?>">[<?php echo t("Clear")?>]</a>
-           <?php endif;?>
-           <?php if ( $cuisine=Yii::app()->functions->Cuisine(false)):?>
-           <div class="filter-box">
-	           <a href="javascript:;">	             
-	             <span>
-	             <i class="<?php echo $fc==2?"ion-ios-arrow-thin-down":'ion-ios-arrow-thin-right'?>"></i>
-	             <?php echo t("By Cuisines")?>
-	             </span>   
-	             <b></b>
-	           </a>
-	            <ul class="<?php echo $fc==2?"hide":''?>">
-	             <?php foreach ($cuisine as $val): ?>
-	              <li>
-		           <?php 
-		           $cuisine_json['cuisine_name_trans']=!empty($val['cuisine_name_trans'])?
-	    		   json_decode($val['cuisine_name_trans'],true):'';
-	    		   
-		           echo CHtml::checkBox('filter_cuisine[]',
-		           in_array($val['cuisine_id'],(array)$filter_cuisine)?true:false
-		           ,array(
-		           'value'=>$val['cuisine_id'],
-		           'class'=>"filter_by icheck filter_cuisine"
-		           ));
-		          ?>
-	              <?php echo qTranslate($val['cuisine_name'],'cuisine_name',$cuisine_json)?>
-	              </li>
-	             <?php endforeach;?> 
-	           </ul>
-           </div> <!--filter-box-->
-           <?php endif;?>
-           <!--END FILTER CUISINE-->
+           
            
            
            <!--FILTER DELIVERY FEE-->           
@@ -197,7 +164,40 @@ echo CHtml::hiddenField('clien_long',$data['client']['long']);
            <?php endif;?>
            <!--END FILTER DELIVERY -->
            
-           
+           <!--FILTER CUISINE-->
+           <?php if (!empty($filter_cuisine)):?>                      
+           <a href="<?php echo FunctionsV3::clearSearchParams('filter_cuisine')?>">[<?php echo t("Clear")?>]</a>
+           <?php endif;?>
+           <?php if ( $cuisine=Yii::app()->functions->Cuisine(false)):?>
+           <div class="filter-box">
+	           <a href="javascript:;">	             
+	             <span>
+	             <i class="<?php echo $fc==2?"ion-ios-arrow-thin-down":'ion-ios-arrow-thin-right'?>"></i>
+	             <?php echo t("By Cuisines")?>
+	             </span>   
+	             <b></b>
+	           </a>
+	            <ul class="<?php echo $fc==2?"hide":''?>">
+	             <?php foreach ($cuisine as $val): ?>
+	              <li>
+		           <?php 
+		           $cuisine_json['cuisine_name_trans']=!empty($val['cuisine_name_trans'])?
+	    		   json_decode($val['cuisine_name_trans'],true):'';
+	    		   
+		           echo CHtml::checkBox('filter_cuisine[]',
+		           in_array($val['cuisine_id'],(array)$filter_cuisine)?true:false
+		           ,array(
+		           'value'=>$val['cuisine_id'],
+		           'class'=>"filter_by icheck filter_cuisine"
+		           ));
+		          ?>
+	              <?php echo qTranslate($val['cuisine_name'],'cuisine_name',$cuisine_json)?>
+	              </li>
+	             <?php endforeach;?> 
+	           </ul>
+           </div> <!--filter-box-->
+           <?php endif;?>
+           <!--END FILTER CUISINE-->
            
            
            <!--MINIUM DELIVERY FEE-->           
@@ -266,7 +266,20 @@ echo CHtml::hiddenField('clien_long',$data['client']['long']);
               </div> <!--col-->
               <div class="col-md-6 col-xs-6 border">                
                
-                         
+                          
+                <a href="<?php echo FunctionsV3::clearSearchParams('','display_type=listview')?>" 
+	           class="display-type orange-button block center rounded 
+	           <?php echo $display_type=="gridview"?'inactive':''?>" 
+		          data-type="listview">
+                <i class="fa fa-th-list"></i>
+                </a>
+                
+                <a href="<?php echo FunctionsV3::clearSearchParams('','display_type=gridview')?>" 
+		          class="display-type orange-button block center rounded mr10px 
+	             <?php echo $display_type=="listview"?'inactive':''?>" 
+		          data-type="gridview">
+                <i class="fa fa-th-large"></i>
+                </a>           
                 
                 <a href="javascript:;" id="mobile-filter-handle" class="orange-button block center rounded mr10px">
                   <i class="fa fa-filter"></i>
