@@ -6,7 +6,9 @@ $prefix = "print_";
 ?> 
 
 
-<?php echo htmlWrapper::checkbox($prefix.'enabled_printer','',"Enabled", getOptionA($prefix.'enabled_printer') );?>   	
+<?php echo htmlWrapper::checkbox($prefix.'enabled_printer','',"Enabled Bluetooth printer", getOptionA($prefix.'enabled_printer') );?>   	
+
+<?php echo htmlWrapper::checkbox($prefix.'enabled_printer_fp_wifi','',"Enabled FP-80WC 80mm WIFI printer", getOptionA($prefix.'enabled_printer_fp_wifi') );?>   	
 
 <div class="spacer"></div>
 

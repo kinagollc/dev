@@ -2,6 +2,12 @@
  'onsubmit'=>"return false;"
 )); ?> 
 
+
+<p class="text-muted"><?php echo translate("Module version [version]",array(
+ '[version]'=>KARENDERIA_APP_VERSION
+))?></p>
+
+
 <div class="form-group">
     <label><?php echo translate("Your mobile API URL")?></label>
     <input name="api_url" type="text" class="form-control copy_text" readonly

@@ -28,6 +28,7 @@ class ReportsWrapper
 		a.trans_type, a.trans_type as trans_type_raw, 
 		a.payment_type, a.payment_type as payment_type_raw ,  a.total_amount ,
 		a.status, a.status as status_raw, a.date_created,
+		a.used_currency,
 		
 		(
     	select group_concat(item_name)
@@ -74,11 +75,57 @@ class ReportsWrapper
 			$and.=" AND a.status IN ($in) ";
 		}
 				
+		if(!Yii::app()->db->schema->getTable("{{view_item_cat}}")){
+			return false;
+		}
+		
+		$select = "a.item_name, a.size, a.size as size_raw,";
+		
+		$e1 =  Yii::app()->functions->multipleField();
+		$e2 =  Yii::app()->db->schema->getTable("{{item_translation}}");
+		$e3 =  Yii::app()->db->schema->getTable("{{size_translation}}");
+				
+		if($e1 && $e2 && $e3){
+			$select = "
+			IFNULL((
+			SELECT IF(item_name IS NULL or item_name = '', 
+			a.item_name, item_name) 
+			from {{item_translation}}
+			 where
+			 item_id = a.item_id
+			 and language = ".q(Yii::app()->language)."
+			), a.item_name ) as item_name,
+			
+			IFNULL((
+			SELECT IF(size_name IS NULL or size_name = '', 
+			a.size, size_name) 
+			from {{size_translation}}
+			 where
+			 size_id = a.size_id
+			 and language = ".q(Yii::app()->language)."
+			), a.size ) as size,	
+			
+			
+			";
+		}
+		
 		$stmt="
 		SELECT SQL_CALC_FOUND_ROWS SUM(a.qty) as total_qty,
-		a.item_id,a.item_name,a.discounted_price as price,
-		a.discounted_price as price_raw,
-		a.size, a.size as size_raw
+		a.item_id,
+		$select
+		
+		IFNULL((
+    	  select price - discount
+    	  from {{view_item_cat}}
+    	  where
+    	  item_id = a.item_id
+    	  and 
+    	  size_id = a.size_id
+    	  and 
+    	  cat_id = a.cat_id
+    	  limit 0,1
+    	),0) as price_raw
+				
 		FROM
 		{{view_order_details}} a	 
 		WHERE
@@ -88,9 +135,8 @@ class ReportsWrapper
 		GROUP BY item_id,size	  
 		ORDER BY a.item_name ASC
 		LIMIT $start,$total_rows 
-		";				
-		//dump($stmt);
-        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	
+		";						
+        if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){        	        	
         	return $resp;
         }
         return false;     

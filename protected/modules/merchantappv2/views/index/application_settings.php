@@ -19,8 +19,8 @@
      'class'=>"form-control numeric_only"
     ));
     ?>
-    <small class="form-text text-muted">
-    <?php echo translate("default is 5 minutes")?>
+    <small class="form-text text-muted">    
+    <?php echo translate("in Minutes when the new order is not attended, example order order was place at 8:00am if set to 5mins it will ring after 8:05am onwards")?>.
 </small>
   </div>
   
@@ -35,7 +35,7 @@
     ));
     ?>
     <small class="form-text text-muted">
-    <?php echo translate("default is 5 minutes")?>
+    <?php echo translate("In minutes when the promise time reach, example set to 1min if promise delivery time is 8:00am will trigger alert when current time is 7:49am")?>.
 </small>
   </div>
   
@@ -50,12 +50,28 @@
     ));
     ?>
     <small class="form-text text-muted">
-    <?php echo translate("default is 5 minutes")?>
+    <?php echo translate("In minutes when the promise time reach, example set to 1min if promise delivery time is 8:00am will trigger alert when current time is 7:49am")?>.
 </small>
   </div>
   
 </div>
 <!--row-->
+
+<div class="row">
+ <div class="col-md-4">
+    <p><b><?php echo translate("Continues number of alert")?></b></p>    
+    <?php 
+    echo CHtml::textField('number_of_alert',
+    isset($data['number_of_alert'])?$data['number_of_alert']:''
+    ,array(    
+     'class'=>"form-control numeric_only"
+    ));
+    ?>
+    <small class="form-text text-muted">        
+    <?php echo translate("how many number that will play alert sounds, leave empty for continues alert")?>.
+   </small>
+  </div>
+</div>
 
 <div class="spacer"></div><div class="spacer"></div>
 

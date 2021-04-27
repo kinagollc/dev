@@ -51,6 +51,15 @@
 
 <div class="spacer"></div>
 
+<h5 style="margin-bottom:0;"><?php echo translate("Order options")?></h5>
+<div class="spacer"></div>
+
+<?php echo htmlWrapper::checkbox('merchantapp_remove_accepting_time','',"Remove time when accepting orders", getOptionA('merchantapp_remove_accepting_time') );?>   	
+
+<?php echo htmlWrapper::checkbox('merchantapp_remove_cancel_status','',"Remove cancel button/cancel status", getOptionA('merchantapp_remove_cancel_status') );?>   	
+
+<div class="spacer"></div>
+
 <h5 style="margin-bottom:0;"><?php echo translate("Define status colors")?></h5>
 <small class="form-text text-muted">
     <?php echo translate("select order status that will determined if failed or successful")?>

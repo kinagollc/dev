@@ -174,10 +174,6 @@ class UpdateController extends CController
 			  'distance_unit'=>"varchar(20) NOT NULL DEFAULT 'mi'",
 			  'delivery_distance_covered'=>"float(14,2) NOT NULL DEFAULT '0.00'"
 			));	
-
-			$loger[] = DatataseMigration::addColumn("{{merchant}}",array(
-			  'stic_dark_theme'=>"int(1) NOT NULL DEFAULT '0'",
-			));	
 			
 			$loger[] = DatataseMigration::addColumn("{{merchant_user}}",array(
 			  'mobile_session_token'=>"varchar(255) NOT NULL DEFAULT ''", 

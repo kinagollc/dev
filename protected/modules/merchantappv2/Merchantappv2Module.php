@@ -9,9 +9,11 @@
  *   Last Update : 25 November 2020 Version 1.0.4
  *   Last Update : 01 December 2020 Version 1.0.5
  *   Last Update : 13 January 2021 Version 1.0.6
+ *   Last Update : 13 April 2021 Version 1.0.7
  *
 ***********************************************************/
 
+define("KARENDERIA_APP_VERSION",'1.0.7');
 define("APP_FOLDER",'merchantappv2');
 define("APP_BTN",'btn-raised btn-info');
 define("APP_BTN2",'btn-raised');

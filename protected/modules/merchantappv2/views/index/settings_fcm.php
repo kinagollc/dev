@@ -31,6 +31,12 @@ echo translate("File [file]",array(
 </p>
 
 
+<div class="spacer"></div>
+<h5><?php echo translate("Disabled Broadcast")?></h5>
+<?php echo htmlWrapper::checkbox('merchantapp_disabled_broadcast','',"Enabled", getOptionA('merchantapp_disabled_broadcast') );?>   	
+
+<div class="spacer"></div>
+
 <div class="pt-3">
 <?php
 echo CHtml::ajaxSubmitButton(

@@ -123,6 +123,14 @@ class AjaxController extends CController
 		Yii::app()->functions->updateOptionAdmin('accepted_based_time',
 		isset($this->data['accepted_based_time'])? trim($this->data['accepted_based_time']) :''
 		);
+		
+		Yii::app()->functions->updateOptionAdmin('merchantapp_remove_accepting_time',
+		isset($this->data['merchantapp_remove_accepting_time'])? (integer)trim($this->data['merchantapp_remove_accepting_time']) :''
+		);
+		
+		Yii::app()->functions->updateOptionAdmin('merchantapp_remove_cancel_status',
+		isset($this->data['merchantapp_remove_cancel_status'])? (integer)trim($this->data['merchantapp_remove_cancel_status']) :''
+		);
 			
     	$this->code=1;
 	    $this->msg=translate("Settings saved");
@@ -229,6 +237,10 @@ class AjaxController extends CController
 		isset($this->data['decline_reason_list'])? trim($this->data['decline_reason_list']) :''
 		);
 		
+		Yii::app()->functions->updateOptionAdmin('number_of_alert',
+		isset($this->data['number_of_alert'])? (integer) trim($this->data['number_of_alert']) :''
+		);
+		
     	$this->code=1;
 	    $this->msg=translate("Settings saved");
 		$this->jsonResponse();	
@@ -298,6 +310,10 @@ class AjaxController extends CController
 		);
 		
 		Yii::app()->functions->updateOptionAdmin(APP_FOLDER.'_fcm','');
+		
+		Yii::app()->functions->updateOptionAdmin('merchantapp_disabled_broadcast',
+		isset($this->data['merchantapp_disabled_broadcast'])?$this->data['merchantapp_disabled_broadcast']:''
+		);
 		
     	$this->code=1;
 	    $this->msg=translate("Settings saved");		
@@ -916,6 +932,10 @@ class AjaxController extends CController
 		
 		Yii::app()->functions->updateOptionAdmin($prefix.'enabled_printer',
 		isset($this->data[$prefix.'enabled_printer'])? trim($this->data[$prefix.'enabled_printer']) :''
+		);
+		
+		Yii::app()->functions->updateOptionAdmin($prefix.'enabled_printer_fp_wifi',
+		isset($this->data[$prefix.'enabled_printer_fp_wifi'])? trim($this->data[$prefix.'enabled_printer_fp_wifi']) :''
 		);
 		
     	

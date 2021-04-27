@@ -450,8 +450,8 @@ class FoodItemWrapper
 	      ->queryRow();	
 	      if($resp){
 	      	if($strip){
-	      		// $resp = Yii::app()->request->stripSlashes($resp);
-	      		return $resp;
+	      	   //$resp = Yii::app()->request->stripSlashes($resp);
+	      	   return $resp;
 	      	}
 	      	return $resp;
 	      } else throw new Exception( "Record not found" );	      
@@ -1678,7 +1678,7 @@ class FoodItemWrapper
 	
 	public static function getImage($filename='',$default_image='no-food.png')
 	{		
-		// $image_url =Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$default_image";	
+		$image_url =Yii::app()->getBaseUrl(true)."/protected/modules/".APP_FOLDER."/assets/images/$default_image";	
 		$upload_path = Yii::getPathOfAlias('webroot')."/upload";
 		if(!empty($filename)){
 			if (file_exists("$upload_path/$filename")){
@@ -2079,7 +2079,8 @@ class FoodItemWrapper
 			}
 		}
 	}
-
+		
+		
 	public static function qTranslate($text='',$key='',$data='',$enabled_trans=false)
 	{		
 		$p = new CHtmlPurifier();

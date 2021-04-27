@@ -368,7 +368,8 @@ class CronController extends CController
 		if($order_unattended_minutes<=0){
 			$order_unattended_minutes = 5;
 		}		
-					
+		
+		$number_of_alert = getOptionA('number_of_alert');					
 				
 		$interval_date = date("Y-m-d H:i:s", strtotime("+$order_unattended_minutes minutes"));
 		$todays_date = date("Y-m-d");
@@ -392,7 +393,7 @@ class CronController extends CController
 		  {{merchantapp_broadcast}}
 		  where order_id=a.order_id
 		  and 
-		  date_created BETWEEN ".q($start)." AND ".q($end)."
+		  date_created BETWEEN ".q($start)." AND ".q($end)."		  
 		)";
 				
 		$tpl = CustomerNotification::getNotificationTemplate('receipt_send_to_merchant',$lang,'push',false);
@@ -405,7 +406,7 @@ class CronController extends CController
 		WHERE 1
 		$and
 		LIMIT 0,50
-		";					
+		";		
 		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){						
 			foreach ($res as $val) {				
 				$data=array();
@@ -418,13 +419,26 @@ class CronController extends CController
 				$params = array(
 				 'merchant_id'=>(integer)$val['merchant_id'],
 				 'merchant_name'=>$val['restaurant_name'],
-				 'order_id'=>$val['order_id'],
+				 'order_id'=>(integer)$val['order_id'],
 				 'push_title'=>$push_title,
 				 'push_message'=>$push_content,
 				 'topics'=>CHANNEL_TOPIC.$val['merchant_id'],
 				 'date_created'=>FunctionsV3::dateNow(),
 				 'ip_address'=>$_SERVER['REMOTE_ADDR'],
-				);						
+				);					
+				
+				if($number_of_alert>0){
+					$stmtc = "SELECT COUNT(*) as total
+					FROM {{merchantapp_broadcast}}
+					WHERE order_id=".q($val['order_id'])."
+					";
+					if($resc = Yii::app()->db->createCommand($stmtc)->queryRow()){						
+						if($resc['total']>$number_of_alert){
+							continue;
+						}
+					}
+				}
+									
 				Yii::app()->db->createCommand()->insert("{{merchantapp_broadcast}}",$params);					
 			} //end foreach
 			OrderWrapper::consumeUrl(FunctionsV3::getHostURL().Yii::app()->createUrl("merchantappv2/cron/processbroadcast"));

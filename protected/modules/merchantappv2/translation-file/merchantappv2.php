@@ -716,4 +716,47 @@ $lang['This app collects location data to Improve location accuracy when finding
 $lang['No thanks'] = '';
 $lang['Turn on'] = '';
 
+
+
+/*Module version 1.0.7*/
+$lang['Continues number of alert'] = '';
+$lang['in Minutes when the new order is not attended, example order order was place at 8:00am if set to 5mins it will ring after 8:05am onwards'] = '';
+$lang['In minutes when the promise time reach, example set to 1min if promise delivery time is 8:00am will trigger alert when current time is 7:49am'] = '';
+$lang['how many number that will play alert sounds, leave empty for continues alert'] = '';
+$lang['Printer'] = '';
+$lang['Privacy policy'] = '';
+$lang['Order options'] = '';
+$lang['Remove time when accepting orders'] = '';
+$lang['Remove cancel button/cancel status'] = '';
+$lang['it can be use to set the status to accepted automatically if merchant didnt accept the order within 10mins or set to decline if merchant no response in 10mins'] = '';
+$lang['Make sure the cron jobs [cron_link] runs in your cpanel every minute'] = '';
+$lang['Disabled Broadcast'] = '';
+$lang['Enabled Bluetooth printer'] = '';
+$lang['Enabled FP-80WC 80mm WIFI printer'] = '';
+$lang['Please select data that you wanted to print'] = '';
+$lang['Header Section'] = '';
+$lang['Merchant name'] = '';
+$lang['Merchant address'] = '';
+$lang['Merchant contact phone'] = '';
+$lang['Printed date'] = '';
+$lang['Sub Header Section'] = '';
+$lang['Customer name'] = '';
+$lang['Transaction type'] = '';
+$lang['Payment type'] = '';
+$lang['Reference #'] = '';
+$lang['TRN Date'] = '';
+$lang['Delivery instructions'] = '';
+$lang['Location name'] = '';
+$lang['Contact Number'] = '';
+$lang['Change'] = '';
+$lang['Footer'] = '';
+$lang['Website URL'] = '';
+$lang['Custom footer'] = '';
+$lang['between words must be separated by new line'] = '';
+$lang['Privacy policy link'] = '';
+$lang['Module version [version]'] = '';
+$lang['Order accepted and will be ready on time'] = '';
+$lang['order will be ready in [estimated_time]'] = '';
+/*Module version 1.0.7*/
+
 return $lang;

@@ -236,8 +236,10 @@ class IndexController extends CController
 		  'interval_ready_order'=>getOptionA('interval_ready_order'),
 		  'merchantapp_upload_resize_width'=>getOptionA('merchantapp_upload_resize_width'),
 		  'merchantapp_upload_resize_height'=>getOptionA('merchantapp_upload_resize_height'),
-		  'merchantapp_upload_resize_enabled'=>getOptionA('merchantapp_upload_resize_enabled')
-		);						
+		  'merchantapp_upload_resize_enabled'=>getOptionA('merchantapp_upload_resize_enabled'),
+		  'number_of_alert'=>getOptionA('number_of_alert')
+		);		
+		
 		$this->render('general_settings',array(
 		  'settings_title'=>translate("Application Settings"),
 		  'tpl'=>"application_settings",

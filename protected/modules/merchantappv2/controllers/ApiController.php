@@ -156,7 +156,8 @@ class ApiController extends CController
 		$this->code = 1;
 		$this->msg = translate("OK");		
 				
-		$data = self::appSettings();
+		$data = self::appSettings();		
+		
 				
 		try {
 			$resp = MerchantUserWrapper::validateToken($this->merchant_token);							
@@ -265,7 +266,7 @@ class ApiController extends CController
             $close_store = $close_store=="yes"?1:0;
             $data['merchant_info']['merchant_close_store']=$close_store;
 
-			$this->details = $data;
+			$this->details = $data;			
 			
 		} catch (Exception $e) {
 			$this->msg = translate($e->getMessage());
@@ -692,7 +693,7 @@ class ApiController extends CController
 	}
 	
 	public function actionAddCategory()
-	{
+	{		
 		$merchant_id = $this->validateToken();
 		$id = isset($this->data['id'])?(integer)$this->data['id']:0;		
 		$params = array(
@@ -3849,9 +3850,7 @@ class ApiController extends CController
 				  'driver_photo'=>$driver_photo,
 				  'task_status'=>$task_status,
 				  'task_color'=>$task_color,
-				  'task_remarks'=>$task_remarks,
-				  'stic_customer_name'=>$val['customer_name'],
-				  'stic_delivery_address'=>$val['full_address']
+				  'task_remarks'=>$task_remarks
 				);							
 				$x++;
 			}		
@@ -4063,7 +4062,7 @@ class ApiController extends CController
 				  'application.modules.driver.components.*',
 			    ));
 			    Driver::addToTask($order_id);
-			    			    //OrderWrapper::updateTaskDeliveryDate($order_id,(float)$time);
+			    //OrderWrapper::updateTaskDeliveryDate($order_id,(float)$time);
 			}		   
 			
 			/*UPDATE POINTS BASED ON ORDER STATUS*/
@@ -7502,29 +7501,6 @@ class ApiController extends CController
 				
 		$this->code = 1;
 		$this->msg = $value=="yes"?translate("Your store is now close"):translate("Your store is now open");
-		$this->output();
-	}
-
-	public function actionupdateDarkMode()
-	{
-		$merchant_id = $this->validateToken(); 
-		$value = isset($this->data['value'])?$this->data['value']:'';		
-		$stic_dark_theme = isset($this->data['value'])?(integer)$this->data['value']:0;
-		$value = $value==1?"yes":'';
-		
-		$params = array(
-		  'stic_dark_theme'=>$stic_dark_theme
-		);		
-		
-        Yii::app()->db->createCommand()->update("{{merchant}}",$params,
-  	    'merchant_id=:merchant_id',
-	  	    array(
-	  	      ':merchant_id'=>$merchant_id
-	  	    )
-  	    );
-				
-		$this->code = 1;
-		$this->msg = $value=="yes"?translate("Dark mode enabled"):translate("Dark mode disabled");
 		$this->output();
 	}
 	
