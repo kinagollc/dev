@@ -39,7 +39,7 @@ class MerchantUserWrapper
 				  'merchant_token'=>$token, 
 				  'restaurant_name'=>$res['restaurant_name'],
 				  'user_type'=>translate($res['user_type']),
-				  'user_access'=>!empty($res['user_access'])?$res['user_access']:'[]',
+				  'user_access'=>$res['user_access'],
 				  'username'=>$res['username'],
 				  'email_address'=>$res['email_address'],
 				  'contact_number'=>$res['contact_number'],
@@ -138,7 +138,7 @@ class MerchantUserWrapper
 		";
 		if(!empty($token)){
 			if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
-				// $res = Yii::app()->request->stripSlashes($res);			
+				$res = Yii::app()->request->stripSlashes($res);			
 				if(!empty($res['timezone'])){
 				   Yii::app()->timeZone = $res['timezone'];
 				}
@@ -146,12 +146,12 @@ class MerchantUserWrapper
 				  'merchant_id'=>$res['merchant_id'],
 				  'id'=>$res['id'],
 				  'merchant_token'=>$token, 
-				  'restaurant_name'=>stripslashes($res['restaurant_name']),
-				  'user_type'=>stripslashes($res['user_type']),
-				  'user_access'=>!empty($res['user_access'])?$res['user_access']:'[]',
-				  'username'=>stripslashes($res['username']),
-				  'email_address'=>stripslashes($res['email_address']),
-				  'contact_number'=>stripslashes($res['contact_number']),
+				  'restaurant_name'=>$res['restaurant_name'],
+				  'user_type'=>$res['user_type'],
+				  'user_access'=>$res['user_access'],
+				  'username'=>$res['username'],
+				  'email_address'=>$res['email_address'],
+				  'contact_number'=>$res['contact_number'],
 				  'pin'=>$res['pin'],
 				  'merchant_photo'=>FoodItemWrapper::getImage($res['merchant_photo'],'chef.svg'),
 				  'stic_dark_theme'=>$res['stic_dark_theme']

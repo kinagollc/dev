@@ -109,7 +109,6 @@ class OrderWrapper
 			";
 		}
 				
-				
 		$stmt="
 		select SQL_CALC_FOUND_ROWS 
 		a.order_id, a.merchant_id,a.total_w_tax as total_order_amount,
@@ -122,9 +121,6 @@ class OrderWrapper
 		concat(b.street,' ',b.area_name,' ',b.city,' ',b.state,' ',b.zipcode) as full_address,
 		concat(b.first_name,' ',b.last_name) as customer_name,	
 		b.estimated_time, b.estimated_date_time,
-		b.used_currency,
-		b.base_currency,
-		b.exchange_rate,
 		(
 		 select count(*) from {{order_details}}
 		 where order_id = a.order_id
@@ -141,7 +137,7 @@ class OrderWrapper
 		$and
 		$order_by
 		LIMIT $start,$total_rows
-		";				
+		";		
         if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){           		    
         	return $resp;
         }        
@@ -264,23 +260,16 @@ class OrderWrapper
 		throw new Exception( "Invalid order id" );
 	}
 	
-	public static function orderStatusList($merchant_id='',$remove_cancel=false)
+	public static function orderStatusList($merchant_id='')
 	{
-		$data = array(); $and="";		
-		if($remove_cancel){
-			$remove_cancel_status=getOptionA('merchantapp_remove_cancel_status');
-			if($remove_cancel_status==1){				
-				$cancel_status = OrderWrapper::getActionStatus('cancel_order');
-				$and.=" AND description NOT IN (".q($cancel_status).")";
-			}
-		}
+		$data = array();
 		$stmt ="
 		SELECT description 
 		FROM {{order_status}}
 		WHERE merchant_id IN ('0',".q($merchant_id).")
-		$and
 		ORDER  BY description ASC
-		";				
+		";
+		
 		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
 			foreach ($res as $val) {
 				$data[]=array(
@@ -380,11 +369,6 @@ class OrderWrapper
 		b.contact_email as customer_email,
 		b.estimated_time, b.estimated_date_time,
 		b.google_lat as location_lat, b.google_lng as location_lng,
-		b.used_currency,
-		b.base_currency,
-		b.exchange_rate,
-		b.service_fee,
-		b.service_fee_applytax,
 		
 		c.restaurant_name as merchant_name,
 		c.restaurant_phone as merchant_contact_phone,
@@ -428,17 +412,7 @@ class OrderWrapper
 	public static function prepareReceipt($order_id='', $with_symbol = true)
 	{		
 		$details_details = array(); $data = array(); $order_details=array();
-		
-		$default_currency = FunctionsV3::getCurrencyCode();
-		$enabled_trans = Yii::app()->functions->multipleField();
-		
 		if ($data=self::getReceiptByID($order_id)){
-					
-			/*MC*/
-			$used_currency = isset($data['used_currency'])?$data['used_currency']: $default_currency;
-			if(Merchant_utility::$price_formater){
-			   Price_Formatter::init( $used_currency );
-			}
 							
 			$merchant_id=$data['merchant_id'];
 			$json_details=!empty($data['json_details'])?json_decode($data['json_details'],true):false;
@@ -456,10 +430,7 @@ class OrderWrapper
 			   'tax'=>$data['tax'],
 			   'points_discount'=>isset($data['points_discount'])?$data['points_discount']:'' /*POINTS PROGRAM*/,
 			   'voucher_amount'=>$data['voucher_amount'],
-			   'voucher_type'=>$data['voucher_type'],
-			   'service_fee'=>isset($data['service_fee'])?(float)$data['service_fee']:0,
-		       'service_fee_applytax'=>isset($data['service_fee_applytax'])?(integer)$data['service_fee_applytax']:false,
-		       'tax_set'=>$data['tax'],
+			   'voucher_type'=>$data['voucher_type']
 			  ),$json_details,true,$order_id);
 			}		
 								
@@ -470,8 +441,7 @@ class OrderWrapper
 			
 			$details_details['request_cancel']=$data['request_cancel'];
 			$details_details['customer_name']=$data['full_name'];			
-			$details_details['date_created']=FunctionsV3::prettyDate($data['date_created'])." ".FunctionsV3::prettyTime($data['date_created']);		
-			$details_details['payment_type_raw'] = $data['payment_type'];
+			$details_details['date_created']=FunctionsV3::prettyDate($data['date_created'])." ".FunctionsV3::prettyTime($data['date_created']);			
 			$details_details['payment_type']=self::prettyPaymentType($data['payment_type'],$data['trans_type']);			
 			$details_details['trans_type'] = t($data['trans_type']);
 			$details_details['trans_type_raw'] = $data['trans_type'];
@@ -492,21 +462,6 @@ class OrderWrapper
 			$details_details['contact_phone']=$data['contact_phone'];
 			$details_details['delivery_date']=FunctionsV3::prettyDate($data['delivery_date']);
 			$details_details['delivery_time']=FunctionsV3::prettyTime($data['delivery_time']);
-			
-			$date_now = date('Ymd'); $pre_order = 0; $pre_order_msg='';
-			$delivery_date=$data['delivery_date'];
-			$delivery_date=date("Ymd",strtotime($delivery_date));			
-			if($delivery_date>$date_now){
-				$pre_order = 1;
-				$dtime = !empty($data['delivery_time'])?date("g:ia",strtotime($data['delivery_time'])):'';
-				$pre_order_msg = translate("This is advance order on [date]",array(					  
-				  '[date]'=>FunctionsV3::prettyDate($data['delivery_date'])." $dtime"
-				));
-			}
-			
-			$details_details['pre_order']=$pre_order;
-			$details_details['pre_order_msg']=$pre_order_msg;
-			
 			$details_details['delivery_asap']=$data['delivery_asap'];
 			$details_details['delivery_instruction']=$data['delivery_instruction'];
 			$details_details['location_name']=$data['location_name'];
@@ -526,18 +481,7 @@ class OrderWrapper
 				);
 			}
 			
-			if($data['payment_type']=="ocr"){
-				if($creditcard_info = FunctionsV3::getCreditCardInfo($data['client_id'],$data['cc_id'])){
-					$details_details['card_information']=array(
-					  'card_name'=>$creditcard_info['card_name'],
-					  'mask_card_number'=>$creditcard_info['credit_card_number'],
-					  'expiration'=>$creditcard_info['expiration_month']."/".$creditcard_info['expiration_yr'],
-					  'billing_address'=>$creditcard_info['billing_address']
-					);
-				}
-			}
-						
-			$raw = Yii::app()->functions->details['raw'];			
+			$raw = Yii::app()->functions->details['raw'];
 						
 			foreach ($raw['item'] as $item){
 				$price = $item['normal_price']; $qty = $item['qty']; $addon_total=0;
@@ -547,17 +491,11 @@ class OrderWrapper
                 $item_total = (integer)$qty* (float) $price; 
                 
                 $item_name=''; $line_items = array(); 
-                                
-                $item_name = FoodItemWrapper::qTranslate($item['item_name'],'item_name',
-                $item['item_name_trans'],$enabled_trans);                
-                
-                $size_name = FoodItemWrapper::qTranslate($item['size_words'],'size_name',
-                isset($item['size_name_trans'])?$item['size_name_trans']:array(),$enabled_trans);                
                 
                 if(!empty($item['size_words'])){
 			   	   $item_name = translate("[item_name] ([size_words])",array(
-			   	     '[item_name]'=>$item_name,
-			   	     '[size_words]'=>$size_name,
+			   	     '[item_name]'=>$item['item_name'],
+			   	     '[size_words]'=>$item['size_words'],
 			   	   ));
 			    } else $item_name = $item['item_name'];
 			    
@@ -569,23 +507,14 @@ class OrderWrapper
 			    			$subitem = array();
 			    			foreach ($sub_item as $sub_item_val) {
 			    				$sub_item_total = (float)$sub_item_val['addon_qty']*(float)$sub_item_val['addon_price'];
-			    				
-			    				$addon_name =  FoodItemWrapper::qTranslate($sub_item_val['addon_name'],'sub_item_name',
-                                isset($sub_item_val['sub_item_name_trans'])?$sub_item_val['sub_item_name_trans']:array(),
-                                $enabled_trans);   
-                                
-                                $addon_category = FoodItemWrapper::qTranslate($sub_item_cat,'subcategory_name',
-                                isset($sub_item_val['subcategory_name_trans'])?$sub_item_val['subcategory_name_trans']:array(),
-                                $enabled_trans);  
-			    				
 			    				$subitem[] = array(
-			    				  'name'=>$addon_name,
+			    				  'name'=>$sub_item_val['addon_name'],
 			    				  'qty'=>$sub_item_val['addon_qty'],
 			    				  'price'=>self::prettyPrice($sub_item_val['addon_price'],$with_symbol),
 			    				  'sub_item_total'=>self::prettyPrice($sub_item_total,$with_symbol),
 			    				);
 			    				$line_sub_item[$sub_item_cat]= array(
-								  'addon_category'=>$addon_category,
+								  'addon_category'=>$sub_item_cat,
 								  'item'=>$subitem
 								);
 			    			}
@@ -595,22 +524,6 @@ class OrderWrapper
                 			    
 			    $item_total_price = (float)$qty*(float)$price;
 			    
-			    $cooking_ref = FoodItemWrapper::qTranslate($item['cooking_ref'],'cooking_name',
-                isset($item['cooking_name_trans'])?$item['cooking_name_trans']:array(),$enabled_trans);
-                
-                $ingredients = array();  $resp_ingredients='';
-                if(isset($item['ingredients'])){
-                   if(is_array($item['ingredients']) && count($item['ingredients'])>=1){
-                   	  foreach ($item['ingredients'] as $ingredients_name) {
-                   	  	 if(!$resp_ingredients = FoodItemWrapper::getIngredientsByName($ingredients_name,$enabled_trans)){
-                   	  	 	$resp_ingredients = stripslashes($ingredients_name);
-                   	  	 }
-                   	  	 $ingredients[]=$resp_ingredients;
-                   	  }
-                   }
-                }
-                
-			    
 			    $line_items[]=array(
 			      'name'=>$item_name,
 			      'qty'=>$qty,
@@ -618,18 +531,14 @@ class OrderWrapper
 			      'discount'=>$item['discount'],
 			      'price_after_discount'=>self::prettyPrice($price,$with_symbol),
 			      'item_total_price'=>self::prettyPrice($item_total_price,$with_symbol),
-			      'cooking_ref'=>$cooking_ref,
+			      'cooking_ref'=>$item['cooking_ref'],
 			      'order_notes'=>$item['order_notes'],
-			      'ingredients'=>$ingredients,
+			      'ingredients'=>$item['ingredients'],
 			      'sub_item'=>$line_sub_item
 			    );
 			    
-			    $category_name = FoodItemWrapper::qTranslate($item['category_name'],'category_name',
-			    isset($item['category_name_trans'])?$item['category_name_trans']:array()
-                ,$enabled_trans);   
-                
                 $order_details[]=array(
-                  'category_name'=>$category_name,
+                  'category_name'=>$item['category_name'],
                   'item'=>$line_items
                 );
 			}			
@@ -638,56 +547,18 @@ class OrderWrapper
 			$total_details = array();
 			$total = $raw['total'];
 			
-			$total_details['apply_food_tax'] = $data['apply_food_tax'];
-			
-			/*EURO TAX*/
-			if($data['apply_food_tax']==1 && $data['tax']>0){		
-										
-				$grand_total = isset($total['subtotal'])?(float)$total['subtotal']:0;
-				$grand_total+= isset($total['delivery_charges'])?(float)$total['delivery_charges']:0;
-				$grand_total+= isset($total['merchant_packaging_charge'])?(float)$total['merchant_packaging_charge']:0;
-				$grand_total+= isset($total['service_fee'])?(float)$total['service_fee']:0;
-				$grand_total+= isset($total['card_fee'])?(float)$total['card_fee']:0;
-				$grand_total+= isset($total['tips'])?(float)$total['tips']:0;				
-				
-				/*$grand_total-= isset($total['less_voucher'])?(float)$total['less_voucher']:0;
-				$grand_total-= isset($total['pts_redeem_amt'])?(float)$total['pts_redeem_amt']:0;
-				$grand_total-= isset($total['discounted_amount'])?(float)$total['discounted_amount']:0;	*/			
-				//dump($grand_total);
-				$new_sub_total = $grand_total/($data['tax']+1);				
-				$taxable_total = (float)$grand_total - (float)$new_sub_total;				
-				
-				$total['subtotal'] = $new_sub_total;
-				$total['taxable_total'] = $taxable_total;
-				$total['total'] = $grand_total;	
-			}
-			
-			
 			if($total['less_voucher']>0){
 				$total_details['less_voucher']=self::prettyPrice($total['less_voucher'],$with_symbol);
 			}
 			if($total['pts_redeem_amt']>0){
 				$total_details['pts_redeem_amt']=self::prettyPrice($total['pts_redeem_amt'],$with_symbol);
 			}
-			
-			if($total['discounted_amount']>0){
-				$total_details['discounted_amount']=self::prettyPrice($total['discounted_amount'],$with_symbol);
-				$total_details['merchant_discount_amount']=$total['merchant_discount_amount']."%";
-			}
-			
 			if($total['subtotal']>0){
 				$total_details['subtotal']=self::prettyPrice($total['subtotal'],$with_symbol);
 			}
 			if($total['delivery_charges']>0){
 				$total_details['delivery_charges']=self::prettyPrice($total['delivery_charges'],$with_symbol);
 			}
-			
-			if(isset($total['service_fee'])){
-			if($total['service_fee']>0){
-				$total_details['service_fee']=self::prettyPrice($total['service_fee'],$with_symbol);
-			}
-			}
-			
 			if($total['merchant_packaging_charge']>0){
 				$total_details['packaging_charge']=self::prettyPrice($total['merchant_packaging_charge'],$with_symbol);
 			}
@@ -703,17 +574,10 @@ class OrderWrapper
 				  'label'=>translate("Tips [tips]",array('[tips]'=> $total['tips_percent'] ))
 				);
 			}
-			
-			if(isset($total['card_fee'])){
-			if($total['card_fee']>0){
-				$total_details['card_fee']=self::prettyPrice($total['card_fee'],$with_symbol);
-			}
-			}
-			
 			if($total['total']>0){
 				$total_details['total'] = self::prettyPrice($total['total'],$with_symbol);
 			}
-									
+						
 			return array(
 			  'order_data'=>$details_details,
 			  'order_details'=>$order_details,
@@ -1046,8 +910,7 @@ class OrderWrapper
 	public static function prettyPrice($amount=0, $with_symbol=true)
 	{
 		if($with_symbol){
-			//return FunctionsV3::prettyPrice($amount);
-			return Merchant_utility::formatNumber($amount);
+			return FunctionsV3::prettyPrice($amount);
 		} else {
 			$amount = $amount>0?$amount:0;
 			return normalPrettyPrice($amount);
@@ -1056,7 +919,7 @@ class OrderWrapper
 	
 	public static function canChangeOrderStatus($order=array())
 	{
-		/*$date_now=date('Y-m-d');
+		$date_now=date('Y-m-d');
 		$can_edit=Yii::app()->functions->getOptionAdmin('merchant_days_can_edit_status');								
 		if (is_numeric($can_edit)){
 			$base_option=getOptionA('merchant_days_can_edit_status_basedon');	    										
@@ -1069,43 +932,7 @@ class OrderWrapper
 				}		    			
 			}	    		
 		}
-		return true;*/
-		
-		$datenow=date('Y-m-d g:i:s a');  
-        $edit_days = (integer) Yii::app()->functions->getOptionAdmin('merchant_days_can_edit_status');
-        $edit_times =  Yii::app()->functions->getOptionAdmin('merchant_time_can_edit_status');
-
-        if($edit_days>0 || !empty($edit_times)){
-        	$base_option=getOptionA('merchant_days_can_edit_status_basedon');
-        	if ( $base_option==2){	    					
-				if(!empty($order['delivery_time'])){
-				   $date_created=date("Y-m-d g:i:s a",strtotime($order['delivery_date']." ".$order['delivery_time']));
-				} else $date_created=date("Y-m-d g:i:s a",strtotime($order['delivery_date']." ".$order['date_created']));
-			} else $date_created=date("Y-m-d g:i:s a",strtotime($order['date_created']));	    	
-			
-			$date_interval=Yii::app()->functions->dateDifference($date_created,$datenow); 			
-			if (is_array($date_interval) && count($date_interval)>=1){
-				if ( $date_interval['days']>$edit_days){
-					return false;
-				}
-								
-				if(!empty($edit_times)){
-					$times = explode(":",$edit_times);		    						    					
-			        $hour = isset($times[0])?(integer)$times[0]:0;	    					
-			        $minute = isset($times[1])?(integer)$times[1]:0;
-			        if($hour>0){
-						if($date_interval['hours']>$hour){
-							return false;
-						}	    					
-					} else {	    						
-						if($date_interval['minutes']>$minute){
-							return false;
-						}	    					
-					}	    				
-				}
-			}
-        }
-        return true;
+		return true;
 	}
 	
 	public static function updateTaskDeliveryDate($order_id='',$estimation_delay=0)
@@ -1140,41 +967,6 @@ class OrderWrapper
 	  	    return true;
         }
         return false;     
-	}
-	
-	public static function validateChangeStatus($order_id='', $status='')
-	{
-		$stmt="
-		SELECT id,order_id,status FROM {{order_history}}
-		WHERE order_id=".q( (integer) $order_id )."
-		ORDER BY id DESC
-		LIMIT 0,1
-		";
-		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){			
-			if($status==$res['status']){
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	public static function updateTaskStatus($order_id='', $status='')
-	{
-		if(!Yii::app()->db->schema->getTable("{{driver_task}}")){
-			return false;
-		}
-		
-		$params = array(
-		 'status'=>$status,
-		 'date_modified'=>FunctionsV3::dateNow(),
-		 'ip_address'=>$_SERVER['REMOTE_ADDR']
-		);
-		Yii::app()->db->createCommand()->update("{{driver_task}}",$params,
-  	    'order_id=:order_id',
-	  	    array(
-	  	      ':order_id'=>(integer)$order_id
-	  	    )
-  	    );
 	}
 	
 }

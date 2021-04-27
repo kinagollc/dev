@@ -1,7 +1,6 @@
 <?php
 class FoodItemWrapper
 {
-	public static $last_inserted_id = 0;
 
 	public static function isMultiLanguage()
     {
@@ -411,7 +410,6 @@ class FoodItemWrapper
 	          ->queryRow();		
 			if(!$resp){
 				if(Yii::app()->db->createCommand()->insert("{{category}}",$params)){
-					self::$last_inserted_id = Yii::app()->db->getLastInsertID();
 					return true;
 				} else throw new Exception( "Failed cannot insert records" );
 			} else throw new Exception( "Category name already exist" );
@@ -450,8 +448,7 @@ class FoodItemWrapper
 	      ->queryRow();	
 	      if($resp){
 	      	if($strip){
-	      		// $resp = Yii::app()->request->stripSlashes($resp);
-	      		return $resp;
+	      	   $resp = Yii::app()->request->stripSlashes($resp);
 	      	}
 	      	return $resp;
 	      } else throw new Exception( "Record not found" );	      
@@ -493,7 +490,6 @@ class FoodItemWrapper
 	          ->queryRow();		
 			if(!$resp){
 				if(Yii::app()->db->createCommand()->insert("{{subcategory}}",$params)){
-					self::$last_inserted_id = Yii::app()->db->getLastInsertID();
 					return true;
 				} else throw new Exception( "Failed cannot insert records" );
 			} else throw new Exception( "Category name already exist" );
@@ -604,7 +600,6 @@ class FoodItemWrapper
 	          ->queryRow();		
 			if(!$resp){
 				if(Yii::app()->db->createCommand()->insert("{{size}}",$params)){
-					self::$last_inserted_id = Yii::app()->db->getLastInsertID();
 					return true;
 				} else throw new Exception( "Failed cannot insert records" );
 			} else throw new Exception( "Size name already exist" );
@@ -649,7 +644,6 @@ class FoodItemWrapper
 	          ->queryRow();		
 			if(!$resp){
 				if(Yii::app()->db->createCommand()->insert("{{ingredients}}",$params)){
-					self::$last_inserted_id = Yii::app()->db->getLastInsertID();
 					return true;
 				} else throw new Exception( "Failed cannot insert records" );
 			} else throw new Exception( "Name already exist" );
@@ -707,7 +701,6 @@ class FoodItemWrapper
 	          ->queryRow();		
 			if(!$resp){
 				if(Yii::app()->db->createCommand()->insert("{{cooking_ref}}",$params)){
-					self::$last_inserted_id = Yii::app()->db->getLastInsertID();
 					return true;
 				} else throw new Exception( "Failed cannot insert records" );
 			} else throw new Exception( "Name already exist" );
@@ -783,8 +776,7 @@ class FoodItemWrapper
 	          ->queryRow();		
 			if(!$resp){								
 				if(Yii::app()->db->createCommand()->insert("{{subcategory_item}}",$params)){
-					self::$last_inserted_id = Yii::app()->db->getLastInsertID();
-					self::subitemRelationship( self::$last_inserted_id ,$categories);
+					self::subitemRelationship(Yii::app()->db->getLastInsertID(),$categories);
 					return true;
 				} else throw new Exception( "Failed cannot insert records" );
 			} else throw new Exception( "Name already exist" );
@@ -1079,7 +1071,6 @@ class FoodItemWrapper
 		} else {
 			if(Yii::app()->db->createCommand()->insert("{{item}}",$params)){
 				$last_id = Yii::app()->db->getLastInsertID();
-				self::$last_inserted_id = $last_id;
 				return $last_id;
 			} else throw new Exception( "Failed cannot insert records" );
 		}
@@ -2078,57 +2069,6 @@ class FoodItemWrapper
 				Yii::app()->db->createCommand()->insert("{{subcategory_item_relationships}}",$params);
 			}
 		}
-	}
-
-	public static function qTranslate($text='',$key='',$data='',$enabled_trans=false)
-	{		
-		$p = new CHtmlPurifier();
-		if(!$enabled_trans){
-			return stripslashes($text);
-		}
-		$key=$key."_trans";				
-		$id=Yii::app()->language;			
-		if(!empty($id)){
-			if (is_array($data) && count($data)>=1){
-				if (isset($data[$key])){					
-					if (array_key_exists($id,(array)$data[$key])){
-						if (!empty($data[$key][$id])){													    
-						    return $p->purify(stripslashes($data[$key][$id]));
-						}
-					}
-				}
-			}
-		}			
-		return $p->purify(stripslashes($text));		
-	}
-		
-	public static function getIngredientsByName($name='',$enabled_trans=false)
-	{		
-		if($enabled_trans && Yii::app()->db->schema->getTable("{{ingredients_translation}}") ){
-			$select = ",		
-			IFNULL((
-			SELECT IF(ingredients_name IS NULL or ingredients_name = '', 
-			a.ingredients_name, ingredients_name) 
-			from {{ingredients_translation}}
-			 where
-			 ingredients_id = a.ingredients_id
-			 and language = ".q(Yii::app()->language)."
-			), a.ingredients_name ) as ingredients_name
-			";
-		} else {
-		   $select = ", ingredients_name";
-		}
-	
-		$stmt="SELECT 
-			ingredients_id $select 
-			FROM {{ingredients}} a
-			WHERE ingredients_name=".q($name)."
-			";		
-				
-		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
-			return stripslashes($res['ingredients_name']);
-		}
-		return false;
 	}
 		
 }
