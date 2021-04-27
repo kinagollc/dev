@@ -8991,6 +8991,19 @@ public static function sticPrettyTime($time='')
 	 	}
 	}
 	
+	public static function getMerchantHeader($merchant_id='',$logo='')
+    {        
+        $upload_path=Yii::getPathOfAlias('webroot')."/upload";     
+        if (!empty($logo)){
+            $merchant_logo=$logo;
+        } else $merchant_logo=Yii::app()->functions->getOption('merchant_photo_bg',$merchant_id);                     
+        if (!empty($merchant_logo)){
+            if (file_exists($upload_path."/".$merchant_logo)){
+               $merchant_logo=uploadURL()."/$merchant_logo";    
+            } else $merchant_logo=assetsURL()."/images/b-2.jpg";
+        } else $merchant_logo=assetsURL()."/images/b-2.jpg";
+        return $merchant_logo;
+    }
 	
     public static function getClientByID($client_id='')
     {
