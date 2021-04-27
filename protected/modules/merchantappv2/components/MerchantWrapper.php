@@ -130,6 +130,15 @@ class MerchantWrapper
 		 'page'=>"cancel_orders.html",
 		 'access_id'=>'allorder'
 		);
+
+		$data[] = array(
+		 'section'=>'3',
+		 'stic_icon'=>"status",			
+		 'icon'=>"2.png",
+		 'label'=>translate("Time"),
+		 'page'=>"order_time_management_list.html",
+		 'access_id'=>'order_settings'
+		);
 		
 		$data[] = array(
 		 'section'=>'3',
@@ -184,6 +193,15 @@ class MerchantWrapper
 		 'label'=>translate("Items"),
 		 'page'=>"item_list.html",
 		 'access_id'=>'FoodItem'
+		);
+
+		$data[] = array(
+		 'section'=>'2',
+		 'stic_icon'=>"items",
+		 'icon'=>"3.png",
+		 'label'=>translate("Invoice"),
+		 'page'=>"invoice_list.html",
+		 'access_id'=>'invoice'
 		);
 
 		$data[] = array(
@@ -342,7 +360,9 @@ class MerchantWrapper
 		 'page'=>"sms_alert.html",
 		 'access_id'=>'smsSettings'
 		);
-		
+
+		$merchantapp_disabled_broadcast = getOptionA('merchantapp_disabled_broadcast');
+		if($merchantapp_disabled_broadcast!=1):
 		$data[] = array(
 		 'section'=>'4',
 		 'stic_icon'=>"push",
@@ -351,6 +371,7 @@ class MerchantWrapper
 		 'page'=>"broadcast_list.html",
 		 'access_id'=>''
 		);
+		endif;
 		
 		return $data;
 	}
@@ -781,7 +802,8 @@ class MerchantWrapper
 		 'order_incoming_status','order_outgoing_status','order_ready_status','merchant_status_disabled',
 		 'merchantapp_enabled_booking','interval_ready_order',
 		 'merchantapp_upload_resize_enabled','merchantapp_upload_resize_width','merchantapp_upload_resize_height',
-		 'print_enabled_printer','merchantapp_privacy_policy_link'
+		 'print_enabled_printer','merchantapp_privacy_policy_link','number_of_alert','merchantapp_remove_accepting_time',
+		 'merchantapp_remove_cancel_status'
 		);
 		if($resp = self::getOptions($name)){
 			foreach ($resp as $val) {
@@ -1122,6 +1144,19 @@ class MerchantWrapper
 		  'content'=>translate("This app collects location data to Improve location accuracy when finding nearby bluetooth printers. Your location can be accessed at any time even when the app is closed or not in use.")
 		);		
 		return $data;
+	}
+
+	public static function dayList()
+	{
+		return array(
+		  'monday'=>t("monday"),
+		  'tuesday'=>t("tuesday"),
+		  'wednesday'=>t("wednesday"),
+		  'thursday'=>t("thursday"),
+		  'friday'=>t("friday"),
+		  'saturday'=>t("saturday"),
+		  'sunday'=>t("sunday")
+		);
 	}	
 		
 }
