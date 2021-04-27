@@ -951,6 +951,17 @@ function callAjax(action,params,buttons)
     			  $(".booking_id_" +  data.details.booking_id ).after("<p class=\"text-muted\">"+ data.msg+"</p>");
     			  $(".booking_id_" +  data.details.booking_id ).remove();
     			break;
+    			
+    			case "loadMenuCategory":
+    			   $(".category-list .theiaStickySidebar").html( data.details.html);
+    			   $("#lazy_current_cat_id").val( parseInt(data.details.category_id) );
+    			   $("#total_cat_paginate").val( parseInt(data.details.total_cat_paginate) );   
+    			       			  
+    			   stopInfiniteScroll(); 				   
+				      setTimeout( function(){ 
+				      reInitLazyLoad();
+			       }, 100); 			   
+    			break;
     			    			    						    	
     			default:
     			   uk_msg_sucess(data.msg);
@@ -992,7 +1003,20 @@ function callAjax(action,params,buttons)
     			break;
     			
     			case "loadMenu":
-    			uk_msg(data.msg);
+    			  //uk_msg(data.msg);
+    			  $(".category-list .theiaStickySidebar").html( '');    			  
+    			  $("#menu-list-wrapper").html( '');
+    			break;
+    			
+    			case "loadMenuCategory":
+    			   $(".category-list .theiaStickySidebar").html( '');
+    			   $("#lazy_current_cat_id").val( 0 );
+    			   $("#total_cat_paginate").val( 0 );   
+    			       			  
+    			   stopInfiniteScroll(); 				   
+				      setTimeout( function(){ 
+				      reInitLazyLoad();
+			       }, 100); 			   
     			break;
     			
     			default: 
@@ -2003,9 +2027,25 @@ function loadSkedMenu(date_selected)
 {
 	dump('loadSkedMenu =>' + date_selected);	
 	if( !empty(website_use_date_picker) ){
-		if (enabled_category_sked==1){
-			callAjax("loadMenu",'merchant_id=' + merchant_information.merchant_id + "&date_selected="+date_selected);
-		} 
+		
+		$menu_lazyload = '';
+		if ((typeof  menu_lazyload !== "undefined") && ( menu_lazyload !== null)) {	
+			$menu_lazyload = menu_lazyload;
+		}
+				
+		if($menu_lazyload==1 && enabled_category_sked==1){					    
+		    $params = 'merchant_id=' + merchant_information.merchant_id + "&date_selected="+date_selected;
+			$params+="&delivery_time=" + $("#delivery_time").val();								    		     			
+			callAjax("loadMenuCategory", $params );
+		} else if ($menu_lazyload==1 && enabled_category_sked_time==1){					    	
+			$params = 'merchant_id=' + merchant_information.merchant_id + "&date_selected="+date_selected;
+			$params+="&delivery_time=" + $("#delivery_time").val();								    		     			
+			callAjax("loadMenuCategory", $params );
+		} else if (enabled_category_sked==1){
+			$params = 'merchant_id=' + merchant_information.merchant_id + "&date_selected="+date_selected;
+			$params+="&delivery_time=" + $("#delivery_time").val();
+			callAjax("loadMenu", $params );
+		}
 	} 
 }
 
@@ -2511,7 +2551,9 @@ initLazyLoad = function(){
 				
 			  $total_cat = parseInt($("#total_cat_paginate").val());			  
 			  if ( this.loadCount < $total_cat ) {			  
-			  	 $params = 'merchant_id='+merchant_information.merchant_id+'&page='+ this.pageIndex;			  	 
+			  	 $params = 'merchant_id='+merchant_information.merchant_id+'&page='+ this.pageIndex;		
+			  	 $params+="&delivery_date="+ $("#delivery_date").val();	  	 
+			  	 $params+="&delivery_time="+ $("#delivery_time").val();	  	 
 			  	 
 			  	 if(lazy_use_mobile==1){
 			  	 	return sites_url  + '/lazymenu?'+$params;

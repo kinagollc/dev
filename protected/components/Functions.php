@@ -1637,58 +1637,7 @@ class Functions extends CApplicationComponent
                    array('visible'=>$this->AA('voguepay'),'tag'=>'voguepay',
                    'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","voguepay"), 
                    'url'=>array('admin/voguepay')),  
-                   
-                   array('visible'=>$this->AA('tap'),'tag'=>'tap',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","Tap"), 
-                   'url'=>array('admin/tap')),  
-                   
-                   array('visible'=>$this->AA('paymongo'),'tag'=>'paymongo',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","paymongo"), 
-                   'url'=>array('admin/paymongo')),  
-                   
-                   array('visible'=>$this->AA('redsys'),'tag'=>'redsys',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","redsys"), 
-                   'url'=>array('admin/redsys')),                    
-                   
-                   array('visible'=>$this->AA('xendit'),'tag'=>'xendit',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","xendit"), 
-                   'url'=>array('admin/xendit')),                    
-                   
-                   array('visible'=>$this->AA('culqi'),'tag'=>'culqi',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","culqi"), 
-                   'url'=>array('admin/culqi')),                    
-                   
-                   array('visible'=>$this->AA('flutterwave'),'tag'=>'flutterwave',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","flutterwave"), 
-                   'url'=>array('admin/flutterwave')),                    
-                   
-                   array('visible'=>$this->AA('paystack'),'tag'=>'paystack',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","paystack"), 
-                   'url'=>array('admin/paystack')),                    
-                   
-                   array('visible'=>$this->AA('scanpay'),'tag'=>'scanpay',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","scanpay"), 
-                   'url'=>array('admin/scanpay')),                    
-                   
-                   array('visible'=>$this->AA('billplz'),'tag'=>'billplz',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","billplz"), 
-                   'url'=>array('admin/billplz')),                    
-                   
-                   array('visible'=>$this->AA('toyyibpay'),'tag'=>'toyyibpay',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","toyyibpay"), 
-                   'url'=>array('admin/toyyibpay')),                    
-                   
-                   array('visible'=>$this->AA('amanpay'),'tag'=>'amanpay',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","amanpay"), 
-                   'url'=>array('admin/amanpay')),                    
-                   
-                   array('visible'=>$this->AA('sofort'),'tag'=>'sofort',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","sofort"), 
-                   'url'=>array('admin/sofort')),                    
-                   
-                   array('visible'=>$this->AA('sofort'),'tag'=>'payhere',
-                   'label'=>'<i class="fa fa-paypal"></i>'.Yii::t("default","payhere"), 
-                   'url'=>array('admin/payhere')),                    
+                                      
                     
                  )),                               
                  
@@ -4011,6 +3960,8 @@ $htm.='<div class="b uk-text-muted">'. Price_Formatter::formatNumber($addon_raw_
 			        	$merchant_spend_amount=$promo_res['offer_price'];
 			        	$merchant_discount_amount=number_format($promo_res['offer_percentage'],0);
 			        	
+			        	$merchant_spend_amount = (float)$merchant_spend_amount * (float)$exchange_rate;
+			        	
 			        	if($offer_continue){
 				        	if ( $subtotal>=$merchant_spend_amount){
 				        				
@@ -4048,8 +3999,26 @@ $htm.='<div class="b uk-text-muted">'. Price_Formatter::formatNumber($addon_raw_
 		        if ( $data['delivery_type']=="delivery"){
 		        	
 		        	if(!isset($_GET['backend'])){
-			        	$free_delivery_above_price=Yii::app()->functions->getOption("free_delivery_above_price",$mid);
-			        	if (!empty($free_delivery_above_price)){
+			        	$free_delivery_above_price = (float)Yii::app()->functions->getOption("free_delivery_above_price",$mid);
+			        	if (FunctionsV3::isSearchByLocation() && $receipt==false){
+			        	
+			        		$location_data=FunctionsV3::getSearchByLocationData();			        		
+			        			
+			        		if(isset($data['location_data'])){
+			        			if(is_array($data['location_data']) && count($data['location_data'])>=1){
+			        				$location_data = $data['location_data'];
+			        			}			        		
+			        		}		
+			        					        		
+			        		$delivery_fee_resp=FunctionsV3::getLocationDeliveryFeeWithMinimum(
+				    	      $mid,0,0,$location_data
+				    	    );						    	    	
+				    	    if($delivery_fee_resp['free_above_subtotal']>0){
+				    	    	$free_delivery_above_price = (float)$delivery_fee_resp['free_above_subtotal'];
+				    	    }			        	
+			        	}
+			        	if($free_delivery_above_price>0){
+			        		//dump("subtotal=>$subtotal  free_delivery_above_price=>$free_delivery_above_price");
 				        	if ($subtotal>=$free_delivery_above_price){
 				        	   	$delivery_charges=0;
 				        	   	$free_delivery=true;
@@ -4105,7 +4074,21 @@ $htm.='<div class="b uk-text-muted">'. Price_Formatter::formatNumber($addon_raw_
 					    }    	
 				    }
 		        }
+		        		       
+		        
+		        $service_fee = isset($data['service_fee'])?(float)$data['service_fee']:0;    				
+		        $service_fee_taxable = isset($data['service_fee'])?(float)$data['service_fee']:0;
+		        
+		        $service_fee  = (float)$service_fee * (float)$exchange_rate;
+		        $service_fee_taxable  = (float)$service_fee_taxable * (float)$exchange_rate;
 		        		        
+				if(isset($data['service_fee_applytax'])){
+					if(!$data['service_fee_applytax']){
+						$service_fee_taxable = 0;
+					}    				
+				}    		    
+    				
+		         
     		    if ( !empty($tax)){
     				$tax=$tax/100;
     				
@@ -4127,23 +4110,21 @@ $htm.='<div class="b uk-text-muted">'. Price_Formatter::formatNumber($addon_raw_
     					$subtotal_non=0;
     				}  		   
     				
-    				
-    				//$htm.="=>$subtotal - $subtotal_non <br/>";
-    				
+    				    				    				    			    			
     				/*FIXED TAX ISSUE*/
     				if ($subtotal_non>=0.0001){    					
     					$temp_subtotal=$subtotal-$subtotal_non;          					
-    					if($temp_subtotal>0){
-    					   $taxable_subtotal=($temp_subtotal+$temp_delivery_charges+$merchant_packaging_charge)*$tax;
+    					if($temp_subtotal>0){    						
+    					   $taxable_subtotal=($temp_subtotal+$temp_delivery_charges+$merchant_packaging_charge+$service_fee_taxable)*$tax;
     					} else {    				
-    					   if($merchant_packaging_charge>0 && $merchant_packaging_charge>0){
-    					      $taxable_subtotal=($temp_delivery_charges+$merchant_packaging_charge)*$tax;    					   
+    					   if($merchant_packaging_charge>0 && $merchant_packaging_charge>0){    					   	
+    					      $taxable_subtotal=($temp_delivery_charges+$merchant_packaging_charge+$service_fee_taxable)*$tax;    					   
     					   }
     					}
     				} else {    					
-    					$taxable_subtotal=( (float)$subtotal+ (float)$temp_delivery_charges + (float)$merchant_packaging_charge)*$tax;    
+    					$taxable_subtotal=( (float)$subtotal+ (float)$temp_delivery_charges + (float)$merchant_packaging_charge + (float) $service_fee_taxable )*$tax;    
     				}
-    				
+    				    				
     				
     				/*dump($temp_delivery_charges."=>".$merchant_packaging_charge);
     				dump($subtotal);
@@ -4155,7 +4136,8 @@ $htm.='<div class="b uk-text-muted">'. Price_Formatter::formatNumber($addon_raw_
     			//$htm.="TAXABLE=>$taxable_subtotal <br/>";
     			
     				            			
-		        $total=(float)$subtotal + (float)$taxable_subtotal + (float)$delivery_charges + (float)$merchant_packaging_charge;
+		        $total=(float)$subtotal + (float)$taxable_subtotal + (float)$delivery_charges + (float)$merchant_packaging_charge + (float) $service_fee;
+		        
 		        
 		        /*VOUCHER*/
     			    			
@@ -4243,6 +4225,14 @@ $htm.='<div class="b uk-text-muted">'. Price_Formatter::formatNumber($addon_raw_
 			        
 		         }   		
 		         
+		         
+		         if(isset($data['service_fee'])){
+			         if($data['service_fee']>0){
+			         	$htm.=FunctionsV3::receiptRowTotal('Service Fee',
+			            Price_Formatter::formatNumber(  $data['service_fee'] * $exchange_rate )
+			            );
+			         }
+		         }
 		         		         
 		         if (!empty($delivery_charges)){
 		            $htm.=FunctionsV3::receiptRowTotal('Delivery Fee',
@@ -4414,6 +4404,7 @@ $htm.='<div class="b uk-text-muted">'. Price_Formatter::formatNumber($addon_raw_
 		         'calculation_method'=>$calculation_method,
 		         'pts_redeem_amt_orig'=>$pts_redeem_amt_orig,
 		         'less_voucher_orig'=>$less_voucher_orig,		         
+		         'service_fee'=>isset($service_fee)?(float)$service_fee:0
 		       );		
 		       		       
 		       		       
@@ -8728,6 +8719,7 @@ $menu_html.="</li>";
 	    $stringData .= 'POST VAR=>'. json_encode($_POST) . "\n";  
 	    $stringData .= 'GET VAR=>'. json_encode($_GET) . "\n";  
 	    $stringData .= 'PHP_INPUT VAR=>'. json_encode($php_input) . "\n";  
+	    $stringData .= 'PHP_INPUT VAR2=>'. $php_input . "\n";  
 	    $stringData .= 'RESPONSE =>'. json_encode($response) . "\n";  
 	    $stringData .=  "\n"; 
 	    fwrite($fh, $stringData);                         

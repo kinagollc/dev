@@ -1,6 +1,12 @@
 
 <h3><?php echo t("All Orders")?></h3>
 
+
+<div class="uk-width-1">
+<a href="<?php echo Yii::app()->request->baseUrl; ?>/merchant/allorder" class="uk-button"><i class="fa fa-list"></i> <?php echo Yii::t("default","List")?></a>
+
+
+
 <form id="frm_table_list" method="POST" class="report" >
 <input type="hidden" name="action" id="action" value="AllOrdersMerchant">
 <input type="hidden" name="tbl" id="tbl" value="order">

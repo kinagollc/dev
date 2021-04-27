@@ -21,6 +21,8 @@
 		   'voucher_amount'=>$data['voucher_amount'],
 		   'voucher_type'=>$data['voucher_type'],
 		   'tax_set'=>$data['tax'],
+		   'service_fee'=>isset($data['service_fee'])?(float)$data['service_fee']:0,
+		   'service_fee_applytax'=>isset($data['service_fee_applytax'])?(integer)$data['service_fee_applytax']:false,
 	     ),$json_details,true,$data['order_id']);
 	     
 	     /*ITEM TAXABLE*/	     

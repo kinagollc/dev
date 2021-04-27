@@ -2,7 +2,36 @@
 class Item_translation
 {
 	
-	public static function insertTranslation($id='',$primary_key='', $column1 = '', $column2='', $data=array(), $table ='')
+	/*
+	@parameters
+	$data = 
+	Array
+	(
+	    [ar] => ar
+	    [en] => 
+	    [jp] => jp
+	)
+	
+	Array
+	(
+	    [ar] => 
+	    [en] => 
+	    [jp] => 
+	)
+	
+	Item_translation::insertTranslation( 
+	(integer) $cat_id ,
+	'cat_id',
+	'category_name',
+	'category_description',
+	array(	                  
+	  'category_name'=>isset($this->data['category_name_trans'])?$this->data['category_name_trans']:'',
+	  'category_description'=>isset($this->data['category_description_trans'])?$this->data['category_description_trans']:'',
+	),"{{category_translation}}");
+	
+	*/	
+	public static function insertTranslation($id='',$primary_key='', $column1 = '', $column2='', 
+	$data=array(), $table ='')
 	{
 		$params = array();
 		

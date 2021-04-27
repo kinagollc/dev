@@ -82,6 +82,32 @@ if (isset($data['rate_id'])){
   ?>  
 </div>
 
+
+<div class="uk-form-row">
+  <label class="uk-form-label"><?php echo t("Minimum Order")?></label>
+  <?php 
+  echo CHtml::textField('minimum_order',
+  isset($data['minimum_order'])?normalPrettyPrice($data['minimum_order']):''
+  ,array(
+    'class'=>"numeric_only",
+    //'data-validation'=>"required"
+  ));
+  ?>  
+</div>
+
+
+<div class="uk-form-row">
+  <label class="uk-form-label"><?php echo t("Free delivery above sub total")?></label>
+  <?php 
+  echo CHtml::textField('free_above_subtotal',
+  isset($data['free_above_subtotal'])?normalPrettyPrice($data['free_above_subtotal']):''
+  ,array(
+    'class'=>"numeric_only",
+    //'data-validation'=>"required"
+  ));
+  ?>  
+</div>
+
 <div class="uk-form-row">
 <label class="uk-form-label"></label>
 <input type="submit" value="<?php echo Yii::t("default","Save")?>" class="uk-button uk-form-width-medium uk-button-success">

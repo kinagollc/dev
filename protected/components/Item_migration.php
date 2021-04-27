@@ -24,11 +24,12 @@ class Item_migration
 	{
 		$total = 0;
 		if(Yii::app()->db->schema->getTable("{{subcategory_item_relationships}}")){	
+			//LENGTH(category) != 2
 			$stmt="
 			SELECT count(*) as total
 			FROM {{subcategory_item}} a		 
-			WHERE 
-			LENGTH(category) != 2
+			WHERE 			
+			TRIM(IFNULL(category,'')) <> ''
 			AND
 			sub_item_id NOT IN (
 			  select sub_item_id from {{subcategory_item_relationships}}
@@ -64,5 +65,26 @@ class Item_migration
 		return false;
 	}	
 	
+	public static function getItemSubcategoryItem()
+	{
+		if(Yii::app()->db->schema->getTable("{{item_relationship_subcategory_item}}")){	
+			$stmt="
+			SELECT count(*) as total FROM {{item}} a
+			WHERE 
+			TRIM(IFNULL(addon_item,'')) <> ''
+			AND
+			item_id NOT IN (
+			  select item_id from {{item_relationship_subcategory_item}}
+			  where item_id = a.item_id
+			)
+			";			
+			if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
+				if($res['total']>0){
+					return $res['total'];
+				}
+			}
+		}
+		return false;
+	}
 }
 /*end class*/

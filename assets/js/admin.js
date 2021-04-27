@@ -2543,6 +2543,7 @@ function callAjax(action,params,button)
 	 	 	 	break;
 	 	 	 	
 	 	 	 	case "SaveInvoice":
+	 	 	 	case "SaveTimeManagement":
 	 	 	 	close_fb();
 	 	 	 	table_reload();
 	 	 	 	break;
@@ -3422,6 +3423,41 @@ jQuery(document).ready(function() {
 		var $page = $(".migration_"+$id+"_count").val();		
 		processAjax("Migration_"+$id,"total="+ $total + "&page=" + $page , null, 1 );
 	});
+	
+	if( $('.timepick24format').exists() ) { 
+		jQuery('.timepick24format').timepicker({  
+			showPeriod: false,      
+	        hourText: js_lang.Hour,       
+			minuteText: js_lang.Minute,  
+			amPmText: [js_lang.AM, js_lang.PM]
+	    });
+	}
+    
+    if( $('.time_mask').exists() ) { 
+       $('.time_mask').mask('00:00',{
+       	"placeholder":"00:00"
+       });
+    }
+    
+    $( document ).on( "click", ".add_time_management", function() {
+		var params='';
+		params+="&method=get";
+		params+="&lang="+lang;
+		
+		if ((typeof  $(this).data("id") !== "undefined") && ( $(this).data("id")!== null)) {
+		   params+="&id="+ $(this).data("id");		
+		}
+		
+		openFancyboxWindow('TimeManagementForm', params );
+	});
+	
+   $('.merchant_time_order_management').on('ifChecked', function(event){    	    	
+    	processAjax("TimeOrderManagmentSettings","enabled=1");    	
+   });
+   $('.merchant_time_order_management').on('ifUnchecked', function(event){    	    	
+    	processAjax("TimeOrderManagmentSettings","enabled=0");    	
+   });
+      
 
 });
 /*end ready*/
@@ -3521,6 +3557,11 @@ var processAjax = function(action , data , single_call, silent, method , loader_
 	     		  var $id = data.details.id;
 	     		  $(".migration_" + $id ).html( data.msg );
 	     		break;
+	     		
+	     		case "refresh_table_close_fb":
+	 	 	 	close_fb();
+	 	 	 	table_reload();
+	 	 	 	break;
 	     				     		
 	     		default:	     		  
 	     		  uk_msg( data.msg );

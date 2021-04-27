@@ -127,14 +127,28 @@ class ItemClass
 	public static function insertItemRelationshipSubcategory($merchant_id='',$item_id=0, $data=array())
 	{
 		self::deleteItemRelationshipSubcategory($merchant_id,$item_id);
+		self::deleteItemRelationshipSubcategoryItem($merchant_id,$item_id);
+		
 		if(is_array($data) && count($data)>=1){
 			foreach ($data as $subcat_id=>$val) {
 				$params = array(
 				  'merchant_id'=>(integer)$merchant_id,
 				  'item_id'=>(integer)$item_id,
 				  'subcat_id'=>(integer)$subcat_id
-				);				
-				Yii::app()->db->createCommand()->insert("{{item_relationship_subcategory}}",$params);								
+				);	
+				Yii::app()->db->createCommand()->insert("{{item_relationship_subcategory}}",$params);
+				
+				if(is_array($val) && count($val)>=1){
+					foreach ($val as $sub_item_id) {
+						$params_sub = array(
+						  'merchant_id'=>$merchant_id,
+						  'item_id'=>$item_id,
+						  'subcat_id'=>$subcat_id,
+						  'sub_item_id'=>$sub_item_id,
+						);						
+						Yii::app()->db->createCommand()->insert("{{item_relationship_subcategory_item}}",$params_sub);
+					}
+				}				
 			}
 		}
 	}
@@ -142,6 +156,16 @@ class ItemClass
 	public static function deleteItemRelationshipSubcategory($merchant_id='',$item_id='')
 	{
 		$resp = Yii::app()->db->createCommand()->delete('{{item_relationship_subcategory}}', 
+		'merchant_id=:merchant_id AND item_id=:item_id ', 
+		 array( 
+		  ':merchant_id'=>(integer)$merchant_id,
+		  ':item_id'=>(integer)$item_id
+		));		
+	}
+	
+	public static function deleteItemRelationshipSubcategoryItem($merchant_id='',$item_id='')
+	{
+		$resp = Yii::app()->db->createCommand()->delete('{{item_relationship_subcategory_item}}', 
 		'merchant_id=:merchant_id AND item_id=:item_id ', 
 		 array( 
 		  ':merchant_id'=>(integer)$merchant_id,
@@ -540,7 +564,8 @@ class ItemClass
 		  ':ingredients_id'=>(integer)$id
 		));		
 		if($resp){												
-			self::deleteRelationship($id, 'ingredients_id','ingredients_translation');						
+			self::deleteRelationship($id, 'ingredients_id','ingredients_translation');		
+			self::deleteMetaID($merchant_id,'ingredients',$id);				
 			return true;
 		}
 		throw new Exception( "Failed cannot delete records" );	      
@@ -555,7 +580,8 @@ class ItemClass
 		  ':cook_id'=>(integer)$id
 		));		
 		if($resp){											
-			self::deleteRelationship($id, 'cook_id','cooking_ref_translation');						
+			self::deleteRelationship($id, 'cook_id','cooking_ref_translation');
+			self::deleteMetaID($merchant_id,'cooking_ref',$id);
 			return true;
 		}
 		throw new Exception( "Failed cannot delete records" );	      
@@ -591,7 +617,9 @@ class ItemClass
 			self::deleteRelationship($id, 'item_id','item_translation');
 			self::deleteRelationship($id, 'item_id','item_relationship_category');
 			self::deleteRelationship($id, 'item_id','item_relationship_subcategory');
+			self::deleteRelationship($id, 'item_id','item_relationship_subcategory_item');
 			self::deleteRelationship($id, 'item_id','item_relationship_size');
+			self::deleteAllMeta($merchant_id,$id);
 			
 			if(!empty($photo)){
 				FunctionsV3::deleteUploadedFile($photo);
@@ -605,6 +633,145 @@ class ItemClass
 		}
 		throw new Exception( "Failed cannot delete records" );	      
 	}	
+	
+	/*
+	@parameters
+	$meta_id = 
+	    (
+            [0] => 1
+            [1] => 4
+        )
+	*/
+	public static function insertMeta($merchant_id='',$item_id='', $meta_name='', $meta_id=array())
+	{
+		if(!Yii::app()->db->schema->getTable("{{item_meta}}")){
+			return false;
+		}
+		
+		ItemClass::deleteMeta($merchant_id,$item_id, $meta_name);
+		
+		$stmt_insert = '';
+		if(is_array($meta_id) && count($meta_id)>=1){
+			foreach ($meta_id as $id) {				
+				$stmt_insert.= "(NULL,".(integer)$merchant_id.",".q( (integer) $item_id).",".q($meta_name).",".q( (integer) $id)." ),";
+			}
+			$stmt_insert = substr($stmt_insert,0,-1);
+			$stmt = "
+			INSERT INTO {{item_meta}} 
+			VALUES $stmt_insert;
+			";						
+			if(Yii::app()->db->createCommand($stmt)->query()){
+				return true;
+			}
+		}		
+		return false;
+	}
+	
+	public static function deleteMeta($merchant_id='',$item_id='', $meta_name='')
+	{
+		$stmt = "
+		DELETE FROM {{item_meta}}
+		WHERE 
+		merchant_id = ".q( (integer) $merchant_id)."
+		AND item_id = ".q( (integer) $item_id)."
+		AND meta_name = ".q($meta_name)."
+		";				
+		if(Yii::app()->db->createCommand($stmt)->query()){
+			return true;
+		}
+		return false;
+	}
+	
+	public static function deleteAllMeta($merchant_id='',$item_id='')
+	{
+		$resp = Yii::app()->db->createCommand()->delete('{{item_meta}}', 
+		'merchant_id=:merchant_id AND item_id=:item_id ', 
+		 array( 
+		  ':merchant_id'=>(integer)$merchant_id,
+		  ':item_id'=>(integer)$item_id
+		));		
+	}
+	
+	public static function deleteMetaID($merchant_id='',$meta_name='', $meta_id='')
+	{
+		Yii::app()->db->createCommand()->delete('{{item_meta}}', 
+		'merchant_id=:merchant_id AND meta_name=:meta_name AND meta_id=:meta_id', 
+		 array( 
+		  ':merchant_id'=>(integer)$merchant_id,
+		  ':meta_id'=>(integer)$meta_id,
+		  ':meta_name'=>$meta_name
+		));	
+	}
+	
+	public static function deleteDishes($dish_id=0)
+	{							
+		$resp = Yii::app()->db->createCommand()->delete('{{dishes}}', 
+		'dish_id=:dish_id', 
+		 array( 
+		  ':dish_id'=>(integer)$dish_id		  
+		));		
+		if($resp){											
+			//self::deleteRelationship($id, 'dish_id','dish_translation');			
+			$resp = Yii::app()->db->createCommand()->delete('{{item_meta}}', 
+			'meta_name=:meta_name AND meta_id=:meta_id ', 
+			 array( 
+			  ':meta_name'=>'dish',
+			  ':meta_id'=>(integer)$dish_id
+			));		
+						
+			self::deleteRelationship($dish_id, 'dish_id','dishes_translation');
+				
+			return true;
+		}
+		throw new Exception( "Failed cannot delete records" );	      
+	}	
+	
+	public static function getDishes($dish_id=0)
+	{
+		$data = array();
+		$stmt = "
+		SELECT 
+		a.dish_id,
+		a.dish_name,
+		a.photo,
+		a.status,
+		IFNULL(b.language,'default') as language,
+		IFNULL(b.dish_name,'') as  dish_name_trans
+		
+		FROM {{dishes}} a		
+		LEFT JOIN {{dishes_translation}} b
+		ON
+		a.dish_id = b.dish_id
+		
+		WHERE a.dish_id = ".q($dish_id)."
+		";		
+		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
+			foreach ($res as $val) {
+				$data[$val['language']] = array(
+				 'dish_id'=>$val['dish_id'],
+				 'dish_name'=> $val['language']=="default"?$val['dish_name']:$val['dish_name_trans'],
+				 'photo'=>$val['photo'],
+				 'status'=>$val['status'],
+				);
+			}
+			return $data;
+		}
+		return false;
+	}
+	
+	public static function getMerchantCategory($merchant_id=0)
+	{
+		$stmt="
+		SELECT * FROM {{category}}
+		WHERE merchant_id = ".q($merchant_id)."
+		AND status ='publish'		
+		ORDER BY category_name ASC
+		";
+		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
+			return $res;
+		}
+		return false;
+	}
 	
 }
 /*end class*/

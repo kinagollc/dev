@@ -7,16 +7,6 @@
 
 </div>
 
-<?php 
-if (isset($_GET['id'])){
-	if (!$data=Yii::app()->functions->GetDish($_GET['id'])){
-		echo "<div class=\"uk-alert uk-alert-danger\">".
-		Yii::t("default","Sorry but we cannot find what your are looking for.")."</div>";
-		return ;
-	}
-}
-?>                                   
-
 <div class="spacer"></div>
 
 <form class="uk-form uk-form-horizontal forms" id="forms">
@@ -26,6 +16,56 @@ if (isset($_GET['id'])){
 <?php echo CHtml::hiddenField("redirect",Yii::app()->request->baseUrl."/admin/dishes/Do/Add")?>
 <?php endif;?>
 
+<?php if ( Yii::app()->functions->multipleField()==2):?>
+
+<ul data-uk-tab="{connect:'#tab-content'}" class="uk-tab uk-active">
+    <li class="uk-active" ><a href="#"><?php echo t("default")?></a></li>    
+    <?php if ( $fields=FunctionsV3::getLanguageList(false)):?>  
+    <?php foreach ($fields as $f_val): ?>
+    <li class="" ><a href="#"><?php echo $f_val;?></a></li>
+    <?php endforeach;?>
+    <?php endif;?>
+</ul>
+
+<ul class="uk-switcher" id="tab-content">
+
+  <li class="uk-active">      
+  
+  <div class="uk-form-row">
+   <label class="uk-form-label"><?php echo Yii::t("default","Dish Name")?></label>
+  <?php echo CHtml::textField('dish_name',
+  isset($data['default'])?$data['default']['dish_name']:''
+  ,array(
+  'class'=>'uk-form-width-large',
+  'data-validation'=>"required"
+  ))?>  
+    </div>    
+    
+    <div style="height:10px;"></div>
+  
+   </li>
+      
+   <?php if (is_array($fields) && count($fields)>=1):?>
+   <?php foreach ($fields as $key_f => $f_val):?>
+   <li>   
+   <div class="uk-form-row">
+	   <label class="uk-form-label"><?php echo Yii::t("default","Dish Name")?></label>
+	  <?php echo CHtml::textField("dish_name_trans[$key_f]",
+	  isset($data[$f_val])?$data[$f_val]['dish_name']:''
+	  ,array(
+	  'class'=>'uk-form-width-large',
+	  ))?>  
+   </div>    
+   
+   <div style="height:10px;"></div>
+   
+   </li>
+   <?php endforeach;?>
+   <?php endif;?>
+</ul>
+
+
+<?php else :?>
 
 <div class="uk-form-row">
   <label class="uk-form-label"><?php echo Yii::t("default","Dish Name")?></label>
@@ -35,7 +75,7 @@ if (isset($_GET['id'])){
   ,array('class'=>"uk-form-width-large",'data-validation'=>"required"))
   ?>
 </div>
-
+<?php endif;?>
 
 <div class="uk-form-row"> 
   <label class="uk-form-label"><?php echo t("Upload Icon")?></label>
@@ -48,7 +88,7 @@ if (isset($_GET['id'])){
 
 <div class="image_preview">
  <?php 
- $image=isset($data['photo'])?$data['photo']:'';
+ $image=isset($data['default']['photo'])?$data['default']['photo']:'';
  if(!empty($image)){
  	echo '<img src="'.FunctionsV3::getImage($image).'" class="uk-thumbnail" id="logo-small"  />';
  	echo CHtml::hiddenField('spicydish',$image);

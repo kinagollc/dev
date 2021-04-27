@@ -509,10 +509,10 @@ function form_submit(formid)
         				window.location.href = sites_url+"/paypalinit/?id="+data.details.order_id ;
         				break;
         				
-        				case "stp":
+        				/*case "stp":
         				case "stripe":        				
         				window.location.href = sites_url+"/stripeinit/?id="+data.details.order_id;
-        				break;
+        				break;*/
         				
         				case "mcd":
         				//case "mercadopago":        				
@@ -527,9 +527,9 @@ function form_submit(formid)
         				window.location.href = sites_url+"/sisowinit/?id="+data.details.order_id;
         				break;
         				
-        				case "payu":        				
+        				/*case "payu":        				
         				window.location.href = sites_url+"/payuinit/?id="+data.details.order_id;
-        				break;
+        				break;*/
         				
         				case "pys":        			
         				window.location.href = sites_url+"/payserainit/?id="+data.details.order_id;
@@ -543,13 +543,13 @@ function form_submit(formid)
         				window.location.href = sites_url+"/epyinit/?id="+data.details.order_id;
         				break;
         				
-        				case "atz":
+        				/*case "atz":
         				window.location.replace(sites_url+"/atzinit/?id="+data.details.order_id);
-        				break;
+        				break;*/
         				
-        				case "btr":        				
+        				/*case "btr":        				
         				window.location.href = sites_url+"/btrinit/?id="+data.details.order_id;
-        				break;
+        				break;*/
         				
         				case "mol":        				
         				window.location.href = sites_url+"/mollieinit/?id="+data.details.order_id;
@@ -1069,7 +1069,20 @@ jQuery(document).ready(function() {
    });
    
    if( $('.item-order-wrap').is(':visible') ) {	
-      load_item_cart();
+   	
+   	  if ((typeof  is_mobile !== "undefined") && ( is_mobile !== null)) {   	  	 
+   	  	 var mobile_set_transaction_type = $.cookie('mobile_set_transaction_type');   	  	 
+   	  	 if ((typeof  mobile_set_transaction_type !== "undefined") && ( mobile_set_transaction_type !== null)) {
+   	  	 	$("#delivery_type").val( mobile_set_transaction_type );   	  	 	
+   	  	 	setTimeout(function () {
+               load_item_cart();
+            }, 500);        	
+   	  	 } else {
+   	  	 	load_item_cart();
+   	  	 }   	  
+   	  } else {
+   	  	 load_item_cart();
+   	  }       	        
    }
       
    $( document ).on( "click", ".delete_item", function() {    	
@@ -2012,11 +2025,11 @@ function load_item_cart()
 		//
 	} else { 
 		$transaction_type = $("#delivery_type").val();				
-		if($transaction_type=="delivery" || $transaction_type=="pickup"){
-            $(".opt_contact_delivery_wrap").show();
-        } else {
-            $(".opt_contact_delivery_wrap").hide();
-        }
+		if($transaction_type=="delivery"){
+			$(".opt_contact_delivery_wrap").show();
+		} else {
+			$(".opt_contact_delivery_wrap").hide();
+		}
 	}
 		
 	busy(true);
@@ -2545,25 +2558,36 @@ function fb_register(object)
 	        		if (!empty(data.details.redirectverify)){
 	        			uk_msg_sucess(data.msg);
 	        			if ($("#redirect").exists()){
-	        			   window.location.href = data.details.redirectverify+"&checkout=true"; 
+	        			   window.location.href = data.details.redirectverify+"&checkout=true"; 	        			   
 	        			} else {
-	        			   window.location.href = data.details.redirectverify; 
+	        			   window.location.href = data.details.redirectverify; 	        			
 	        			}
 	        			return;
 	        		}
         		}
-        		        		
-        		if ( $(".section-checkout").exists() ){        			
-        			window.location.href = $("#redirect").val();
-        		}	
-        		            		    	
-        		if ( $("#single_page").exists() ){
-        			if ((typeof  data.details.redirect !== "undefined") && ( data.details.redirect !== null)) {
-        				window.location.href=data.details.redirect;
-        			} else {
-        			    window.location.href=home_url;
+        		        		        		        		            		    
+        		if ( $("#single_page").exists() ){        			
+        			if ((typeof  data.details !== "undefined") && ( data.details !== null)) {
+	        			if ((typeof  data.details.redirect !== "undefined") && ( data.details.redirect !== null)) {
+	        				window.location.href=data.details.redirect;
+	        			} else {
+	        			    window.location.href=home_url;
+	        			    return ;
+	        			}
+        			} else {        				
+        				window.location.href=home_url;
+        				return ;
         			}
         		}		
+        		
+        		if ( $(".section-checkout").exists() ){  
+        			if ( $("#redirect").exists() ){      			
+        			   window.location.href = $("#redirect").val();
+        			} else {
+        			   window.location.href=home_url;
+        			}
+        			return ;
+        		}	
         		
         		close_fb();
         	} else {
@@ -2909,6 +2933,11 @@ jQuery(document).ready(function() {
 			$(".pickup-min").hide();
 			$(".dinein-min").hide();
 		}
+
+		if ((typeof  is_mobile !== "undefined") && ( is_mobile !== null)) { 	
+		    $.cookie('mobile_set_transaction_type', delivery_type , { expires: 500, path: '/' }); 
+		}
+		
     	load_item_cart();
     });	    
     

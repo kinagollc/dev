@@ -190,7 +190,8 @@ class CronController extends CController
 	
 	public function actionFax()
 	{
-		$msg='';		
+		$msg='';
+		//$send_fax_link='https://www.faxage.com/httpsfax.php';
 		$send_fax_link='https://api.faxage.com/httpsfax.php';
 		
 		$db_ext=new DbExt;

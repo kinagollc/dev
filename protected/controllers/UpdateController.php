@@ -1966,6 +1966,129 @@ echo "(Done)<br/>";
 		} else $loger[] = "Create table {{view_rs_category}} failed";
 		/*END 5.4.3*/
 		
+		
+		/*START 5.4.4*/
+		if(!Yii::app()->db->schema->getTable("{{item_meta}}")){		
+		 Yii::app()->db->createCommand()->createTable(
+	      "{{item_meta}}",
+	      array(
+	        'id'=>'pk',
+	        'merchant_id'=>"integer(14) NOT NULL DEFAULT '0'",
+            'item_id'=>"integer(14) NOT NULL DEFAULT '0'",
+            'meta_name'=>"varchar(255) NOT NULL DEFAULT ''", 
+            'meta_id'=>"integer(14) NOT NULL DEFAULT '0'", 
+	      ),
+		 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+		}
+		$this->addIndex("item_meta","merchant_id");
+		$this->addIndex("item_meta","item_id");
+		$this->addIndex("item_meta","meta_name");
+		$this->addIndex("item_meta","meta_id");
+		
+		
+		if(!Yii::app()->db->schema->getTable("{{item_relationship_subcategory_item}}")){		
+		 Yii::app()->db->createCommand()->createTable(
+	      "{{item_relationship_subcategory_item}}",
+	      array(
+	        'id'=>'pk',
+	        'merchant_id'=>"integer(14) NOT NULL DEFAULT '0'",
+            'item_id'=>"integer(14) NOT NULL DEFAULT '0'",
+            'subcat_id'=>"integer(14) NOT NULL DEFAULT '0'",
+            'sub_item_id'=>"integer(14) NOT NULL DEFAULT '0'"
+	      ),
+		 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+		}
+		$this->addIndex("item_relationship_subcategory_item","merchant_id");
+		$this->addIndex("item_relationship_subcategory_item","item_id");
+		$this->addIndex("item_relationship_subcategory_item","subcat_id");
+		$this->addIndex("item_relationship_subcategory_item","sub_item_id");
+		
+		
+		if(!Yii::app()->db->schema->getTable("{{dishes_translation}}")){		
+		 Yii::app()->db->createCommand()->createTable(
+	      "{{dishes_translation}}",
+	      array(
+	        'id'=>'pk',
+	        'dish_id'=>"integer(14) NOT NULL DEFAULT '0'",
+            'language'=>"varchar(100) NOT NULL DEFAULT ''",
+            'dish_name'=>"varchar(255) NOT NULL DEFAULT ''"
+	      ),
+		 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+		}
+		$this->addIndex("dishes_translation","dish_id");
+		$this->addIndex("dishes_translation","language");
+		$this->addIndex("dishes_translation","dish_name");
+		
+		
+		if(!Yii::app()->db->schema->getTable("{{order_time_management}}")){		
+		 Yii::app()->db->createCommand()->createTable(
+	      "{{order_time_management}}",
+	      array(
+	        'id'=>'pk',
+	        'group_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	        'merchant_id'=>"integer(14) NOT NULL DEFAULT '0'",
+	        'transaction_type'=>"varchar(100) NOT NULL DEFAULT ''",
+            'days'=>"varchar(200) NOT NULL DEFAULT ''",
+            'start_time'=>"varchar(5) NOT NULL DEFAULT ''",
+            'end_time'=>"varchar(5) NOT NULL DEFAULT ''",
+            'number_order_allowed'=>"integer(14) NOT NULL DEFAULT '0'",
+            'order_status'=>"text"
+	      ),
+		 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
+		}		
+		$this->addIndex("order_time_management","group_id");
+		$this->addIndex("order_time_management","merchant_id");
+		$this->addIndex("order_time_management","transaction_type");
+		$this->addIndex("order_time_management","days");
+		$this->addIndex("order_time_management","start_time");
+		$this->addIndex("order_time_management","end_time");
+		
+        echo "Updating table order_delivery_address<br/>";
+		$new_field=array( 
+		   'service_fee'=>"float(14,5) NOT NULL DEFAULT '0'",
+		   'service_fee_applytax'=>"integer(14) NOT NULL DEFAULT '0'",
+		);
+		$this->alterTable('order_delivery_address',$new_field);
+
+			
+		$new_field=array( 
+		   'free_above_subtotal'=>"float(14,5) NOT NULL DEFAULT '0' AFTER fee",
+		   'minimum_order'=>"float(14,5) NOT NULL DEFAULT '0' AFTER fee",		   		   
+		);
+		$this->alterTable('location_rate',$new_field);
+		
+		$new_field=array( 
+		   'monday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'monday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'tuesday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'tuesday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'wednesday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'wednesday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'thursday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'thursday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'friday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'friday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'saturday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'saturday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'sunday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+		   'sunday_end'=>"varchar(5) NOT NULL DEFAULT ''"
+		);
+		$this->alterTable('category',$new_field);
+		
+		$new_field=array( 
+		   'min_order'=>"float(14,5) NOT NULL DEFAULT '0'",
+		   'monday'=>"int(1) NOT NULL DEFAULT '0'",
+		   'tuesday'=>"int(1) NOT NULL DEFAULT '0'",
+		   'wednesday'=>"int(1) NOT NULL DEFAULT '0'",
+		   'thursday'=>"int(1) NOT NULL DEFAULT '0'",
+		   'friday'=>"int(1) NOT NULL DEFAULT '0'",
+		   'saturday'=>"int(1) NOT NULL DEFAULT '0'",
+		   'sunday'=>"int(1) NOT NULL DEFAULT '0'",
+		);
+		$this->alterTable('voucher_new',$new_field);
+		
+		/*END 5.4.4*/
+		
 		/*ADD INDEX*/
 		/*MERCHANT TABLE*/
 		$this->addIndex("merchant","restaurant_slug");
@@ -2303,6 +2426,8 @@ echo "(Done)<br/>";
 		a.area_id,
 		e.name as area_name,
 		a.fee,
+		a.minimum_order,
+		a.free_above_subtotal,
 		a.sequence,
 		a.date_created,
 		a.date_modified,
@@ -2382,6 +2507,14 @@ echo "(Done)<br/>";
 		b.dinein_special_instruction,
 		b.dinein_table_number,
 		b.opt_contact_delivery,
+		b.estimated_time,
+		b.estimated_date_time,
+		b.used_currency,
+		b.base_currency,
+		b.exchange_rate,
+		b.service_fee,
+		b.service_fee_applytax,
+		
 		c.payment_customer_id ,
 		c.payment_customer_type,
 		a.merchant_id,

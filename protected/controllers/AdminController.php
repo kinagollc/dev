@@ -208,7 +208,7 @@ class AdminController extends CController
 				/*if(FunctionsV3::checkNewDb()){					
 					$this->needs_db_update = true;
 				}*/
-				
+								
 				/*CHECK FOR UPDATE DATABASE*/
 			    if(FunctionsV3::checkNewDb()){				
 				    $this->redirect(Yii::app()->createUrl('/update'));
@@ -611,7 +611,7 @@ class AdminController extends CController
 		     'customer_verification_code_email'=>array(
 		        'email'=>true,
 		        'sms'=>false,
-		        'email_tag'=>'firstname,lastname,code,sitename,siteurl',		        
+		        'email_tag'=>'firstname,lastname,code,sitename,siteurl,verification_link',		        
 		      ),
 		      'customer_verification_code_sms'=>array(
 		        'email'=>false,
@@ -678,14 +678,14 @@ class AdminController extends CController
 		       'sms'=>true,		        
 		       'push'=>false,
 		       'email_tag'=>'order_id,customer_name,restaurant_name,total_amount,receipt,sitename,siteurl', 
-		       'sms_tag'=>'order_id,customer_name,restaurant_name,total_amount,order_details,sitename,siteurl',
+		       'sms_tag'=>'order_id,customer_name,restaurant_name,total_amount_order,order_details,sitename,siteurl',
 		     ),
 		     'receipt_send_to_merchant'=>array(
 		       'email'=>true,
 		       'sms'=>true,		        
 		       'push'=>true,
 		       'email_tag'=>'order_id,customer_name,restaurant_name,total_amount,receipt,accept_link,decline_link,sitename,siteurl', 
-		       'sms_tag'=>'order_id,customer_name,restaurant_name,total_amount,order_details,sitename,siteurl', 
+		       'sms_tag'=>'order_id,customer_name,restaurant_name,total_amount_order,order_details,sitename,siteurl', 
 		       'push_tag'=>'order_id,customer_name,restaurant_name,total_amount,sitename,siteurl', 
 		     ),
 		     'receipt_send_to_admin'=>array(
@@ -974,9 +974,28 @@ class AdminController extends CController
 	
 	public function actionDishes()
 	{
+		
+       FunctionsV3::registerScript(array(
+		  "var ajax_merchant_action='deleteDishes';"
+		),'ajax_admin_action');
+		
 		$this->crumbsTitle=t("Dishes");
 		if (isset($_GET['Do'])){
-			$this->render('dishes-add');
+			
+			$data = array();
+			$id = isset($_GET['id'])?(integer)$_GET['id']:0;
+			if($id>0){
+				if(!$data = ItemClass::getDishes($id)){
+					$this->render('error',array(
+				      'msg'=>t("Sorry but we cannot find what you are looking for.")
+				   ));
+				   Yii::app()->end();
+				}
+			}
+			
+			$this->render('dishes-add',array(
+			  'data'=>$data
+			));
 		} else $this->render('dishes-list');
 	}
 	
@@ -1749,7 +1768,8 @@ class AdminController extends CController
 		$ingredients_translation = Item_migration::GetTranslation("ingredients","ingredients_translation","ingredients_id");			
 		$cooking_ref_translation = Item_migration::GetTranslation("cooking_ref","cooking_ref_translation","cook_id");			
 		$item_translation = Item_migration::GetTranslation("item","item_translation","item_id");			
-		$cuisine_translation = Item_migration::GetTranslation("cuisine","cuisine_translation","cuisine_id");			
+		$cuisine_translation = Item_migration::GetTranslation("cuisine","cuisine_translation","cuisine_id");	
+		$item_sub_item = Item_migration::getItemSubcategoryItem();			
 		
 		$data = array();
 		$data[] = array(
@@ -1761,6 +1781,11 @@ class AdminController extends CController
 		  'title'=>"Subaddon item",
 		  'id'=>'subcategoryitem',
 		  'total'=>$subaddon_item,		  
+		);
+		$data[] = array(
+		  'title'=>"Item relationship subitem",
+		  'id'=>'itemsubitem',
+		  'total'=>$item_sub_item,		  
 		);
 
 		if ( Yii::app()->functions->multipleField()){	

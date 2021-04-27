@@ -755,10 +755,28 @@ class AjaxController extends CController
 		$merchant_id = isset($this->data['merchant_id'])?$this->data['merchant_id']:'';
 		if($this->data['merchant_id']>0){			
 			$day_selected = date("l",strtotime($this->data['date_selected']));			
-			$menu=Yii::app()->functions->getMerchantMenu($merchant_id , '' , $day_selected ); 			
+			//$menu=Yii::app()->functions->getMerchantMenu($merchant_id , '' , $day_selected ); 			
+						
+			//dump($this->data);
+			$today = strtolower(date("l")); $time_now = date("H:i");
+			if(isset($this->data['date_selected'])){
+				$today = date("l",strtotime($this->data['date_selected']));				
+			}
+			if(isset($this->data['delivery_time'])){
+				$time_now = date("H:i",strtotime($this->data['delivery_time']));				
+			}
+			
+			//dump($this->data);
+			Item_menu::init( $merchant_id );
+			Item_menu::$language = Yii::app()->language;    
+			Item_menu::$currency_code = Yii::app()->session['currency'];
+			Item_menu::$time_now = $time_now;
+			$menu = Item_menu::getMenu($merchant_id , strtolower($today) );        
+			
 			if(is_array($menu) && count($menu)>=1){
 				$this->code = 1;
 				$this->msg = "OK";
+								
 												
 				$enabled_food_search_menu = getOptionA('enabled_food_search_menu');
 				
@@ -771,13 +789,21 @@ class AjaxController extends CController
 					}
 				}
 				
+				$menu_lazyload = getOptionA('admin_menu_lazyload'); $lazy_use_mobile = false;                
+                $admin_menu_allowed_merchant = getOptionA('admin_menu_allowed_merchant');
+                if($admin_menu_allowed_merchant==2){
+                	$menu_lazyload = getOption($merchant_id,'merchant_menu_lazyload');
+                }	
+                       
+				
 				$tpl = $this->renderPartial('/front/menu-ajax',array(
-				   'merchant_id'=>$merchant_id,
-				   'menu'=>$menu,
+				  'merchant_id'=>$merchant_id,
+				  'menu'=>$menu,
 		    	  'enabled_food_search_menu'=>$enabled_food_search_menu,
 		    	  'is_preview'=>false,
 		    	  'disabled_addcart'=>$disabled_addcart,
 		    	  'tc'=>getOptionA('theme_menu_colapse'),
+		    	  'menu_lazyload'=>$menu_lazyload
 		    	),true);
 		    	
 		    	$this->details = $tpl;
@@ -1338,9 +1364,11 @@ class AjaxController extends CController
    	    SELECT restaurant_name as name
    	    FROM {{merchant}}
    	    WHERE restaurant_name LIKE ".q("$name%")."
+   	    AND status = 'active'
+   	    AND is_ready = 2
    	    ORDER BY restaurant_name ASC 
    	    LIMIT 0,10
-   	   ";    	    	
+   	   ";    	    	    	    	
     	if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){    		
     		$data = Yii::app()->request->stripSlashes($resp);
     	}    		    
@@ -1406,6 +1434,7 @@ class AjaxController extends CController
     	if ( $data = Item_menu::searchByCuisine($name)){
     		//
     	}    
+    	    	
     	
     	header('Content-Type: application/json');
 		echo json_encode(array(
@@ -1439,6 +1468,9 @@ class AjaxController extends CController
     	
     	Item_menu::init();
     	Item_menu::$language =  Yii::app()->language;
+    	Item_menu::$time_now = date("H:i");
+        Item_menu::$todays_day = strtolower(date("l"));
+    	
     	if ( $data = Item_menu::searchByFoodName($name)){
     		//
     	}    
@@ -1470,6 +1502,21 @@ class AjaxController extends CController
 		$multi_field = Yii::app()->functions->multipleField();
         $table_item_translation = Yii::app()->db->schema->getTable("{{item_translation}}");
         
+        
+        $enabled_category_sked = getOption($merchant_id,'enabled_category_sked');           
+        if($enabled_category_sked==1){        	
+        	$and .= "
+			 AND cat_id IN (  
+	           select cat_id 
+	           from {{category}}
+	           where
+	           cat_id = a.cat_id
+	           and merchant_id = a.merchant_id
+	           and ". strtolower(date("l"))." = 1 
+	        )        
+			";
+        }
+        
         $select = "item_name as name";
         $where = "WHERE item_name LIKE ".FunctionsV3::q("%$name%")." ";
         if($multi_field && $table_item_translation && $language!="en" ){
@@ -1498,15 +1545,17 @@ class AjaxController extends CController
         }
     	
     	$stmt="
-   	    SELECT $select
-   	    FROM {{item}} a
+   	    SELECT 
+   	    DISTINCT
+   	    $select
+   	    FROM {{view_item_cat}} a
    	    $where
    	    AND merchant_id=".q($merchant_id)."
    	    AND status ='publish'
    	    $and
    	    ORDER BY item_name ASC   	    
    	    LIMIT 0,10
-   	   ";    	     	
+   	   ";      	
     	if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){       		
     		$data = Yii::app()->request->stripSlashes($resp);
     	}        	
@@ -1521,5 +1570,40 @@ class AjaxController extends CController
     	Yii::app()->end();	
     }        
     
-
+    public function actionloadMenuCategory()
+    {    	
+    	$merchant_id = isset($this->data['merchant_id'])?(integer)$this->data['merchant_id']:0;
+    	$today = strtolower(date("l")); $time_now = date("H:i");
+		if(isset($this->data['date_selected'])){
+			if(!empty($this->data['date_selected'])){
+			  $today = date("l",strtotime($this->data['date_selected']));				
+			}
+		}
+		if(isset($this->data['delivery_time'])){
+			if(!empty($this->data['delivery_time'])){
+			   $time_now = date("H:i",strtotime($this->data['delivery_time']));				
+			}
+		}		
+    	
+		Item_menu::init( $merchant_id );          
+        Item_menu::$todays_day = strtolower($today);
+        Item_menu::$time_now = $time_now;
+        
+        if($menu = Item_menu::getCategoryLazyLoad($merchant_id, strtolower($today))){             	
+        	$html = $this->renderPartial('/front/menu-category',array(
+			  'merchant_id'=>$merchant_id,
+			  'menu'=>$menu,
+			  'menu_lazyload'=>true,
+			  'show_image_category'=>getOption($merchant_id, 'merchant_show_category_image')
+			 ),true);
+			 $this->code = 1; $this->msg = "OK";
+			 $this->details = array(
+			   'category_id'=>$menu[0]['category_id'],
+			   'total_cat_paginate'=>$menu[0]['total_cat_paginate']>0?$menu[0]['total_cat_paginate']:1,
+			   'html'=>$html
+			 );			 
+        } else $this->msg = t("No records");
+        $this->jsonResponse();	
+    }
+        
 } /*end class*/    

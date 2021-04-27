@@ -3,10 +3,13 @@ class PrintWrapper
 {
 	public static function prepareReceipt($order_id='')
 	{
-		$_GET['backend']=true; $print = array();
-		if ( $data=Yii::app()->functions->getOrder2($order_id)){
+		$_GET['backend']=true; $print = array();		
+		if ( $data = FunctionsV3::getReceiptByID($order_id)){
 			$merchant_id=$data['merchant_id'];
 			$json_details=!empty($data['json_details'])?json_decode($data['json_details'],true):false;				
+			
+			$used_currency = isset($data['used_currency'])?$data['used_currency']: FunctionsV3::getCurrencyCode() ;
+            Price_Formatter::init( $used_currency );
 			
 			if ( $json_details !=false){
 				Yii::app()->functions->displayOrderHTML(array(
@@ -21,7 +24,10 @@ class PrintWrapper
 			   'tax'=>$data['tax'],
 			   'points_discount'=>isset($data['points_discount'])?$data['points_discount']:'' /*POINTS PROGRAM*/,
 			   'voucher_amount'=>$data['voucher_amount'],
-			   'voucher_type'=>$data['voucher_type']
+			   'voucher_type'=>$data['voucher_type'],
+			   'tax_set'=>isset($data['tax'])?$data['tax']:'',
+		       'service_fee'=>isset($data['service_fee'])?(float)$data['service_fee']:0,
+		       'service_fee_applytax'=>isset($data['service_fee_applytax'])?(integer)$data['service_fee_applytax']:false,
 			  ),$json_details,true,$order_id);
 			}
 			

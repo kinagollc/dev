@@ -25,6 +25,11 @@ echo CHtml::hiddenField('mobile_country_code',Yii::app()->functions->getAdminCou
 		   <form class="forms" id="forms" onsubmit="return false;">
 		   <?php echo CHtml::hiddenField('action','driverSignup')?>
 		   
+		    <?php if ($captcha_driver_signup==1):?>
+	           <div class="recaptcha_v3"></div> 
+	         <?php endif;?> 
+         
+		   
 		     <div class="row top10">
 		        <div class="col-md-3 "><?php echo t("First Name")?></div>
 		        <div class="col-md-8 ">

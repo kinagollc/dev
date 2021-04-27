@@ -6,11 +6,13 @@
 <table class="table table-condensed table-hover">
   <thead>
    <tr>     
-     <th width="10%"><?php echo t("State/Region")?></th>
-     <th width="10%"><?php echo t("City")?></th>
-     <th width="10%"><?php echo t("Distric/Area/neighborhood")?></th>
-     <th width="10%"><?php echo t("Postal Code/Zip Code")?></th>
+     <th width="5%"><?php echo t("State/Region")?></th>
+     <th width="5%"><?php echo t("City")?></th>
+     <th width="5%"><?php echo t("Distric/Area/neighborhood")?></th>
+     <th width="5%"><?php echo t("Postal Code/Zip Code")?></th>
      <th width="5%"><?php echo t("Fee")?></th>
+     <th width="5%"><?php echo t("Min. Order")?></th>
+     <th width="5%"><?php echo t("Free delivery above sub total")?></th>
      <th width="5%"></th>
    </tr>
   </thead>
@@ -25,6 +27,17 @@
       $fee =  (float)$val['fee'] *  (float)$rates;
       echo Price_Formatter::formatNumber($fee);
     ?></td>
+    
+    <td><?php 
+      $fee =  (float)$val['minimum_order'] *  (float)$rates;
+      echo Price_Formatter::formatNumber($fee);
+    ?></td>
+    
+    <td><?php 
+      $free_above_subtotal =  (float)$val['free_above_subtotal'] *  (float)$rates;
+      echo $free_above_subtotal>0?Price_Formatter::formatNumber($free_above_subtotal):'';
+    ?></td>
+    
     <td>
     <?php echo CHtml::radioButton('location_fee',false,array(
      'value'=>$val['rate_id']

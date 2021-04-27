@@ -111,18 +111,12 @@
 </a>
   </h4>
   </div>
-     <div class="right">
-  <a target="_blank" class="uk-button" 
-  href="https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=https://kinago.com<?php echo Yii::app()->request->baseUrl."/menu-".$merchant_info[0]->restaurant_slug;?>">
-  <i class="fa fa-qrcode"></i> <?php echo t("QR Code")?></a>
-  </div>
+    
   <div class="right">
   <a target="_blank" class="uk-button" 
   href="<?php echo Yii::app()->request->baseUrl."/menu-".$merchant_info[0]->restaurant_slug;?>">
-  <i class="fa fa-eye"></i> <?php echo t("View")?></a>
+  <i class="fa fa-cutlery"></i> <?php echo t("View")?></a>
   </div>
- 
-  
   
   <?php if ( $merchant_info[0]->is_commission==2):?>
   <div class="right">
@@ -273,6 +267,8 @@ var jsLanguageValidator=<?php echo json_encode($js_lang_validator)?>;
 <script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl;?>/assets/vendor/intel/build/js/intlTelInput.js?ver=2.1.5"></script>
 
 <script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl;?>/assets/vendor/jquery.creditCardValidator.js"></script>
+
+<script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl;?>/assets/vendor/jquery.mask.js"></script>
 
 <script src="<?php echo Yii::app()->request->baseUrl; ?>/assets/js/admin.js?ver=1" type="text/javascript"></script>  
 

@@ -273,8 +273,10 @@ FunctionsV3::addCsrfToken(false);
   
   <li>
   
+		
 	
-	<p class="uk-text-small uk-text-muted"><?php echo t("These section is optional")?></p>
+	<h4><?php echo t("reCAPTCHA v3")?></h4>	
+	<p class="uk-text-small uk-text-muted"><?php echo t("Please generate keys for Google reCAPTCHA v3")?></p>
 	
 	<div class="uk-form-row">
 	<label class="uk-form-label"><?php echo Yii::t("default","Site Key")?></label>
@@ -381,6 +383,21 @@ FunctionsV3::addCsrfToken(false);
 	))
 	?>    
 	</div>
+	
+	
+	<?php if ( FunctionsV3::hasModuleAddon('driver')):?>
+	<div class="uk-form-row">
+	<label class="uk-form-label"><?php echo Yii::t("default","Enable Driver signup")?></label>  
+	<?php 
+	echo CHtml::checkBox('captcha_driver_signup',
+	Yii::app()->functions->getOptionAdmin('captcha_driver_signup')==1?true:false
+	,array(
+	'class'=>"icheck",
+	'value'=>1
+	))
+	?>    
+	</div>
+	<?php endif;?>
 
 
   </li>
@@ -994,6 +1011,30 @@ if(!empty($restrict_order_by_status)){
   <p class="uk-text-muted indent"><?php echo t("during checkout customer will need to select their address from the map for delivery location accuracy")?></p>  
 </div>
 
+
+
+<div class="uk-form-row">
+  <label class="uk-form-label"><?php echo t("Service fee")?></label>  
+  <?php 
+  echo CHtml::textField('admin_service_fee',
+   getOptionA('admin_service_fee')
+   ,array(
+   'class'=>"form-control numeric_only",   
+  ))
+  ?>  
+</div>
+
+<div class="uk-form-row">
+<label class="uk-form-label"><?php echo t("Do not apply tax to service fee")?></label>
+<?php echo CHtml::checkBox('admin_service_fee_applytax',
+getOptionA('admin_service_fee_applytax')==1?true:false
+,array(
+'class'=>"icheck",
+'value'=>1
+));  
+?>
+</div>
+
   </li>
   <!--END Website Ordering-->
   
@@ -1019,6 +1060,18 @@ if(!empty($restrict_order_by_status)){
   <?php 
   echo CHtml::checkBox('admin_menu_lazyload',
    getOptionA('admin_menu_lazyload')==1?true:false
+   ,array(
+   'class'=>"icheck",
+   'value'=>1
+  ))
+  ?>  
+</div>
+
+<div class="uk-form-row">
+  <label class="uk-form-label"><?php echo Yii::t("default","Hide empty category")?></label>  
+  <?php 
+  echo CHtml::checkBox('mobile2_hide_empty_category',
+   getOptionA('mobile2_hide_empty_category')==1?true:false
    ,array(
    'class'=>"icheck",
    'value'=>1
@@ -1089,6 +1142,19 @@ if(!empty($restrict_order_by_status)){
   Yii::app()->functions->getOptionAdmin('merchant_days_can_edit_status'),
   array(
     'class'=>"numeric_only"    
+  ))
+  ?>   
+</div>
+
+<div class="uk-form-row">
+  <label class="uk-form-label">
+  <?php echo Yii::t("default","Time can change the order")?>  
+  </label>  
+  <?php 
+  echo CHtml::textField('merchant_time_can_edit_status',
+  Yii::app()->functions->getOptionAdmin('merchant_time_can_edit_status'),
+  array(
+    'class'=>"timepick24format time_mask"    
   ))
   ?>   
 </div>

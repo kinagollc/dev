@@ -335,11 +335,21 @@ echo CHtml::hiddenField('clien_long',$data['client']['long']);
 		             }	     
 	             } else {
 	             	$unit_pretty = MapsWrapper::prettyUnit($val['distance_unit']);	             	
-	             	$delivery_fee = FunctionsV3::getLocationDeliveryFee(
+	             	/*$delivery_fee = FunctionsV3::getLocationDeliveryFee(
 	             	   $merchant_id,
 	             	   $val['delivery_charges'],
 	             	   $location_data
+	             	);*/
+	             	$delivery_fee_resp = FunctionsV3::getLocationDeliveryFeeWithMinimum(
+	             	   $merchant_id,
+	             	   $val['delivery_charges'],
+	             	   0,
+	             	   $location_data
 	             	);
+	             	if($delivery_fee_resp){
+	             		$delivery_fee = (float)$delivery_fee_resp['fee'];
+	             		$min_fees = (float)$delivery_fee_resp['minimum_order'];
+	             	}	             	
 	             }      
 	             
 	             if ( $display_type=="listview"){	             	

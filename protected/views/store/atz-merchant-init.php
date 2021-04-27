@@ -24,57 +24,27 @@ $cs->registerScriptFile($baseUrl."/assets/vendor/jquery.formance.min.js"
 ,CClientScript::POS_END); 	
 
 
-$db_ext=new DbExt;
-$error='';
-$success='';
-$amount_to_pay=0;
-$payment_description=Yii::t("default",'Payment to merchant');
-$payment_ref=Yii::app()->functions->generateRandomKey(6)."-".Yii::app()->functions->getLastIncrement('{{order}}');
-
-$data_get=$_GET;
-$data_post=$_POST;
-
 $merchant_default_country=getOptionA('admin_country_set');
+//require_once 'buy.php';
+require_once('buy_new.php');
+$payment_code = 'atz';
 
-if ( $data=Yii::app()->functions->getOrder($_GET['id'])){	
-	
-	$client_id = $data['client_id'];
-	$merchant_id=isset($data['merchant_id'])?$data['merchant_id']:'';
-	
-	$mode_autho=Yii::app()->functions->getOption('merchant_mode_autho',$merchant_id);
-    $autho_api_id=Yii::app()->functions->getOption('merchant_autho_api_id',$merchant_id);
-    $autho_key=Yii::app()->functions->getOption('merchant_autho_key',$merchant_id);
-		
-	$payment_description.=isset($data['merchant_name'])?" ".$data['merchant_name']:'';	
-		
-    $mtid=Yii::app()->functions->getOption('merchant_sanbox_sisow_secret_key',$merchant_id);
-    $mtkey=Yii::app()->functions->getOption('merchant_sandbox_sisow_pub_key',$merchant_id);
-    $mtshopid=Yii::app()->functions->getOption('merchant_sandbox_sisow_shopid',$merchant_id);
-    $mode=Yii::app()->functions->getOption('merchant_sisow_mode',$merchant_id);
-    
-    /*COMMISSION*/
-	//if ( Yii::app()->functions->isMerchantCommission($merchant_id)){			
-	if (FunctionsV3::isMerchantPaymentToUseAdmin($merchant_id)){
-		$mode_autho=Yii::app()->functions->getOptionAdmin('admin_mode_autho');
-        $autho_api_id=Yii::app()->functions->getOptionAdmin('admin_autho_api_id');
-        $autho_key=Yii::app()->functions->getOptionAdmin('admin_autho_key');        
-	}
-   
-    $amount_to_pay = number_format($data['total_w_tax'],2,'.','');
-    
-    /*dump($payment_description);
-    dump($amount_to_pay);
-    dump($mode);
-    dump($autho_api_id);
-    dump($autho_key);*/
-    
-    if (isset($_POST['x_card_num'])){
-    	if (!empty($autho_api_id) && !empty($autho_key)) {
-    		
-    	   $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
+if(empty($error)){
+	if (isset($_POST['x_card_num'])){
+		$mode_autho=Yii::app()->functions->getOption('merchant_mode_autho',$merchant_id);
+        $autho_api_id=Yii::app()->functions->getOption('merchant_autho_api_id',$merchant_id);
+        $autho_key=Yii::app()->functions->getOption('merchant_autho_key',$merchant_id);
+        
+        if (FunctionsV3::isMerchantPaymentToUseAdmin($merchant_id)){
+			$mode_autho=Yii::app()->functions->getOptionAdmin('admin_mode_autho');
+	        $autho_api_id=Yii::app()->functions->getOptionAdmin('admin_autho_api_id');
+	        $autho_key=Yii::app()->functions->getOptionAdmin('admin_autho_key');        
+		}
+        if (!empty($autho_api_id) && !empty($autho_key)) {
+           $merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
            $merchantAuthentication->setName($autho_api_id);
            $merchantAuthentication->setTransactionKey($autho_key);
-           
+                      
            $card_number = str_replace(" ",'',$_POST['x_card_num']);
            $card_number = trim($card_number);           
            
@@ -150,34 +120,13 @@ if ( $data=Yii::app()->functions->getOrder($_GET['id'])){
             			  'resp_description'=>$resp_description
             			);
             			
-            			$params_logs=array(
-				          'order_id'=>$data_get['id'],
-				          'payment_type'=>Yii::app()->functions->paymentCode('authorize'),
-				          'raw_response'=>json_encode($raw_response),
-				          'date_created'=>FunctionsV3::dateNow(),
-				          'ip_address'=>$_SERVER['REMOTE_ADDR'],
-				          'payment_reference'=>$transaction_id
-				        );
-				        $db_ext->insertData("{{payment_order}}",$params_logs);
-				        
-				        $params_update=array('status'=>'paid');	        
-                        $db_ext->updateData("{{order}}",$params_update,'order_id',$data_get['id']);
-                        
-                        /*POINTS PROGRAM*/ 
-			            if (FunctionsV3::hasModuleAddon("pointsprogram")){
-				           PointsProgram::updatePoints($data_get['id']);
-			            }
-			            
-			            /*Driver app*/
-						if (FunctionsV3::hasModuleAddon("driver")){
-						   Yii::app()->setImport(array(			
-							  'application.modules.driver.components.*',
-						   ));
-						   Driver::addToTask($data_get['id']);
-						}
-				        	        
+            			FunctionsV3::updateOrderPayment($order_id,$payment_code,
+				        $transaction_id,$raw_response,$reference_id); 
+						
+				        FunctionsV3::callAddons($order_id);
+            				        
 				        $this->redirect( Yii::app()->createUrl('/store/receipt',array(
-				          'id'=>$_GET['id']
+				          'id'=>$order_id
 				        )) );
 				        Yii::app()->end();
             			
@@ -201,9 +150,9 @@ if ( $data=Yii::app()->functions->getOrder($_GET['id'])){
             	
             } else $error = t("No response returned");
     		
-    	} else $error = t("Missing payment credentials");
-    }        
-} else  $error=Yii::t("default","Sorry but we cannot find what your are looking for.");	
+        } else $error = t("Missing payment credentials");
+	}
+}
 ?>
 
 <div class="sections section-grey2 section-orangeform">
@@ -227,7 +176,7 @@ if ( $data=Yii::app()->functions->getOrder($_GET['id'])){
 				  <div class="col-md-3"><?php echo t("Amount")?></div>
 				  <div class="col-md-8">
 				    <?php echo CHtml::textField('amount',
-					  number_format($amount_to_pay,2)
+					  Price_Formatter::formatNumber($amount_to_pay,2)
 					  ,array(
 					  'class'=>'grey-fields full-width',
 					  'disabled'=>true

@@ -530,6 +530,10 @@ class FunctionsK extends DbExt
 		    	$verification_type='sms';
     		}
     		
+    		
+            $customer_token =FunctionsV3::generateCustomerToken();
+		    $params['token']=$customer_token;
+		    	
     		if ( $this->insertData("{{client}}",$params)){    			
 	    	    $client_id=Yii::app()->db->getLastInsertID();
 	    	    $params['client_id']=$client_id;	    	    
@@ -539,6 +543,7 @@ class FunctionsK extends DbExt
 		    	    	case "sms":
 		    	    	case "email":
 		    	    		$params['verification_type']='sms';
+		    	    		$params['verification_link'] = websiteUrl()."/email_verification/?id=".urlencode($customer_token);
 		    	    		FunctionsV3::sendEmailVerificationCode($params['email_address'],$email_code,$params);
 		    	    		break;
 		    	    	    	    	

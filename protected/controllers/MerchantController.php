@@ -248,7 +248,9 @@ class MerchantController extends CController
 		
 	    if (isset($_GET['Do'])){
 			if ( $_GET['Do']=="Add"){
-				$this->render('category_add');
+				$this->render('category_add',array(
+				 'days'=>FunctionsV3::dayList()
+				));
 			} elseif ( $_GET['Do'] =="Sort" ){	
 			   $this->render('category_sort');
 			} else $this->render('category_list');
@@ -1314,15 +1316,17 @@ $params['RETURNURL']="http://".$_SERVER['HTTP_HOST'].Yii::app()->request->baseUr
 	
 	public function actionShippingRate()
 	{
+		$mtid = Yii::app()->functions->getMerchantID();
 		$this->crumbsTitle=Yii::t("default","Delivery Charges Rates");		
 		if (FunctionsV3::isSearchByLocation()){
-			$this->render('location-delivery-rates');
+			$this->render('location-delivery-rates',array(
+			  'mtid'=>$mtid,
+			));
 		} else {
-			if(FunctionsV3::isClassDeliveryTableExist()){
-				$mtid = Yii::app()->functions->getMerchantID();
+			if(FunctionsV3::isClassDeliveryTableExist()){				
 				$this->render('shippingrate-new',array(
 				  'range'=>DeliveryTableRate::range(),
-				  'mtid'=>Yii::app()->functions->getMerchantID(),
+				  'mtid'=>$mtid,
 				  'data'=>DeliveryTableRate::getTableRateByMerchant($mtid)
 				));
 			} else $this->render('shippingrate');			
@@ -1849,9 +1853,9 @@ header('Location: '.Yii::app()->request->baseUrl."/merchant/smsReceipt/id/".Yii:
 	{
 		$mtid = Yii::app()->functions->getMerchantID();
 		$this->crumbsTitle=t("Category Scheduler");
+		
 		$this->render('category_sked',array(
-		 'merchant_id'=>$mtid,
-		 'data'=>Yii::app()->functions->getCategoryList($mtid)
+		 'merchant_id'=>$mtid,		 
 		));
 	}
 	
@@ -2262,6 +2266,22 @@ header('Location: '.Yii::app()->request->baseUrl."/merchant/smsReceipt/id/".Yii:
 			));
 		} else $this->render('noaccess');
 	}
+	
+	public function actionorder_settings()
+	{
+		
+        FunctionsV3::registerScript(array(
+		  "var ajax_merchant_action='deleteTimeManagement';"
+		),'ajax_merchant_action');
+		
+		
+		$merchant_id = Yii::app()->functions->getMerchantID();
+		$this->crumbsTitle=t("Order settings");
+		$this->render('order_settings',array(
+		  'merchant_id'=>$merchant_id
+		));
+	}
+			
 	
 }
 /*END CONTROLLER*/

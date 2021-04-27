@@ -196,7 +196,21 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."category (
   `thursday` int(1) NOT NULL DEFAULT '0',
   `friday` int(1) NOT NULL DEFAULT '0',
   `saturday` int(1) NOT NULL DEFAULT '0',
-  `sunday` int(1) NOT NULL DEFAULT '0'
+  `sunday` int(1) NOT NULL DEFAULT '0',
+  `monday_start` varchar(5) NOT NULL DEFAULT '',
+  `monday_end` varchar(5) NOT NULL DEFAULT '',
+  `tuesday_start` varchar(5) NOT NULL DEFAULT '',
+  `tuesday_end` varchar(5) NOT NULL DEFAULT '',
+  `wednesday_start` varchar(5) NOT NULL DEFAULT '',
+  `wednesday_end` varchar(5) NOT NULL DEFAULT '',
+  `thursday_start` varchar(5) NOT NULL DEFAULT '',
+  `thursday_end` varchar(5) NOT NULL DEFAULT '',
+  `friday_start` varchar(5) NOT NULL DEFAULT '',
+  `friday_end` varchar(5) NOT NULL DEFAULT '',
+  `saturday_start` varchar(5) NOT NULL DEFAULT '',
+  `saturday_end` varchar(5) NOT NULL DEFAULT '',
+  `sunday_start` varchar(5) NOT NULL DEFAULT '',
+  `sunday_end` varchar(5) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -245,7 +259,8 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."client (
   `payment_customer_id` varchar(255) NOT NULL DEFAULT '',
   `social_id` varchar(255) NOT NULL DEFAULT '',
   `verify_code_requested` $date_default,
-  `single_app_merchant_id` int(14) NOT NULL DEFAULT '0'
+  `single_app_merchant_id` int(14) NOT NULL DEFAULT '0',
+  `payment_customer_type` varchar(255) NOT NULL DEFAULT 'sandbox'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -346,14 +361,24 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."currency (
   `id` int(14) NOT NULL DEFAULT '0',
   `currency_code` varchar(3) NOT NULL DEFAULT '',
   `currency_symbol` varchar(100) NOT NULL DEFAULT '',
+  `description` varchar(255) NOT NULL DEFAULT '',
   `date_created` $date_default,
   `date_modified` $date_default,
-  `ip_address` varchar(50) NOT NULL DEFAULT ''
+  `ip_address` varchar(50) NOT NULL DEFAULT '',
+  `as_default` integer(1) NOT NULL DEFAULT '0',
+  `is_hidden` integer(1) NOT NULL DEFAULT '0',
+  `currency_position` varchar(100) NOT NULL DEFAULT 'left',
+  `exchange_rate` float(14,4) NOT NULL DEFAULT '0.0000',
+  `exchange_rate_fee` float(14,4) NOT NULL DEFAULT '0.0000',
+  `number_decimal` integer(14) NOT NULL DEFAULT '2',
+  `decimal_separator` varchar(5) NOT NULL DEFAULT '.',
+  `thousand_separator` varchar(5) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE  ".$table_prefix."currency
   ADD PRIMARY KEY (`id`),
   ADD KEY `currency_symbol` (`currency_symbol`),
+  ADD KEY `as_default` (`as_default`),
   ADD KEY `currency_code` (`currency_code`);
   
 ALTER TABLE  ".$table_prefix."currency
@@ -718,6 +743,8 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."location_rate (
   `city_id` int(14) DEFAULT '0',
   `area_id` int(14) NOT NULL DEFAULT '0',
   `fee` float(14,5) NOT NULL DEFAULT '0.00000',
+  `minimum_order` float(14,5) NOT NULL DEFAULT '0.00000',  
+  `free_above_subtotal` float(14,5) NOT NULL DEFAULT '0.00000', 
   `sequence` int(14) NOT NULL DEFAULT '0',
   `date_created` $date_default,
   `date_modified` $date_default,
@@ -819,7 +846,10 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."merchant (
   `payment_gateway_ref` varchar(255) NOT NULL DEFAULT '',
   `user_access` text,
   `distance_unit` varchar(20) NOT NULL DEFAULT 'mi',
-  `delivery_distance_covered` float(14,2) NOT NULL DEFAULT '0.00'
+  `delivery_distance_covered` float(14,2) NOT NULL DEFAULT '0.00',  
+  `single_app_keys` varchar(255) NOT NULL DEFAULT '',
+  `pin` int(4) NOT NULL DEFAULT '0',
+  `close_store` int(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -1113,7 +1143,14 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."order_delivery_address (
   `dinein_number_of_guest` varchar(14) NOT NULL DEFAULT '',
   `dinein_special_instruction` varchar(255) NOT NULL DEFAULT '',
   `dinein_table_number` varchar(50) NOT NULL DEFAULT '',
-  `opt_contact_delivery` int(1) NOT NULL DEFAULT '0'  
+  `opt_contact_delivery` int(1) NOT NULL DEFAULT '0',
+  `estimated_time` int(14) NOT NULL DEFAULT '0',
+  `estimated_date_time` $date_default,
+  `used_currency` varchar(5) NOT NULL DEFAULT '',
+  `base_currency` varchar(5) NOT NULL DEFAULT '',
+  `exchange_rate` float(14,4) NOT NULL DEFAULT '1',
+  `service_fee` float(14,4) NOT NULL DEFAULT '0',
+  `service_fee_applytax` int(2) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE  ".$table_prefix."order_delivery_address
@@ -1699,7 +1736,15 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."voucher_new (
   `date_created` $date_default,
   `date_modified` $date_default,
   `ip_address` varchar(100) NOT NULL DEFAULT '',
-  `used_once` int(1) NOT NULL DEFAULT '1'
+  `used_once` int(1) NOT NULL DEFAULT '1',
+  `min_order` float(14,5) NOT NULL DEFAULT '0.00000',
+  `monday` int(1) NOT NULL DEFAULT '0',
+  `tuesday` int(1) NOT NULL DEFAULT '0',
+  `wednesday` int(1) NOT NULL DEFAULT '0',
+  `thursday` int(1) NOT NULL DEFAULT '0',
+  `friday` int(1) NOT NULL DEFAULT '0',
+  `saturday` int(1) NOT NULL DEFAULT '0',
+  `sunday` int(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE  ".$table_prefix."voucher_new
@@ -1937,6 +1982,320 @@ ALTER TABLE ".$table_prefix."tags
 /*END 5.4*/
 
 
+/*5.4.3*/
+$tbl['item_relationship_category']="
+CREATE TABLE IF NOT EXISTS {{item_relationship_category}} (
+  `id` bigint(20) NOT NULL,
+  `merchant_id` integer(14) NOT NULL DEFAULT '0',
+  `item_id` integer(14) NOT NULL DEFAULT '0',
+  `cat_id` integer(14) NOT NULL DEFAULT '0'  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{item_relationship_category}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `merchant_id` (`merchant_id`),
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `cat_id` (`cat_id`);
+
+ALTER TABLE {{item_relationship_category}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['item_relationship_subcategory']="
+CREATE TABLE IF NOT EXISTS {{item_relationship_subcategory}} (
+  `id` bigint(20) NOT NULL,
+  `merchant_id` integer(14) NOT NULL DEFAULT '0',
+  `item_id` integer(14) NOT NULL DEFAULT '0',
+  `subcat_id` integer(14) NOT NULL DEFAULT '0'  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{item_relationship_subcategory}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `merchant_id` (`merchant_id`),
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `subcat_id` (`subcat_id`);
+
+ALTER TABLE {{item_relationship_subcategory}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['item_relationship_size']="
+CREATE TABLE IF NOT EXISTS {{item_relationship_size}} (
+  `item_size_id` bigint(20) NOT NULL,
+  `merchant_id` integer(14) NOT NULL DEFAULT '0',
+  `item_token` varchar(255) NOT NULL DEFAULT '',
+  `item_id` integer(14) NOT NULL DEFAULT '0' ,
+  `size_id` integer(14) NOT NULL DEFAULT '0' ,
+  `price` float(14,4) NOT NULL DEFAULT '0.0000',
+  `cost_price` float(14,4) NOT NULL DEFAULT '0.0000',
+  `sku` varchar(255) NOT NULL DEFAULT '',
+  `available` integer(1) NOT NULL DEFAULT '1',
+  `low_stock` float(14,2) NOT NULL DEFAULT '0',
+  `created_at` varchar(50) NOT NULL DEFAULT '',
+  `updated_at` varchar(50) NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{item_relationship_size}}
+  ADD PRIMARY KEY (`item_size_id`),
+  ADD KEY `merchant_id` (`merchant_id`),
+  ADD KEY `item_token` (`item_token`),
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `size_id` (`size_id`);
+
+ALTER TABLE {{item_relationship_size}}
+MODIFY `item_size_id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['subcategory_item_relationships']="
+CREATE TABLE IF NOT EXISTS {{subcategory_item_relationships}} (
+  `id` bigint(20) NOT NULL,
+  `subcat_id` integer(14) NOT NULL DEFAULT '0',
+  `sub_item_id` integer(14) NOT NULL DEFAULT '0'  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{subcategory_item_relationships}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `subcat_id` (`subcat_id`),  
+  ADD KEY `sub_item_id` (`sub_item_id`);
+
+ALTER TABLE {{subcategory_item_relationships}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['category_translation']="
+CREATE TABLE IF NOT EXISTS {{category_translation}} (
+  `id` bigint(20) NOT NULL,
+  `cat_id` integer(14) NOT NULL DEFAULT '0',
+  `language` varchar(100) NOT NULL DEFAULT '',
+  `category_name` varchar(255) NOT NULL DEFAULT '',
+  `category_description` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{category_translation}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `cat_id` (`cat_id`),  
+  ADD KEY `language` (`language`);
+
+ALTER TABLE {{category_translation}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['size_translation']="
+CREATE TABLE IF NOT EXISTS {{size_translation}} (
+  `id` bigint(20) NOT NULL,
+  `size_id` integer(14) NOT NULL DEFAULT '0',
+  `language` varchar(100) NOT NULL DEFAULT '',
+  `size_name` varchar(255) NOT NULL DEFAULT ''  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{size_translation}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `size_id` (`size_id`),  
+  ADD KEY `language` (`language`);
+
+ALTER TABLE {{size_translation}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['subcategory_translation']="
+CREATE TABLE IF NOT EXISTS {{subcategory_translation}} (
+  `id` bigint(20) NOT NULL,
+  `subcat_id` integer(14) NOT NULL DEFAULT '0',
+  `language` varchar(100) NOT NULL DEFAULT '',
+  `subcategory_name` varchar(255) NOT NULL DEFAULT '',
+  `subcategory_description` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{subcategory_translation}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `subcat_id` (`subcat_id`),  
+  ADD KEY `language` (`language`);
+
+ALTER TABLE {{subcategory_translation}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['subcategory_item_translation']="
+CREATE TABLE IF NOT EXISTS {{subcategory_item_translation}} (
+  `id` bigint(20) NOT NULL,
+  `sub_item_id` integer(14) NOT NULL DEFAULT '0',
+  `language` varchar(100) NOT NULL DEFAULT '',
+  `sub_item_name` varchar(255) NOT NULL DEFAULT '',
+  `item_description` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{subcategory_item_translation}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sub_item_id` (`sub_item_id`),  
+  ADD KEY `language` (`language`);
+
+ALTER TABLE {{subcategory_item_translation}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['ingredients_translation']="
+CREATE TABLE IF NOT EXISTS {{ingredients_translation}} (
+  `id` bigint(20) NOT NULL,
+  `ingredients_id` integer(14) NOT NULL DEFAULT '0',
+  `language` varchar(100) NOT NULL DEFAULT '',
+  `ingredients_name` varchar(255) NOT NULL DEFAULT ''  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{ingredients_translation}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ingredients_id` (`ingredients_id`),  
+  ADD KEY `language` (`language`);
+
+ALTER TABLE {{ingredients_translation}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['cooking_ref_translation']="
+CREATE TABLE IF NOT EXISTS {{cooking_ref_translation}} (
+  `id` bigint(20) NOT NULL,
+  `cook_id` integer(14) NOT NULL DEFAULT '0',
+  `language` varchar(100) NOT NULL DEFAULT '',
+  `cooking_name` varchar(255) NOT NULL DEFAULT ''  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{cooking_ref_translation}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `cook_id` (`cook_id`),  
+  ADD KEY `language` (`language`);
+
+ALTER TABLE {{cooking_ref_translation}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+$tbl['item_translation']="
+CREATE TABLE IF NOT EXISTS {{item_translation}} (
+  `id` bigint(20) NOT NULL,
+  `item_id` integer(14) NOT NULL DEFAULT '0',
+  `language` varchar(100) NOT NULL DEFAULT '',
+  `item_name` varchar(255) NOT NULL DEFAULT '',
+  `item_description` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{item_translation}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `item_id` (`item_id`),  
+  ADD KEY `item_name` (`item_name`),  
+  ADD KEY `language` (`language`);
+
+ALTER TABLE {{item_translation}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+
+$tbl['cuisine_translation']="
+CREATE TABLE IF NOT EXISTS {{cuisine_translation}} (
+  `id` bigint(20) NOT NULL,
+  `cuisine_id` integer(14) NOT NULL DEFAULT '0',
+  `language` varchar(100) NOT NULL DEFAULT '',
+  `cuisine_name` varchar(255) NOT NULL DEFAULT ''  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{cuisine_translation}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `cuisine_id` (`cuisine_id`),  
+  ADD KEY `cuisine_name` (`cuisine_name`),  
+  ADD KEY `language` (`language`);
+
+ALTER TABLE {{cuisine_translation}}
+MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+";
+
+/*END 5.4.3*/
+
+
+/*5.4.4*/
+$tbl['item_meta']="
+CREATE TABLE IF NOT EXISTS {{item_meta}} (
+  `id` int(11) NOT NULL,
+  `merchant_id` int(14) NOT NULL DEFAULT '0',
+  `item_id` int(14) NOT NULL DEFAULT '0',
+  `meta_name` varchar(255) NOT NULL DEFAULT '',
+  `meta_id` int(14) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE {{item_meta}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `meta_name` (`meta_name`),
+  ADD KEY `meta_id` (`meta_id`),
+  ADD KEY `merchant_id` (`merchant_id`);
+
+
+ALTER TABLE {{item_meta}}
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;  
+";
+
+$tbl['item_relationship_subcategory_item']="
+CREATE TABLE IF NOT EXISTS {{item_relationship_subcategory_item}} (
+  `id` int(11) NOT NULL,
+  `merchant_id` int(14) NOT NULL DEFAULT '0',
+  `item_id` int(14) NOT NULL DEFAULT '0',
+  `subcat_id` int(14) NOT NULL DEFAULT '0',
+  `sub_item_id` int(14) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{item_relationship_subcategory_item}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `merchant_id` (`merchant_id`),
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `subcat_id` (`subcat_id`),
+  ADD KEY `sub_item_id` (`sub_item_id`);
+  
+ALTER TABLE {{item_relationship_subcategory_item}}
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;  
+";
+
+$tbl['dishes_translation']="
+CREATE TABLE IF NOT EXISTS {{dishes_translation}} (
+  `id` int(11) NOT NULL,
+  `dish_id` int(14) NOT NULL DEFAULT '0',
+  `language` varchar(100) NOT NULL DEFAULT '',
+  `dish_name` varchar(255) NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{dishes_translation}}
+  ADD PRIMARY KEY (`id`);
+  
+ALTER TABLE {{dishes_translation}}
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+";
+
+
+$tbl['order_time_management']="
+CREATE TABLE IF NOT EXISTS {{order_time_management}} (
+  `id` int(11) NOT NULL,
+  `group_id` int(14) NOT NULL DEFAULT '0',
+  `merchant_id` int(14) NOT NULL DEFAULT '0',
+  `transaction_type` varchar(100) NOT NULL DEFAULT '',
+  `days` varchar(200) NOT NULL DEFAULT '',
+  `start_time` varchar(5) NOT NULL DEFAULT '',
+  `end_time` varchar(5) NOT NULL DEFAULT '',
+  `number_order_allowed` int(14) NOT NULL DEFAULT '0',
+  `order_status` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE {{order_time_management}}
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `group_id` (`group_id`),
+  ADD KEY `merchant_id` (`merchant_id`),
+  ADD KEY `transaction_type` (`transaction_type`),
+  ADD KEY `days` (`days`),
+  ADD KEY `start_time` (`start_time`),
+  ADD KEY `end_time` (`end_time`);
+  
+ALTER TABLE {{order_time_management}}
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+";
+
+/*END 5.4.4*/
+
+
 /*VIEW TABLES */
 
 $tbl['view_ratings']="
@@ -1993,6 +2352,8 @@ d.postal_code,
 a.area_id,
 e.name as area_name,
 a.fee,
+a.minimum_order,
+a.free_above_subtotal,
 a.sequence,
 a.date_created,
 a.date_modified,
@@ -2045,3 +2406,136 @@ a.merchant_id = c.merchant_id
 ";
 
 /*END 5.4 view*/
+
+/*5.4.3 view */
+$tbl['view_item']="
+create OR REPLACE VIEW {{view_item}} as
+select 
+a.item_id,
+a.item_token,
+a.merchant_id,
+a.item_name,
+a.item_name_trans,
+a.item_description,
+a.item_description_trans,
+a.status,
+a.with_size,
+a.supplier_id,
+a.photo,
+a.discount,
+a.not_available,
+a.cooking_ref,
+a.ingredients,
+a.spicydish,
+a.dish,
+a.sequence as item_sequence,
+IFNULL(b.item_size_id,'') as item_size_id,
+IFNULL(b.item_token,'') as item_size_token,
+IFNULL(b.size_id,0) as size_id,
+IFNULL(c.size_name,'') as size_name,
+IFNULL(c.size_name_trans,'') as size_name_trans,
+IFNULL(b.price,0) as price,
+IFNULL(b.cost_price,0) as cost_price,
+IFNULL(b.sku,'') as sku,
+a.track_stock,
+IFNULL(b.available,0) as available,
+IFNULL(b.low_stock,0) as low_stock
+		
+from {{item}}  a
+left join {{item_relationship_size}} b
+on
+a.item_id = b.item_id
+
+left join {{size}} c
+on
+b.size_id = c.size_id
+";
+
+$tbl['view_item_cat']="
+create OR REPLACE VIEW {{view_item_cat}} as
+select 
+a.cat_id,
+c.category_name,
+c.category_description,
+c.category_name_trans,
+c.category_description_trans,
+c.sequence as category_sequence,
+b.*
+from
+{{item_relationship_category}} a
+left join {{view_item}} b
+on 
+a.item_id = b.item_id
+
+left join {{category}} c
+on 
+a.cat_id = c.cat_id
+
+where b.item_id >0
+";
+
+$tbl['view_rs_category']="
+create OR REPLACE VIEW {{view_rs_category}} as
+select 
+a.id,
+a.merchant_id,
+a.item_id,
+a.cat_id,
+b.category_name,
+b.category_description,
+b.category_name_trans,
+b.category_description_trans,
+b.photo,
+b.status,
+b.sequence,
+c.not_available
+from {{item_relationship_category}} a
+left join {{category}} b
+on 
+a.cat_id = b.cat_id
+
+left join {{item}} c
+on 
+a.item_id = c.item_id
+
+where c.item_id IN (
+  select item_id from {{item}}
+  where 
+  item_id = c.item_id
+)
+";
+
+$tbl['view_order_summary']="
+create OR REPLACE VIEW {{view_order_summary}} as
+select
+a.order_id,
+a.merchant_id,
+a.payment_type,
+a.trans_type,
+a.commision_ontop,
+a.percent_commision,		
+status,
+a.sub_total,
+total_w_tax,
+total_commission,
+merchant_earnings,
+b.used_currency,
+b.base_currency,
+b.exchange_rate,		
+
+IFNULL((sub_total/b.exchange_rate),0) as sub_total_ex,
+
+IFNULL((total_w_tax/b.exchange_rate),0) as total_w_tax_ex,
+
+IFNULL((total_commission/b.exchange_rate),0) as total_commission_ex,
+
+IFNULL((merchant_earnings/b.exchange_rate),0) as merchant_earnings_ex,
+
+a.date_created
+
+from {{order}} a
+left join {{order_delivery_address}} b
+on
+a.order_id = b.order_id
+";
+/*END 5.4.3 view*/

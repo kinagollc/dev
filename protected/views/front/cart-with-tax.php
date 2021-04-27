@@ -149,6 +149,12 @@ if (isset($data_total['card_fee'])){
 	}
 }
 
+if (isset($data_total['service_fee'])){
+	if ($data_total['service_fee']>0){
+		$total_plus_charges+=$data_total['service_fee'];
+	}
+}
+
 if ( $data_total['cart_tip_percentage']>0.001){
 	$data_total['tips']=$total_food*($data_total['cart_tip_percentage']/100);
 	$total_plus_charges+=+$data_total['tips'];
@@ -192,6 +198,22 @@ $data_total['taxable_total']=$data_total['total']-$data_total['subtotal'];
 
 <?php //dump($data_total)?>
 
+
+<?php 
+if (isset($data_total['service_fee'])):
+if ($data_total['service_fee']>0):
+?>
+<div class="row" id="new-cart">
+  <div class="col-xs-9 txt-indent" ><?php echo t("Service Fee")?></div>
+  <div class="col-xs-3 text-right">
+    <?php echo Price_Formatter::formatNumber($data_total['service_fee'])?>
+  </div>
+</div> <!--row-->
+<?php 
+endif;
+endif;
+?>
+
 <?php if ($data_total['delivery_charges']>0):?>
 <div class="row" id="new-cart">
   <div class="col-xs-9 txt-indent" ><?php echo t("Delivery Fee")?></div>
@@ -200,6 +222,7 @@ $data_total['taxable_total']=$data_total['total']-$data_total['subtotal'];
   </div>
 </div> <!--row-->
 <?php endif;?>
+
 
 
 <?php 
@@ -216,6 +239,7 @@ if ($data_total['card_fee']>0):
 endif;
 endif;
 ?>
+
 
 <?php if ($data_total['merchant_packaging_charge']>0):?>
 <div class="row" id="new-cart">

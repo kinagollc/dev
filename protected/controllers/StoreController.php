@@ -909,9 +909,7 @@ class StoreController extends CController
 			if ( $current_merchant !=$res['merchant_id']){							 
 				 unset($_SESSION['kr_item']);
 			}		
-			
-			//dump($res);
-			
+						
 			if ( $res['status']=="active" && $res['is_ready']==2){
 								
 				/*SEO*/
@@ -962,13 +960,20 @@ class StoreController extends CController
 		    	$location_data=FunctionsV3::getSearchByLocationData();
 		    	$search_by_location=false;
 		    	if (FunctionsV3::isSearchByLocation()){
+		    		
+		    		$default_min_fees = isset($res['delivery_minimum_order'])?(float)$res['delivery_minimum_order']:0;
+		    		
 		    		$search_by_location=TRUE;
-		    	    $delivery_fee=FunctionsV3::getLocationDeliveryFee(
+		    	    $delivery_fee_resp=FunctionsV3::getLocationDeliveryFeeWithMinimum(
 		    	      $merchant_id,
 		    	      $res['delivery_charges'],
+		    	      $default_min_fees,
 		    	      $location_data
-		    	    );		  
-		    	    $min_fees = isset($res['delivery_minimum_order'])?(float)$res['delivery_minimum_order']:0;
+		    	    );		
+		    	    		    	    
+		    	    $delivery_fee = isset($delivery_fee_resp['fee'])?$delivery_fee_resp['fee']:0;
+		    	    $min_fees = isset($delivery_fee_resp['minimum_order'])?$delivery_fee_resp['minimum_order']:0;
+		    	    
 		    	} else {
 			    	if (isset($_SESSION['client_location'])){
 			    		 try {			    		 				  			    		 	
@@ -1018,10 +1023,11 @@ class StoreController extends CController
 		    		$booking_enabled=false;
 		    	}
 		    	
+		    	$exchange_rate = Item_utility::getRates();
+		    	
 		    	/*CHECK IF MERCHANT HAS PROMO*/
-		    	$promo['enabled']=1;
-		    	//if($offer=FunctionsV3::getOffersByMerchant($merchant_id,2)){
-		    	if($offer=FunctionsV3::getOffersByMerchantNew($merchant_id)){
+		    	$promo['enabled']=1;		    	
+		    	if($offer=FunctionsV3::getOffersByMerchantNew($merchant_id,$exchange_rate)){
 		    	   $promo['offer']=$offer;
 		    	   $promo['enabled']=2;
 		    	}		    			
@@ -1062,6 +1068,7 @@ class StoreController extends CController
 				
 				$website_use_date_picker = getOptionA('website_use_date_picker');
 				$enabled_category_sked = getOption($merchant_id,'enabled_category_sked');
+				$enabled_category_sked_time = getOption($merchant_id,'enabled_category_sked_time');
 				$website_review_type=getOptionA('website_review_type');				
 				
 				$merchant_opt_contact_delivery = getOption($merchant_id,'merchant_opt_contact_delivery');
@@ -1070,12 +1077,14 @@ class StoreController extends CController
 				
 				$minimum_order_dinein = (float)$minimum_order_dinein * $exchange_rate;
 				$maximum_order_dinein = (float)$maximum_order_dinein * $exchange_rate;
+								
 				
 				FunctionsV3::registerScript(array(
 				 "var dinein_minimum='$minimum_order_dinein';",
 				 "var dinein_max='$maximum_order_dinein';",
 				 "var website_use_date_picker='$website_use_date_picker';",
 				 "var enabled_category_sked='$enabled_category_sked';",
+				 "var enabled_category_sked_time='$enabled_category_sked_time';",
 				 "var website_review_type='$website_review_type';",
 				 "var search_by_location='$search_by_location';",
 				 "var distance_error='$distance_error';",
@@ -1116,8 +1125,7 @@ class StoreController extends CController
 					),'menu_lazyload');
 	
                 }			
-                                                           
-		    			    									
+                                                                           						
 				$this->render('menu' ,array(
 				   'data'=>$res,
 				   'exchange_rate'=>$exchange_rate,
@@ -1617,7 +1625,83 @@ class StoreController extends CController
 	
 	public function actionPayuInit()
 	{		
-		$this->render('payuinit-merchant');
+		//$this->render('payuinit-merchant');
+		require_once('buy_new.php');
+		if(empty($error)){
+			if ($credentials = PayumoneyWrapperWeb::getCredentials($merchant_id)){
+				
+				$success_url = websiteUrl()."/payu/verify?reference_id=".urlencode($reference_id);
+			    $failed_url = websiteUrl()."/payu/failed?reference_id=".urlencode($reference_id);
+			    $cancel_url = websiteUrl()."/payu/cancel";
+			
+			    $client_id = Yii::app()->functions->getClientId();
+			    $client_info=Yii::app()->functions->getClientInfo( (integer) $client_id);
+
+			    $params = array(
+				  'key'=>$credentials['key'],
+				  'amount'=>Price_Formatter::convertToRaw($amount_to_pay),
+				  'txnid'=>$reference_id,
+				  'productinfo'=>$payment_description,
+				  'firstname'=>isset($client_info['first_name'])?$client_info['first_name']:'',
+				  'email'=>isset($client_info['email_address'])?$client_info['email_address']:'',
+				  'surl'=>$success_url,
+				  'furl'=>$failed_url,
+				  'curl'=>$cancel_url
+				);				    
+				
+				try {
+				
+					$hash = PayumoneyWrapperWeb::generateHash($params, $credentials['salt']);				
+					$payment_link = $credentials['payment_link']."/_payment";				
+					$publish_key='';
+					$cs = Yii::app()->getClientScript();				
+					$cs->registerScript(
+						 'submitform',
+						 'jQuery(document).ready(function(){ showPreloader(1); $(".payuForm").submit(); });',
+						  CClientScript::POS_END
+					);		
+					$form='';
+					$form.= '<form action="'.$payment_link.'" method="post" class="payuForm">';
+					$form.= CHtml::hiddenField('key', $credentials['key']);
+					$form.= CHtml::hiddenField('hash', $hash);
+					$form.= CHtml::hiddenField('txnid', $reference_id);		
+					
+					$form.= CHtml::hiddenField('amount',$params['amount']);
+					$form.= CHtml::hiddenField('firstname',$params['firstname']);
+					$form.= CHtml::hiddenField('email',$params['email']);
+					$form.= CHtml::hiddenField('phone', isset($client_info['contact_phone'])?$client_info['contact_phone']:'' );
+					$form.= CHtml::hiddenField('productinfo',$params['productinfo']);
+					$form.= CHtml::hiddenField('surl',$success_url);
+					$form.= CHtml::hiddenField('furl',$failed_url);
+					$form.= CHtml::hiddenField('service_provider','payu_paisa');				
+					
+					$form.= CHtml::submitButton('submit',array(
+					'style'=>"display:none;"
+					));
+					$form.= '</form>';
+					
+					$this->render('payu_buy',array(		
+					 'form'=>$form
+					));
+					
+				} catch (Exception $e) {
+					$error = Yii::t("default","Caught exception: [error]",array(
+					  '[error]'=>$e->getMessage()
+					));
+				}    
+				
+				
+			} else $error= t("invalid payment credentials");
+		}
+		
+		$back_url = Yii::app()->createUrl('/store/confirmorder');			
+		
+		if(!empty($error)){
+        	$error.='<p style="margin-top:20px;"><a href="'.$back_url.'" />'.t("back").'</a></p>';
+	        $this->render('error',array(
+			  'message'=>$error
+			));
+        }
 	}
 	
 	public function actionBankDepositverify()
@@ -2084,8 +2168,11 @@ class StoreController extends CController
 				);			
 		}
 		
+		$exchange_rate = Item_utility::getRates();	
+		
 		$this->render('payment-option',
 		  array(
+		      'exchange_rate'=>$exchange_rate,
 		     'is_guest_checkout'=>true,
 		     'website_enabled_map_address'=>getOptionA('website_enabled_map_address'),
 		     'address_book'=>Yii::app()->functions->showAddressBook(),
@@ -2142,6 +2229,10 @@ class StoreController extends CController
 	
 	public function actionATZinit()
 	{
+		if (!Yii::app()->functions->isClientLogin()){
+			$this->redirect(Yii::app()->user->returnUrl);
+			Yii::app()->end();
+		}		
 		$this->render('atz-merchant-init');
 	}
 	
@@ -2530,6 +2621,30 @@ class StoreController extends CController
 		} else $this->render('error',array('message'=>$msg));
 	}
 	
+	public function actionemail_verification()
+	{
+		$id = isset($_GET['id'])?trim($_GET['id']):'';
+		$msg=t("Sorry but we cannot find what you are looking for.");
+		if(!empty($id)){
+			
+			$stmt="
+			SELECT * FROM {{client}}
+			WHERE token=".q($id)."
+			";
+			if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
+				if ( $res['status']=="active"){
+					$msg=t("Your account is already verified");
+				} else {
+					$this->render('email-verification',array(
+				     'data'=>$res
+				   ));
+				    return ;
+				}							
+			}			
+		} 
+		$this->render('error',array('message'=>$msg));
+	}
+	
 	public function actionMyPoints()
 	{		
 		/*POINTS PROGRAM*/
@@ -2564,8 +2679,8 @@ class StoreController extends CController
 	/*braintree*/
 	public function actionBtrInit()
 	{
-		if (!Yii::app()->functions->isClientLogin()){
-			$this->redirect(Yii::app()->createUrl('/store')); 
+		if (!Yii::app()->functions->isClientLogin()){		
+			$this->redirect(Yii::app()->user->returnUrl);
 			Yii::app()->end();
 		}
 		$this->render('braintree-init',array(
@@ -2639,7 +2754,13 @@ class StoreController extends CController
 		
 	public function actionrzrinit()
 	{				
-		require_once 'buy.php';
+		if (!Yii::app()->functions->isClientLogin()){
+			$this->redirect(Yii::app()->user->returnUrl);
+			Yii::app()->end();
+		}		
+		
+		//require_once 'buy.php';
+		require_once('buy_new.php');
 		if (empty($error)){
 			 $amount = $amount_to_pay*100;
 			 $this->render('rzr-init',array(
@@ -3014,17 +3135,26 @@ class StoreController extends CController
 		    	
 		    	$website_use_date_picker = getOptionA('website_use_date_picker');
 				$enabled_category_sked = getOption($merchant_id,'enabled_category_sked');
+				$enabled_category_sked_time = getOption($merchant_id,'enabled_category_sked_time');
 				
 				$merchant_info = array(
 				  'merchant_id'=>$data['merchant_id']
 				);							
 				$merchant_opt_contact_delivery = getOption($merchant_id,'merchant_opt_contact_delivery');	
 				
+				$detect = new Mobile_Detect;
+				$is_mobile=false;
+				if ( $detect->isMobile() ) {
+					$is_mobile = true;
+				}
+				
 				FunctionsV3::registerScript(array(
 				  "var website_use_date_picker='$website_use_date_picker';",
 				  "var enabled_category_sked='$enabled_category_sked';",
+				  "var enabled_category_sked_time='$enabled_category_sked_time';",
 				  "var merchant_information =".json_encode($merchant_info)."",
 				  "var merchant_opt_contact_delivery='$merchant_opt_contact_delivery';",
+				  "var is_mobile='$is_mobile';",
 				));
 				
 			
@@ -3237,7 +3367,13 @@ class StoreController extends CController
 	
 	public function actionvoginit()
 	{				
-		require_once 'buy.php';
+		if (!Yii::app()->functions->isClientLogin()){
+			$this->redirect(Yii::app()->user->returnUrl);
+			Yii::app()->end();
+		}		
+		
+		//require_once 'buy.php';
+		require_once('buy_new.php');
 		if (empty($error)){
 			 $credentials  = FunctionsV3::GetVogueCredentials($merchant_id);
 			 
@@ -3548,7 +3684,13 @@ class StoreController extends CController
 			$this->render('404-page',array('header'=>true));
 			return ;
 		}
-		$this->render('driver_signup');
+		$captcha_driver_signup = getOptionA('captcha_driver_signup');
+		if($captcha_driver_signup==1){
+		   GoogleCaptchaV3::init();
+		}
+		$this->render('driver_signup',array(
+		  'captcha_driver_signup'=>$captcha_driver_signup
+		));
 	}
 	
 	public function actiondriver_signup_ty()
@@ -3561,7 +3703,15 @@ class StoreController extends CController
 	/*STRIPE*/	
 	public function actionstripeInit()
 	{
-		require_once('buy.php');
+		if (!Yii::app()->functions->isClientLogin()){
+			$this->redirect(Yii::app()->user->returnUrl);
+			Yii::app()->end();
+		}
+		
+		//require_once('buy.php');
+		require_once('buy_new.php');
+		
+		$back_url = Yii::app()->createUrl('/store/confirmorder');
 		
 		if(empty($error)){
 			if ($credentials = StripeWrapper::getCredentials($merchant_id)){
@@ -3593,7 +3743,7 @@ class StoreController extends CController
 					   'cancel_url'=>websiteUrl()."/paymentoption",
 					   //'locale'=>'es'
 					);			
-					
+										
 					
 					$resp  =  StripeWrapper::createSession($credentials['secret_key'],$params);					
 					$stripe_session=$resp['id'];
@@ -4151,7 +4301,8 @@ class StoreController extends CController
 	
 	public function actionpaypal_v2init()
 	{
-		require_once('buy.php');
+		//require_once('buy.php');
+		require_once('buy_new.php');
 		
 		if(empty($error)){
 			if ($credentials=PaypalWrapper::getCredentials($merchant_id)){
@@ -4224,7 +4375,8 @@ class StoreController extends CController
 	
 	public function actionmercadopagoinit()
 	{
-		require_once('buy.php');
+		//require_once('buy.php');
+		require_once('buy_new.php');
 		if(empty($error)){
 			if ($credentials=mercadopagoWrapper::getCredentials($merchant_id)){				
 				$success_url = websiteUrl()."/mercadopago_success?trans_type=$trans_type";

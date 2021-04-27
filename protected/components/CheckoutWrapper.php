@@ -253,5 +253,87 @@ class CheckoutWrapper
          } 
          return $_fee;
 	}	
+	
+	
+	public static function verifyOrderTimeManagement($merchant_id='',
+	$trans_type='',$delivery_date='', $delivery_time='')
+	{
+		
+		//dump("$merchant_id=>$trans_type=>$delivery_date=>$delivery_time");
+		
+		if(empty($merchant_id) || empty($trans_type) || empty($delivery_date) || empty($delivery_time)){
+			return true;
+		}
+				
+		$date = "$delivery_date $delivery_time";		
+		$date_date = date("Y-m-d",strtotime($date));
+		$date_day = date("l",strtotime($date));
+		$date_time = date("H:i",strtotime($date));
+		$date_day = strtolower($date_day);
+		//dump($date_day);dump($date_time);
+		
+		$order_status=''; $and='';
+		
+		/*FIRST QUERY*/
+		$stmtc="
+		SELECT id,number_order_allowed,order_status				
+		FROM {{order_time_management}} a
+		WHERE 
+		transaction_type=".q($trans_type)."
+		AND days=".q($date_day)."
+		AND merchant_id=".q($merchant_id)."
+		AND
+		CAST(".q($date_time)." AS TIME)
+				BETWEEN CAST(start_time AS TIME) and CAST(end_time AS TIME)				
+		";		
+		if($resc = Yii::app()->db->createCommand($stmtc)->queryRow()){							
+			$orderstatus = !empty($resc['order_status'])?json_decode($resc['order_status'],true):false;		
+			if(is_array($orderstatus) && count($orderstatus)>=1){				
+				foreach ($orderstatus as $orderstatus_val) {
+					$order_status.=q($orderstatus_val).",";
+				}
+				$order_status = substr($order_status,0,-1);
+				$and=" AND status IN ($order_status) ";
+			} else $and=" AND status NOT IN ('initial_order') ";
+		}
+		
+		/*2ND QUERY*/
+		$stmt="
+		SELECT id,number_order_allowed,
+		(
+		 select count(*) from {{order}} 
+		 where trans_type=".q($trans_type)."
+		 and delivery_date = ".q($date_date)."
+		 and merchant_id=".q($merchant_id)."
+		 and CAST(delivery_time as time)
+		 between CAST(a.start_time AS TIME) and CAST(a.end_time AS TIME)
+		 $and
+		) as total
+		
+		FROM {{order_time_management}} a
+		WHERE 
+		transaction_type=".q($trans_type)."
+		AND days=".q($date_day)."
+		AND merchant_id=".q($merchant_id)."
+		AND
+		CAST(".q($date_time)." AS TIME)
+				BETWEEN CAST(start_time AS TIME) and CAST(end_time AS TIME)
+				
+		";		
+		//dump($stmt);	
+		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){												
+			//dump($res);
+			if($res['total']>=$res['number_order_allowed']){
+				 throw new Exception( 
+				   Yii::t("default","For this time [time] there is no longer the possibility of [trans_type]",array(
+				     '[time]'=>FunctionsV3::prettyTime($date_time),
+				     '[trans_type]'=>$trans_type
+				   ))
+				  );
+			}
+		}
+		return true;
+	}
+	
 }
 /*end class;*/

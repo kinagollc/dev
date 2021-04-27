@@ -22,7 +22,7 @@ class Price_Formatter
 					
 			$stmt="
 			SELECT currency_code,currency_symbol,currency_position,
-			IF(number_decimal IS NULL or number_decimal = '',  2 , number_decimal )  as number_decimal,
+			IF(number_decimal IS NULL or number_decimal = '',  0 , number_decimal )  as number_decimal,
 			IF(decimal_separator IS NULL or decimal_separator = '',  '.' , decimal_separator )  as decimal_separator
 			,thousand_separator
 			
@@ -34,7 +34,7 @@ class Price_Formatter
 			if(!$res = Yii::app()->db->createCommand($stmt)->queryRow()){					
 				$stmt="
 				SELECT id,currency_code,currency_symbol,currency_position,
-				IF(number_decimal IS NULL or number_decimal = '',  2 , number_decimal )  as number_decimal,
+				IF(number_decimal IS NULL or number_decimal = '',  0 , number_decimal )  as number_decimal,
 				IF(decimal_separator IS NULL or decimal_separator = '',  '.' , decimal_separator )  as decimal_separator
 				,thousand_separator
 				
@@ -110,7 +110,7 @@ class Price_Formatter
 					//
 					break;
 			}
-									
+												
 			Price_Formatter::$number_format = array(
 			   'decimals'=>$res['number_decimal'], 
 			   'decimal_separator'=>$res['decimal_separator'], 
@@ -139,11 +139,9 @@ class Price_Formatter
 	
 	public static function formatNumber($value=0)
 	{				
-	if($value<=0){
-            return '';
-        }
+				
 		$formatted_number = number_format( (float) $value ,
-		   !empty(Price_Formatter::$number_format['decimals'])?Price_Formatter::$number_format['decimals']:2,
+		   !empty(Price_Formatter::$number_format['decimals'])?Price_Formatter::$number_format['decimals']:0,
 		   Price_Formatter::$number_format['decimal_separator'],
 		   Price_Formatter::$number_format['thousand_separator']
 		);
@@ -153,6 +151,17 @@ class Price_Formatter
 		} else {
 			return $formatted_number.Price_Formatter::$number_format['spacer'].Price_Formatter::$number_format['currency_symbol'];
 		}
+	}
+	
+	public static function formatNumberNoSymbol($value=0)
+	{								
+		$formatted_number = number_format( (float) $value ,
+		   !empty(Price_Formatter::$number_format['decimals'])?Price_Formatter::$number_format['decimals']:0,
+		   Price_Formatter::$number_format['decimal_separator'],
+		   Price_Formatter::$number_format['thousand_separator']
+		);
+		
+		return $formatted_number;
 	}
 	
 	public static function convertToRaw($price, $decimal=2)

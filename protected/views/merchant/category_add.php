@@ -179,14 +179,57 @@ if (isset($_GET['id'])){
 </div>
 <?php endif;?>
 
-<!--<div class="uk-form-row">
-  <label class="uk-form-label"><?php echo t("Spicy Note")?></label>
-  <?php 
-  echo CHtml::textArea('spicydish_notes',$data['spicydish_notes'],array(
-    'class'=>"big-textarea"
-  ))
-  ?>
-</div>-->
+  
+<h3><?php echo t("Category availability")?></h3>
+<p class="small"><?php echo t("Note: the time available should be on same day, eg. 8:00 to 23:00")?></p>
+
+<ul class="uk-list uk-list-striped">
+<li>
+<table width="80%">
+ <tr>
+  <td width="33.3%"><?php echo t("Days available")?></td>
+  <td width="33.3%"><?php echo t("Start time")?></td>
+  <td width="33.3%"><?php echo t("End time")?></td>
+</tr>
+</table>  
+</li>
+<?php foreach ($days as $key=> $val):?>
+<li>
+<table width="80%">
+ <tr>
+  <td width="33.3%">
+   <?php echo CHtml::checkBox("days[$key]",
+   isset($data[$key])?$data[$key]:false
+  ,array(
+   'class'=>"icheck",
+   'value'=>1
+  ))?>	  
+  &nbsp;&nbsp;<?php echo ucwords(t($val))?>
+  </td>
+  <td width="33.3%">
+   <?php echo CHtml::textField("start_time[$key]",
+  isset($data[$key."_start"])?$data[$key."_start"]:''
+  ,array(
+  'class'=>'timepick24format time_mask',  
+  ))?>  
+  </td>
+  
+  <td width="33.3%">
+   <?php echo CHtml::textField("end_time[$key]",
+  isset($data[$key."_end"])?$data[$key."_end"]:''
+  ,array(
+  'class'=>'timepick24format time_mask',  
+  ))?>  
+  </td>
+  
+ </tr>
+</table>
+</li>
+<?php endforeach;?>
+</ul>
+
+<div class="spacer"></div>
+
 
 <div class="uk-form-row">
   <label class="uk-form-label"><?php echo t("Status")?></label>

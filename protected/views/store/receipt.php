@@ -14,7 +14,7 @@ Price_Formatter::init( $used_currency );
 
 $ok=false;			
 if (is_array($data) && count($data)>=1){
-	$merchant_id=$data['merchant_id'];
+	$merchant_id=$data['merchant_id'];	
 	$json_details=!empty($data['json_details'])?json_decode($data['json_details'],true):false;
 	if ( $json_details !=false){
 		Yii::app()->functions->displayOrderHTML(array(
@@ -30,6 +30,8 @@ if (is_array($data) && count($data)>=1){
 		  'voucher_amount'=>$data['voucher_amount'],
 		  'voucher_type'=>$data['voucher_type'],
 		  'tax_set'=>$data['tax'],
+		  'service_fee'=>isset($data['service_fee'])?(float)$data['service_fee']:0,
+		  'service_fee_applytax'=>isset($data['service_fee_applytax'])?(integer)$data['service_fee_applytax']:false,
 		  ),$json_details,true);
 		if ( Yii::app()->functions->code==1){
 			$ok=true;
@@ -558,6 +560,7 @@ $data_raw=Yii::app()->functions->details['raw'];
 if ( $apply_tax==1 && $tax_set>0){	
 	$receipt=EmailTPL::salesReceiptTax($print,Yii::app()->functions->details['raw']);
 } else $receipt=EmailTPL::salesReceipt($print,Yii::app()->functions->details['raw']);
+
 
 $to=isset($data['email_address'])?$data['email_address']:'';
 

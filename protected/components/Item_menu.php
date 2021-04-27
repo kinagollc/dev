@@ -18,6 +18,11 @@ class Item_menu
     public static $food_option_not_available = false;
     public static $paginated = false;
     public static $inventory_enabled = false;
+    
+    public static $hide_empty_category = false;
+    public static $enabled_category_sked_time = false;
+    public static $time_now='';
+    public static $todays_day='';
 	
 	public static function init( $merchant_id = 0 )
 	{
@@ -34,6 +39,9 @@ class Item_menu
 		self::$food_option_not_available = getOption($merchant_id,'food_option_not_available');   		
 		self::$inventory_enabled = Item_utility::InventoryEnabled();
 		self::$paginated = false;
+		
+		self::$hide_empty_category = getOptionA('mobile2_hide_empty_category');
+		self::$enabled_category_sked_time = getOption($merchant_id,'enabled_category_sked_time');  
 	}
 	
 	
@@ -46,6 +54,25 @@ class Item_menu
 		if(self::$enabled_category_sked==1){
     		$and .= " AND $todays_day='1' ";
     	}    
+    	
+    	if(self::$enabled_category_sked_time==1){    		
+    		$and.=" 
+    		AND CAST(".q(self::$time_now)." AS TIME)
+			BETWEEN CAST(".$todays_day."_start AS TIME) and CAST(".$todays_day."_end AS TIME)
+    		";
+    	}    
+    	
+    	if( self::$table_view_item_cat  && self::$hide_empty_category ){	
+	    	$and.="
+	    	  AND a.cat_id IN (
+	    	    select cat_id 
+	    	    from {{view_item_cat}}
+	    	    where
+	    	    cat_id = a.cat_id
+	    	    and not_available = 1
+	    	  )
+	    	";
+    	}
     	    	    	
 		if( self::$multi_field  && self::$table_category_translation  ){
 			$stmt="
@@ -101,7 +128,8 @@ class Item_menu
 			$and
 			ORDER BY a.sequence ASC
 			";
-		}		
+		}				
+		//dump($stmt);
 		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
 			return $res;
 		}
@@ -182,7 +210,7 @@ class Item_menu
 			a.discount,a.photo,a.spicydish,a.dish,
 			a.item_name_trans,a.item_description_trans,a.not_available,
 			a.cat_id, a.item_token,
-			a.cooking_ref,a.ingredients,
+			a.cooking_ref,a.ingredients,a.item_sequence,
 
 			(
 			  select IF( count(*)>1, 1, 2 ) from {{view_item_cat}}
@@ -208,12 +236,12 @@ class Item_menu
 			a.cat_id = ".q( (integer) $category_id )."		
 			AND a.status IN ('publish','published')			
 			$and	
-			ORDER BY item_sequence,item_id ASC
+			ORDER BY a.item_sequence,a.item_id ASC
 			";
 		} else {
 			return false;
 		}	
-					
+						
 		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){				
 			foreach ($res as $val) {
 				$single_details = array();
@@ -369,6 +397,47 @@ class Item_menu
 		return false;
 	}
 	
+	public static function getItemPriceAndVerify($item_id=0, $size_id = 0)
+	{		
+		$and_cat = '';	$and='';	
+		if(self::$enabled_category_sked==1 || self::$enabled_category_sked_time==1){
+			$and_cat = '';			
+			if(self::$enabled_category_sked==1 && !empty(self::$todays_day)){
+				$and_cat = " and ". self::$todays_day." = 1 ";
+			}
+			if(self::$enabled_category_sked_time==1 && !empty(self::$time_now) && !empty(self::$todays_day)){
+				$and_cat.=" 
+				AND CAST(".q(self::$time_now)." AS TIME)
+				BETWEEN CAST(".self::$todays_day."_start AS TIME) and CAST(".self::$todays_day."_end AS TIME)
+				";
+			}
+			$and .= "
+			 AND a.cat_id IN (  
+			   select cat_id 
+			   from {{category}}
+			   where
+			   cat_id = a.cat_id
+			   and merchant_id = a.merchant_id	           
+			   and status='publish'
+			   $and_cat
+			)        
+			";
+		}
+		$stmt="
+		SELECT price,discount,not_available,size_name,size_id
+		FROM {{view_item_cat}} a
+		WHERE item_id = ". q( (integer)$item_id)."
+		AND size_id = ". q( (integer)$size_id) ."
+		AND status='publish'
+		$and
+		LIMIT 0,1
+		";				
+		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
+			return $res;
+		}
+		return false;
+	}	
+	
 	public static function getAddonPrice($sub_item_id=0)
 	{
 		$stmt="
@@ -395,6 +464,25 @@ class Item_menu
     	$and_category='';    	
     	if(self::$food_option_not_available==1){
     		$and_category= " AND not_available=1 ";
+    	}
+    	
+    	if(self::$enabled_category_sked_time==1){    		
+    		$and.=" 
+    		AND CAST(".q(self::$time_now)." AS TIME)
+			BETWEEN CAST(".$todays_day."_start AS TIME) and CAST(".$todays_day."_end AS TIME)
+    		";
+    	}    
+    	
+    	if( self::$table_view_item_cat  && self::$hide_empty_category ){	
+	    	$and.="
+	    	  AND a.cat_id IN (
+	    	    select cat_id 
+	    	    from {{view_item_cat}}
+	    	    where
+	    	    cat_id = a.cat_id
+	    	    and not_available = 1
+	    	  )
+	    	";
     	}
     	
     	$paginate = Item_utility::paginate();
@@ -457,7 +545,6 @@ class Item_menu
 		$and
 		ORDER BY sequence ASC
 		";				
-		//dump($stmt);die();
 		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){						
 			foreach ($res as $val) {										
 				$total_cat_paginate = $val['total_item_in_category']>0? ceil($val['total_item_in_category']/$paginate) : 0;
@@ -590,10 +677,11 @@ class Item_menu
 			";
 		}
 							
+		//DISTINCT a.item_id,
 		if( self::$table_view_item_cat  ){	
 			$stmt="
 			SELECT 
-			DISTINCT a.item_id,
+			DISTINCT a.item_id,a.item_sequence,
 			
 			$select		
 			
@@ -659,6 +747,32 @@ class Item_menu
 			}
 		}
 		
+		if(self::$enabled_category_sked==1 && self::$enabled_category_sked_time==1){
+    		$and.="
+    		AND a.cat_id IN (
+    		  select cat_id from {{category}}
+    		  where ".self::$todays_day."='1'
+    		  and CAST(".q(self::$time_now)." AS TIME)
+	          BETWEEN CAST(".self::$todays_day."_start AS TIME) and CAST(".self::$todays_day."_end AS TIME)
+    		)
+    		";
+    	} elseif ( self::$enabled_category_sked==1 ) {
+    		$and.="
+    		AND a.cat_id IN (
+    		  select cat_id from {{category}}
+    		  where ".self::$todays_day."='1'    		  
+    		)
+    		";
+    	} elseif ( self::$enabled_category_sked_time==1 ) {
+    		$and.="
+    		AND a.cat_id IN (
+    		  select cat_id from {{category}}    		  
+    		  where CAST(".q(self::$time_now)." AS TIME)
+	          BETWEEN CAST(".self::$todays_day."_start AS TIME) and CAST(".self::$todays_day."_end AS TIME)
+    		)
+    		";
+    	}
+		
 		if ( $stmt = self::itemQueryStatment()){
 			$stmt.="
 		    WHERE			
@@ -667,7 +781,7 @@ class Item_menu
 			$and	
 			ORDER BY category_sequence,cat_id,item_id ASC
 			LIMIT $page,$page_limit
-			";
+			";			
 		} else return false;		
 		
 		return self::processLazyQuery($stmt);
@@ -705,7 +819,8 @@ class Item_menu
 				$and.= " AND not_available=1 ";
 			}
 		}
-				
+		
+		      
 		if ( $stmt = self::itemQueryStatment()){
 			$stmt.="
 			WHERE
@@ -717,7 +832,7 @@ class Item_menu
 			LIMIT $page,$page_limit		    
 			";
 		} else return false;					
-		
+				
 		return self::processLazyQuery($stmt);
 	}
 	
@@ -729,6 +844,41 @@ class Item_menu
 		
 		if(self::$food_option_not_available==1){
 			$and = " AND not_available=1 ";
+		}
+		
+		if(self::$enabled_category_sked==1 || self::$enabled_category_sked_time==1){			
+			$and_cat = '';			
+			if(self::$enabled_category_sked==1 && !empty(self::$todays_day)){
+				$and_cat = " and ". self::$todays_day." = 1 ";
+			}
+			if(self::$enabled_category_sked_time==1 && !empty(self::$time_now) && !empty(self::$todays_day)){
+				$and_cat.=" 
+				AND CAST(".q(self::$time_now)." AS TIME)
+				BETWEEN CAST(".self::$todays_day."_start AS TIME) and CAST(".self::$todays_day."_end AS TIME)
+				";
+			}
+			$and .= "
+			 AND cat_id IN (  
+	           select cat_id 
+	           from {{category}}
+	           where
+	           cat_id = a.cat_id
+	           and merchant_id = a.merchant_id	           
+	           and status='publish'
+	           $and_cat
+	        )        
+			";
+		} else {					
+			$and .= "
+			 AND cat_id IN (  
+	           select cat_id 
+	           from {{category}}
+	           where
+	           cat_id = a.cat_id
+	           and merchant_id = a.merchant_id           
+	           and status='publish'
+	        )        
+			";
 		}
 				
 		if ( $stmt = self::itemQueryStatment()){
@@ -752,9 +902,9 @@ class Item_menu
 			AND a.status IN ('publish','published')		
 			$and		
 			LIMIT $page,$page_limit			  
-			";
+			";			
 		} else return false;
-						
+								
 		return self::processLazyQuery($stmt);
 	}
 	
@@ -810,7 +960,33 @@ class Item_menu
 	
 	public static function searchByFoodName($item_name='')
 	{
-		$select=''; $where = '';
+		$select=''; $where = ''; $and_cat='';
+		
+		if(self::$enabled_category_sked==1 || self::$enabled_category_sked_time==1){
+			$andcat = '';			
+			if(self::$enabled_category_sked==1 && !empty(self::$todays_day)){
+				$andcat = " and ". self::$todays_day." = 1 ";
+			}
+			if(self::$enabled_category_sked_time==1 && !empty(self::$time_now) && !empty(self::$todays_day)){
+				$andcat.=" 
+				AND CAST(".q(self::$time_now)." AS TIME)
+				BETWEEN CAST(".self::$todays_day."_start AS TIME) and CAST(".self::$todays_day."_end AS TIME)
+				";
+			}
+			$and_cat .= "
+			 AND a.cat_id IN (  
+	           select cat_id 
+	           from {{category}}
+	           where
+	           cat_id = a.cat_id
+	           and merchant_id = a.merchant_id	           
+	           and status='publish'
+	           $andcat
+	        )        
+			";
+		}
+		
+		
 		if ( self::$multi_field && self::$table_item_translation  ){
 			$select = "
 			IFNULL((
@@ -822,24 +998,38 @@ class Item_menu
 			 and language = ".q(self::$language)."
 			), a.item_name ) as name				
 			";
-		} else {			
-			$select = "item_name as name";
-		};
-		
-		$stmt = "
-		SELECT $select 
-		FROM {{item}} a
-		WHERE 
+			$where = "
+			WHERE 
+			not_available = 1
+			AND
 			a.item_id IN (
 	        	  select item_id from {{item_translation}}
 	        	  where item_id = a.item_id
-	        	  and language = ".q(self::$language)."
+	        	  and language IN (".q(self::$language).",".q("default").")
 	        	  and item_name LIKE ".FunctionsV3::q("%$item_name%")."	  	        	        	
-	        	)	    
-	         AND status ='publish'
+	        	)	  
+	        $and_cat	  	         
+			";
+		} else {			
+			$select = "item_name as name";
+			$where = "
+			WHERE item_name LIKE ".FunctionsV3::q("%$item_name%")."	
+			AND not_available = 1
+			$and_cat
+			";
+		};
+		
+		$stmt = "
+		SELECT DISTINCT $select					 
+		FROM {{view_item_cat}} a
+		$where		
+		AND status ='publish'
    	    ORDER BY item_name ASC   	    	
 		";		
-		if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){			
+				
+		//dump($stmt);
+		if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){						
+			//dump($resp);die();
 			$data = array();
 			foreach ($resp as $key=>$val) {				
 				$data[]['name'] = clearString($val['name']);
@@ -863,21 +1053,27 @@ class Item_menu
 			 and language = ".q(self::$language)."
 			), a.cuisine_name ) as name				
 			";
-		} else {			
-			$select = "cuisine_name as name";
-		};
-		
-		$stmt = "
-		SELECT $select 
-		FROM {{cuisine}} a
-		WHERE 
+			$where = "
+			WHERE 
 			a.cuisine_id IN (
 	        	  select cuisine_id from {{cuisine_translation}}
 	        	  where cuisine_id = a.cuisine_id
 	        	  and language = ".q(self::$language)."
 	        	  and cuisine_name LIKE ".FunctionsV3::q("%$name%")."	  	        	        	
-	        	)	    
-	         AND status ='publish'
+	        	)	    	         
+			";
+		} else {			
+			$select = "cuisine_name as name";			
+			$where ="
+			WHERE cuisine_name LIKE ".FunctionsV3::q("%$name%")."
+			";
+		};
+		
+		$stmt = "
+		SELECT $select 
+		FROM {{cuisine}} a
+		$where
+		AND status ='publish'
    	    ORDER BY cuisine_name ASC   	    	
 		";				
 		if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){			

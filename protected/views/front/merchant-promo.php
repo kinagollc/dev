@@ -1,5 +1,5 @@
 
-
+<?php $exchange_rate = Item_utility::getRates();?>
 <div class="box-grey rounded merchant-promo" style="margin-top:0;">
 
 <?php if(isset($promo['offer'])):?>
@@ -29,7 +29,7 @@
 </div>  
 <?php foreach ($promo['voucher'] as $val): 
       if ( $val['voucher_type']=="fixed amount"){
-      	  $amount=Price_Formatter::formatNumber($val['amount']);
+      	  $amount=Price_Formatter::formatNumber( (float) $val['amount'] * (float)$exchange_rate );
       } else $amount=number_format( ($val['amount']/100)*100 )." %";
 ?>
    <p><i class="green-color ion-ios-plus-empty"></i> <?php echo $val['voucher_name']." - ".$amount." ".t("Discount")?></p>
@@ -47,7 +47,7 @@
     </a>     
 </div>  
 <p><i class="green-color ion-ios-plus-empty"></i> <?php 
-echo t("Free Delivery On Orders Over")." ". Price_Formatter::formatNumber($promo['free_delivery'])?></p>
+echo t("Free Delivery On Orders Over")." ". Price_Formatter::formatNumber( (float) $promo['free_delivery'] * (float)$exchange_rate )?></p>
 <?php endif;?>
 
 </div>

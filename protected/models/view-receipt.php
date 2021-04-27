@@ -22,6 +22,8 @@ if ( $data = FunctionsV3::getReceiptByID($order_id)){
 		   'points_discount'=>isset($data['points_discount'])?$data['points_discount']:'' /*POINTS PROGRAM*/,
 		   'voucher_amount'=>$data['voucher_amount'],
 		   'voucher_type'=>$data['voucher_type'],
+		   'service_fee'=>isset($data['service_fee'])?(float)$data['service_fee']:0,
+		   'service_fee_applytax'=>isset($data['service_fee_applytax'])?(integer)$data['service_fee_applytax']:false,
 		   'tax_set'=>$data['tax'],
 	     ),$json_details,true);
 	     

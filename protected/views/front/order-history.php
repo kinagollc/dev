@@ -130,7 +130,7 @@ $cancel_order_enabled = getOptionA('cancel_order_enabled');
            	   	  foreach ($remarks_args as $remarks_args_key=>$remarks_args_val) {
            	   	  	$new_arrgs[$remarks_args_key]= Yii::t("driver",$remarks_args_val);
            	   	  }		           	   	  
-           	      $remarks = Yii::t("driver",$valh['remarks2'],$new_arrgs);            	   
+           	      $remarks = Yii::t("default",$valh['remarks2'],$new_arrgs);            	   
            	   }
            }
            ?>

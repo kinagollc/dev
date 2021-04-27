@@ -802,7 +802,30 @@ if (!class_exists('AjaxAdmin'))
 			  'spicydish_notes'=>isset($this->data['spicydish_notes'])?$this->data['spicydish_notes']:'',
 			  'dish'=>isset($this->data['dish'])?json_encode($this->data['dish']):''			  
 			);				
+											
+			$day_input = isset($this->data['days'])?$this->data['days']:'';
+			$days = FunctionsV3::dayList();
+			foreach ($days as $day=>$val) {
+				$params[$day] = isset($day_input[$day])?$day_input[$day]:0;
+			}
 			
+			if(isset($this->data['start_time'])){
+				if(is_array($this->data['start_time']) && count($this->data['start_time'])>=1){
+					foreach ($this->data['start_time'] as $day=>$val) {
+						$params[$day."_start"]=$val;
+					}
+				}			
+			}		
+			
+			if(isset($this->data['end_time'])){
+				if(is_array($this->data['end_time']) && count($this->data['end_time'])>=1){
+					foreach ($this->data['end_time'] as $day=>$val) {
+						$params[$day."_end"]=$val;
+					}
+				}			
+			}		
+					
+				
 			if (isset($this->data['category_name_trans'])){				
 				if (okToDecode()){
 					$params['category_name_trans']=json_encode($this->data['category_name_trans'],
@@ -1564,7 +1587,7 @@ if (!class_exists('AjaxAdmin'))
 		                (integer)$this->data['id'],
 		                isset($this->data['category'])?(array)$this->data['category']:''
 	                );
-	                
+	                	                
 	                ItemClass::insertItemRelationshipSubcategory(
 		                Yii::app()->functions->getMerchantID(),
 		                (integer)$this->data['id'],
@@ -1578,6 +1601,26 @@ if (!class_exists('AjaxAdmin'))
 		               'size'=>isset($this->data['size'])?(array)$this->data['size']:'',
 		               'price'=>isset($this->data['price'])?(array)$this->data['price']:''
 		              )		              
+	                );
+	                	                
+	                $merchant_id = (integer)Yii::app()->functions->getMerchantID();
+	                
+	                ItemClass::insertMeta( 
+	                  $merchant_id,
+	                  (integer)$this->data['id'],'cooking_ref',
+	                  isset($this->data['cooking_ref'])?(array)$this->data['cooking_ref']:''
+	                );
+	                
+	                ItemClass::insertMeta( 
+	                  $merchant_id,
+	                  (integer)$this->data['id'],'ingredients',
+	                  isset($this->data['ingredients'])?(array)$this->data['ingredients']:''
+	                );
+	                
+	                ItemClass::insertMeta( 
+	                  $merchant_id,
+	                  (integer)$this->data['id'],'dish',
+	                  isset($this->data['dish'])?(array)$this->data['dish']:''
 	                );
 	                									
 				} else $this->msg=Yii::t("default","ERROR: cannot update");
@@ -1608,6 +1651,26 @@ if (!class_exists('AjaxAdmin'))
 		               'size'=>isset($this->data['size'])?(array)$this->data['size']:'',
 		               'price'=>isset($this->data['price'])?(array)$this->data['price']:''
 		              )		              
+	                );
+	                
+	                $merchant_id = (integer)Yii::app()->functions->getMerchantID();
+	                
+	                 ItemClass::insertMeta( 
+	                   $merchant_id,
+	                  (integer)$item_id,'cooking_ref',
+	                  isset($this->data['cooking_ref'])?(array)$this->data['cooking_ref']:''
+	                );
+	                
+	                ItemClass::insertMeta( 
+	                  $merchant_id, 
+	                  (integer)$item_id,'ingredients',
+	                  isset($this->data['ingredients'])?(array)$this->data['ingredients']:''
+	                );
+	                
+	                ItemClass::insertMeta( 
+	                  $merchant_id,
+	                  (integer)$item_id,'dish',
+	                  isset($this->data['dish'])?(array)$this->data['dish']:''
 	                );
 	                         
 	            } else $this->msg=Yii::t("default",'ERROR. cannot insert data.');
@@ -1731,7 +1794,7 @@ if (!class_exists('AjaxAdmin'))
 	    public function UpdateMerchant()
 	    {	    	
 	    	
-	    	$merchant_id=Yii::app()->functions->getMerchantID();
+	    	$merchant_id = (integer) Yii::app()->functions->getMerchantID();
 	    	if (!empty($this->data['password'])){
 				$params['username']=$this->data['username'];
 				$params['password']=md5($this->data['password']);
@@ -1800,10 +1863,18 @@ if (!class_exists('AjaxAdmin'))
 		    unset($params['date_created']);
 			$params['date_modified']=FunctionsV3::dateNow();				
 													
-			$res = $this->updateData('{{merchant}}' , $params ,'merchant_id',Yii::app()->functions->getMerchantID());
+			$res = $this->updateData('{{merchant}}' , $params ,'merchant_id', $merchant_id );
 			if ($res){
 				$this->code=1;
                 $this->msg=Yii::t("default",'Merchant updated.');  
+                
+                $cuisine = $this->data['cuisine'];
+                try {
+		    		FunctionsV3::insertCuisine($merchant_id,(array)$cuisine);		    		
+		    	} catch (Exception $e) {
+		    		//$e->getMessage()
+		    	}                
+            
 			} else $this->msg=Yii::t("default","ERROR: cannot update");		    
 	    }	
 	    
@@ -2134,6 +2205,14 @@ if (!class_exists('AjaxAdmin'))
 	    	
 	    	Yii::app()->functions->updateOption("merchant_menu_lazyload",
 	    	isset($this->data['merchant_menu_lazyload'])?(integer)$this->data['merchant_menu_lazyload']:0
+	    	,$merchant_id);  
+	    	
+	    	Yii::app()->functions->updateOption("merchant_service_fee",
+	    	isset($this->data['merchant_service_fee'])?(float)$this->data['merchant_service_fee']:0
+	    	,$merchant_id);  
+	    	
+	    	Yii::app()->functions->updateOption("merchant_service_fee_applytax",
+	    	isset($this->data['merchant_service_fee_applytax'])?(integer)$this->data['merchant_service_fee_applytax']:0
 	    	,$merchant_id);  
 	    	
 	    	$this->code=1;
@@ -2996,9 +3075,12 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    		    	
 	    	$this->data = array_merge( (array) $this->data, (array) $rates);	    	
 	    		    	    
-	    	/*dump($this->data);
-	    	dump($_SESSION['kr_item']);*/
-	    	    	
+	    	
+	    	/*SERVICE FEE*/	 	    	
+	    	if($service_resp = Cart_utilities::getServiceFee( isset($current_merchant_id)?$current_merchant_id:'' )){
+	    		$this->data['service_fee'] = (float)$service_resp['service_fee'];
+	    		$this->data['service_fee_applytax'] = $service_resp['service_fee_applytax'];	    		
+	    	}	    		    	    	
 	    	
 	    	Yii::app()->functions->displayOrderHTML($this->data, isset($_SESSION['kr_item'])?$_SESSION['kr_item']:'' );
 	    	$this->code=Yii::app()->functions->code;
@@ -3021,8 +3103,6 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 		    	$apply_tax=getOption($mtid,'merchant_apply_tax');
 		    	$tax=FunctionsV3::getMerchantTax($mtid);
 		    	if ( $apply_tax==1 && $tax>0){		    		
-		    		/*$new_data=ItemTaxable::compute( $this->details['raw'] , $tax, $mtid);
-		    		$this->details['raw']=$new_data;	*/
 		    		$this->details['html']=Yii::app()->controller->renderPartial('/front/cart-with-tax',array(
 		    		   'data'=>$this->details['raw'],
 		    		   'tax'=>$tax,
@@ -3063,6 +3143,30 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			 return ;
 	    		}
 	    	}
+	    	
+	    	    	
+	    	$merchantid=isset($this->data['merchant_id'])?(integer)$this->data['merchant_id']:0;
+	    	$time_order_management = getOption($merchantid,'merchant_time_order_management');	    	
+	    	if($time_order_management==1){
+	    		try {	    	
+	    			
+	    			$deliverytime = isset($this->data['delivery_time'])?$this->data['delivery_time']:'';	    		
+	    			if(is_null($deliverytime) || $deliverytime=="null" || empty($deliverytime)){
+	    				$deliverytime =date("H:i");
+	    			}	    			
+	    					
+	    			CheckoutWrapper::verifyOrderTimeManagement(
+	    			  $merchantid,
+	    			  isset($this->data['delivery_type'])?$this->data['delivery_type']:'',
+	    			  isset($this->data['delivery_date'])?$this->data['delivery_date']:'',
+	    			  $deliverytime
+	    			);
+	    		} catch (Exception $e) {
+	    			 $this->msg = $e->getMessage();
+	    			 return ;
+	    		}
+	    	}	    
+	    		    	
 	    	
 	       /** check if time is non 24 hour format */	    
 	       if ( yii::app()->functions->getOptionAdmin('website_time_picker_format')=="12"){
@@ -3228,8 +3332,8 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 		    	$email_verification=getOptionA('theme_enabled_email_verification');
 		    	if ($email_verification==2){
 		    		$params['email_verification_code']=$email_code;
-		    		$params['status']='pending';
-		    		FunctionsV3::sendEmailVerificationCode($params['email_address'],$email_code,$params);
+		    		$params['status']='pending';		    		
+		    		//FunctionsV3::sendEmailVerificationCode($params['email_address'],$email_code,$params);
 		    	}
 	    	
 		    	/** update 2.3*/
@@ -3239,11 +3343,17 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 		    	if (isset($this->data['custom_field2'])){
 		    		$params['custom_field2']=!empty($this->data['custom_field2'])?$this->data['custom_field2']:'';
 		    	}
+		    	
 
+		    	$customer_token =FunctionsV3::generateCustomerToken();
+		    	$params['token']=$customer_token;
 		    	$params = FunctionsV3::purifyData($params);
-		    		    	
+		    			    		    
 	    		if ( $this->insertData("{{client}}",$params)){
-	    			$this->details=Yii::app()->db->getLastInsertID();	    		
+	    			$client_id = Yii::app()->db->getLastInsertID();	  
+	    			$this->details = $client_id;
+
+	    			
 	    			$this->code=1;
 	    			$this->msg=Yii::t("default","Registration successful");
 
@@ -3251,6 +3361,10 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    				$this->msg=t("We have sent verification code to your mobile number");
 	    			} elseif ( $email_verification ==2 ){ 
 	    				$this->msg=t("We have sent verification code to your email address");
+	    				
+	    				$params['verification_link'] = websiteUrl()."/email_verification/?id=".urlencode($customer_token);
+	    				FunctionsV3::sendEmailVerificationCode($params['email_address'],$email_code,$params);
+	    				
 	    			} else {
 	    			   /*sent welcome email*/		    			   
 	    			   FunctionsV3::sendCustomerWelcomeEmail($params);
@@ -3487,8 +3601,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    }	
 	    
 	    public function placeOrder()
-	    {	
-	    	
+	    {		    	
 	    	/*GOOGLE CAPCHA*/
 	    	if ( getOptionA('captcha_order')==2){
 				try {	    			
@@ -3510,6 +3623,30 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			 return ;
 	    		}
 	    	}
+	    		    	
+	    	$merchantid=isset($this->data['merchant_id'])?(integer)$this->data['merchant_id']:0;
+	    	$time_order_management = getOption($merchantid,'merchant_time_order_management');	    	
+	    	if($time_order_management==1){
+	    		try {	    			
+	    			
+	    			$deliverytime = isset($_SESSION['kr_delivery_options']['delivery_time'])?$_SESSION['kr_delivery_options']['delivery_time']:'';
+	    			if(is_null($deliverytime) || $deliverytime=="null" || empty($deliverytime)){
+	    				$deliverytime =date("H:i");
+	    			}	  			
+	    			
+	    			CheckoutWrapper::verifyOrderTimeManagement(
+	    			  $merchantid,
+	    			  isset($this->data['delivery_type'])?$this->data['delivery_type']:'',
+	    			  isset($_SESSION['kr_delivery_options']['delivery_date'])?$_SESSION['kr_delivery_options']['delivery_date']:'',
+	    			  $deliverytime
+	    			  
+	    			);
+	    		} catch (Exception $e) {
+	    			 $this->msg = $e->getMessage();
+	    			 return ;
+	    		}
+	    	}	    
+	    		    	
 
 	    	$transaction_type = isset($this->data['delivery_type'])?$this->data['delivery_type']:'';
 			$accurate_address_lat = isset($this->data['map_accurate_address_lat'])?$this->data['map_accurate_address_lat']:'';
@@ -3571,7 +3708,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			    	
 			}	    
 						
-			if ( $transaction_type=="delivery"){
+			if ( $transaction_type=="delivery" && $is_by_location!=true){
 				if(empty($accurate_address_lat) || empty($accurate_address_lng)){
 					$this->msg=t("Please select location on tne map");
 		    		return ;
@@ -3641,44 +3778,57 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 					    $this->msg = $e->getMessage();
 					    return ;
 					}
-		    	} else {
+		    	} else {		    		
 		    		$disabled_order_confirm_page = getOptionA('disabled_order_confirm_page');
-		    		if($disabled_order_confirm_page==1){		    		   
-		    			if(isset($this->data['address_book_id_location'])){
-		    			   $address_book_id_location = $this->data['address_book_id_location'];	    
-		    			   if($res_book = FunctionsV3::getAddressByLocationFullDetails($address_book_id_location)){		    			   	   
-		    			   	    $this->data['state_id']=$res_book['state_id'];
-			    				$this->data['city_id']=$res_book['city_id'];
-			    				$this->data['area_id']=$res_book['area_id'];
-			    				
-			    				$this->data['street'] = $res_book['street'];    				
-			    				$this->data['city'] = $res_book['city_name'];
-			    				$this->data['state'] = $res_book['state_name'];
-			    				$this->data['area_name'] = $res_book['area_name'];
-			    				$this->data['location_name'] = $res_book['location_name'];
-			    				$this->data['zipcode'] = $res_book['postal_code'];
-		    			   }
-		    			}		    			
-		    			$params_check=array(
-			    		   'state_id'=>$this->data['state_id'],
-			    		   'city_id'=>$this->data['city_id'],
-			    		   'area_id'=>$this->data['area_id'],
-			    		   'location_city'=>isset($this->data['city'])?$this->data['city']:'',
-			    		   'city_name'=>isset($this->data['city'])?$this->data['city']:'',
-			    		   'location_area'=>isset($this->data['area_name'])?$this->data['area_name']:'',
-			    		   'location_type'=>getOptionA('admin_zipcode_searchtype')
-			    		);
-			    		
-			    		if ( $fee=FunctionsV3::validateCanDeliverByLocation($mtid,$params_check)){			    			
-			    			$_SESSION['shipping_fee']=$fee['fee'];			    			
-			    		} else {
-			    			$this->msg=t("Sorry this merchant does not deliver to your location");
-			    			return ;
-			    		} 
-		    		}		    		
+		    		
+		    		if(isset($this->data['address_book_id_location'])){
+	    			   $address_book_id_location = $this->data['address_book_id_location'];	    
+	    			   if($res_book = FunctionsV3::getAddressByLocationFullDetails($address_book_id_location)){		    			   	   
+	    			   	    $this->data['state_id']=$res_book['state_id'];
+		    				$this->data['city_id']=$res_book['city_id'];
+		    				$this->data['area_id']=$res_book['area_id'];
+		    				
+		    				$this->data['street'] = $res_book['street'];    				
+		    				$this->data['city'] = $res_book['city_name'];
+		    				$this->data['state'] = $res_book['state_name'];
+		    				$this->data['area_name'] = $res_book['area_name'];
+		    				$this->data['location_name'] = $res_book['location_name'];
+		    				$this->data['zipcode'] = $res_book['postal_code'];
+	    			   }
+	    			}		    			
+	    			$params_check=array(
+		    		   'state_id'=>$this->data['state_id'],
+		    		   'city_id'=>$this->data['city_id'],
+		    		   'area_id'=>$this->data['area_id'],
+		    		   'location_city'=>isset($this->data['city'])?$this->data['city']:'',
+		    		   'city_name'=>isset($this->data['city'])?$this->data['city']:'',
+		    		   'location_area'=>isset($this->data['area_name'])?$this->data['area_name']:'',
+		    		   'location_type'=>getOptionA('admin_zipcode_searchtype')
+		    		);
+		    		
+		    		if ( $fee=FunctionsV3::validateCanDeliverByLocation($mtid,$params_check)){
+			    			
+		    			$order_subtotal = isset($_SESSION['kmrs_subtotal'])?(float)$_SESSION['kmrs_subtotal']:0;  
+		    			$minimum_order = (float)$fee['minimum_order'];
+		    			if($minimum_order>0){
+		    				if($minimum_order>$order_subtotal){
+		    					$this->msg = Yii::t("default","Minimum order is [min_order]",array(
+		    					  '[min_order]'=>Price_Formatter::formatNumber($minimum_order)
+		    					));
+		    					return ;
+		    				}
+		    			}	    		
+		    			
+		    			$_SESSION['shipping_fee']=$fee['fee'];			    			
+		    			Cookie::setCookie('kr_location_search',json_encode($params_check)); 
+		    		} else {
+		    			$this->msg=t("Sorry this merchant does not deliver to your location");
+		    			return ;
+		    		} 	    		
 		    	}	    	
 	    	} 	    	
 	    	/** re-check delivery address */
+	    	
 	    		    	
 	    	/*guest checkout*/    			    		    		    	 
 	    	if (isset($this->data['is_guest_checkout'])){
@@ -3731,11 +3881,14 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    		  'contact_phone'=>$p->purify($this->data['contact_phone']),
 	    		  'is_guest'=>1
 	    		);	    			    					    
-	    		if ($guest_exist){
-	    			unset($params['date_created']);
-	    			if ( $this->updateData("{{client}}",$params,'client_id',$res_check['client_id'])){
-	    				Yii::app()->functions->clientAutoLogin($this->data['email_address'],$this->data['password']);
-	    			} else $Validator->msg[]=t("Something went wrong during processing your request. Please try again later.");
+	    		if ($guest_exist){	    		
+	    			
+	    			if ( $this->insertData("{{client}}",$params)){		
+	    				$new_client_id = Yii::app()->db->getLastInsertID();    			
+	    				FunctionsV3::deleteCustomerGuest( (integer) $new_client_id,$params['email_address']);
+		    			Yii::app()->functions->clientAutoLogin($this->data['email_address'],$this->data['password']);
+		    		} else $Validator->msg[]=t("Something went wrong during processing your request. Please try again later.");
+	    			
 	    		} else {	    	
 			    	if ( $this->insertData("{{client}}",$params)){		    			
 		    			Yii::app()->functions->clientAutoLogin($this->data['email_address'],$this->data['password']);
@@ -3864,8 +4017,14 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 		    	
 		    	Price_Formatter::init( Yii::app()->session['currency'] );
 		    		    	
-		    	$this->data = array_merge( (array) $this->data, (array) $rates);	   
-		    	    
+		    	$this->data = array_merge( (array) $this->data, (array) $rates);	
+		    	
+		    	/*SERVICE FEE*/	 		    	   
+		    	if($service_resp = Cart_utilities::getServiceFee($this->data['merchant_id'])){
+		    		$this->data['service_fee'] = (float)$service_resp['service_fee'];
+		    		$this->data['service_fee_applytax'] = $service_resp['service_fee_applytax'];	    		
+		    	}	  
+	    			    	   
 	    		Yii::app()->functions->displayOrderHTML($this->data,$_SESSION['kr_item']);
 	    		if ( Yii::app()->functions->code==1){
 	    			
@@ -3963,6 +4122,11 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			            			$params['commision_ontop']=$admin_commision_ontop;			            		
 			            			$params['merchant_earnings']=$params['sub_total']-$params['total_commission'];
 			            		}
+			            		
+			            		if($service_resp){
+			            			$params['total_commission'] = (float)$params['total_commission'] + (float)$service_resp['service_fee'];
+			            		    $params['merchant_earnings'] = (float)$params['merchant_earnings'] - (float)$service_resp['service_fee'];
+			            		}
 			            	}			
 			            	
 			            	/** check if merchant commission is fixed  */
@@ -3971,16 +4135,24 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			            	if ( $merchant_com_details['commision_type']=="fixed"){
 			            		$params['percent_commision']=$merchant_com_details['percent_commision'];
 			            		$params['total_commission']=$merchant_com_details['percent_commision'];
-			            		$params['merchant_earnings']=$params['total_w_tax']-$merchant_com_details['percent_commision'];
+			            		
+			            		
+			            		$params['merchant_earnings']=$params['total_w_tax']-$merchant_com_details['percent_commision'];			            		
 			            		$params['commision_type']='fixed';
 			            		
 			            		if ( $admin_commision_ontop==1){			            		
 			            		    $params['merchant_earnings']=$params['sub_total']-$merchant_com_details['percent_commision'];
 			            		}
+			            		
+			            		if($service_resp){			            					            				
+			            				$params['total_commission'] = (float)$params['total_commission'] + (float)$service_resp['service_fee'];
+			            				$params['merchant_earnings'] = (float)$params['merchant_earnings'] - (float)$service_resp['service_fee'];
+			            		}			            	
+			            		
 			            	}            
 			            }/** end commission condition*/
 			            
-			            			            
+			          	            
 			            if(isset($raw['total'])){
 			               if(isset($raw['total']['merchant_packaging_charge'])){			    
 			               	   if(is_numeric($raw['total']['merchant_packaging_charge'])){
@@ -4023,7 +4195,8 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 		    		        }
 	    		        }	    		        	    		       
 	    		        	    		        
-	    		        $params['order_id_token']=FunctionsV3::generateOrderToken();
+	    		        $order_id_token = FunctionsV3::generateOrderToken();
+	    		        $params['order_id_token']=$order_id_token;
 	    		        $params['dinein_number_of_guest']=isset($this->data['dinein_number_of_guest'])?$this->data['dinein_number_of_guest']:'';
 	    		        $params['dinein_special_instruction']=isset($this->data['dinein_special_instruction'])?$this->data['dinein_special_instruction']:'';
 	    		        
@@ -4142,7 +4315,12 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
                             $params_address['used_currency'] = isset($rates['used_currency'])?$rates['used_currency']:'';
 	    		            $params_address['base_currency'] = isset($rates['base_currency'])?$rates['base_currency']:'';
 	    		            $params_address['exchange_rate'] = isset($rates['exchange_rate'])?(float)$rates['exchange_rate']:0;
-		    		        
+	    		            /*SERVICE FEE*/	    		            
+	    		            if($service_resp){
+	    		               $params_address['service_fee'] = (float)$service_resp['service_fee'] * (float) $exchange_rate;
+	    		               $params_address['service_fee_applytax'] = (integer)$service_resp['service_fee_applytax'];
+	    		            }
+	    		            		    		        
 		    		        Yii::app()->db->createCommand()->insert("{{order_delivery_address}}",$params_address);
 		    				
 		    				/** save to address book*/
@@ -4316,15 +4494,22 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 		    					    $this->msg=Yii::t("default","Please wait while we redirect...");
 		    					    break;
 		    				}
-		    				
-		    				$payment_action=$this->data['payment_opt']."init";
 		    						    				
+		    				$payment_opt = isset($this->data['payment_opt'])?$this->data['payment_opt']:'';
+		    				if($payment_opt=="stp"){
+		    					$payment_opt='stripe';
+		    				}
+		    				$payment_action=$payment_opt."init";
+		    						    				
+		    				$payment_link = Yii::app()->createUrl("/store/$payment_action",array(
+	    				      'order_id_token'=>$order_id_token
+	    				      //'id'=>$order_id
+	    				    ));	
+	    				    		    				
 		    				$this->details=array(
 		    				  'order_id'=>$order_id,
 		    				  'payment_type'=>$this->data['payment_opt'],
-		    				  'payment_link'=>Yii::app()->createUrl("/store/$payment_action",array(
-		    				    'id'=>$order_id
-		    				  ))
+		    				  'payment_link'=>$payment_link
 		    				);
 		    						    				
 	    				} else $this->msg=Yii::t("default","ERROR: Cannot insert records.");
@@ -4806,6 +4991,10 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			$merchant_id = $res['merchant_id'];
 	    			$order_id = $res['order_id'];
 	    			
+	    			Item_menu::init($merchant_id);
+	    			Item_menu::$todays_day = strtolower(date("l"));
+                    Item_menu::$time_now = date("H:i");
+	    			
 	    			$merchant_master_disabled_ordering=getOption($res['merchant_id'],'merchant_master_disabled_ordering');	    			
 	    			if($merchant_master_disabled_ordering==1){
 	    				$this->msg = t("Ordering is disabled for this merchant");
@@ -4842,8 +5031,8 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			   	    		$size_id = isset($with_size[2])? $with_size[2] :0 ;
 	    			   	    	}	    			   	    
 	    			   	    }	    		
-	    			   	    	    			   	    	    			   	   
-	    			   		if ($item_details = Item_menu::getItemPrice( $val['item_id'], $size_id)){	    			   						   				    			   		
+	    			   	    	    			   	    	    			    			   	    
+	    			   		if ($item_details = Item_menu::getItemPriceAndVerify( $val['item_id'], $size_id)){	    			   						   				    			   		
 	    			   			if($item_details['not_available']==2){
 	    			   				unset($json_details[$key]);
 	    			   			} else {
@@ -4860,6 +5049,8 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			   		
 	    			   		/*GET ADDON PRICE*/
 	    			   		$sub_item_id = 0;
+	    			   		
+	    			   		if(isset($val['sub_item'])){
 	    			   		if ( is_array($val['sub_item']) && count($val['sub_item'])>=1 ){	    			   			
 	    			   			foreach ($val['sub_item'] as $subitem_key=>$subitem_val) {
 	    			   				foreach ($subitem_val as $subitem_key2=>$subitem_val2) {	    			   				    
@@ -4880,7 +5071,8 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			   				    }	    			   				
 	    			   			    }
 	    			   			}
-	    			   		}	    			   
+	    			   		}	    
+	    			   		}			   
 	    			   		/*END ADDON PRICE*/
 	    			   		
 	    			   	}	
@@ -4905,8 +5097,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 							$this->msg = $e->getMessage();
 			                return ;
 						}
-					}	    			
-										
+					}	    		
+					
+									
 	    				    				    	
 	    			$_SESSION['kr_merchant_slug']=$res['restaurant_slug'];
 	    			$_SESSION['kr_merchant_id']=$res['merchant_id'];
@@ -5200,7 +5393,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
     	    	}    	    
     	    }	        	    
     	        	        	
-    	    $date_now=date('Y-m-d');
+    	    $date_now=date('Y-m-d g:i:s a');
     	    	    	
 	    	if (isset($this->data['order_id'])){
 	    		$order_id=$this->data['order_id'];	    		
@@ -5208,27 +5401,50 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    			$params=array('status'=>$this->data['status'],'date_modified'=>FunctionsV3::dateNow(),'viewed'=>2);		
 	    			
 	    			/*check if merchant can change the status*/
-	    			$can_edit=Yii::app()->functions->getOptionAdmin('merchant_days_can_edit_status');
+	    			$can_edit = (integer) Yii::app()->functions->getOptionAdmin('merchant_days_can_edit_status');
+	    			$edit_times =  Yii::app()->functions->getOptionAdmin('merchant_time_can_edit_status');
 	    			
-	    			if (is_numeric($can_edit) && !empty($can_edit)){
+	    			
+	    			if($can_edit>0 || !empty($edit_times)){
 	    					    				
-	    				$base_option=getOptionA('merchant_days_can_edit_status_basedon');	    				
-	    				
+	    				$base_option=getOptionA('merchant_days_can_edit_status_basedon');	    					    				
 	    				if ( $base_option==2){	    					
-	    					$date_created=date("Y-m-d",
-	    					strtotime($resp['delivery_date']." ".$resp['delivery_time']));		
-	    				} else $date_created=date("Y-m-d",strtotime($resp['date_created']));	    						    					    				
+	    					if(!empty($resp['delivery_time'])){
+	    					   $date_created=date("Y-m-d g:i:s a",strtotime($resp['delivery_date']." ".$resp['delivery_time']));
+	    					} else $date_created=date("Y-m-d g:i:s a",strtotime($resp['delivery_date']." ".$resp['date_created']));
+	    				} else $date_created=date("Y-m-d g:i:s a",strtotime($resp['date_created']));	    						    					    					    				
 		    			$date_interval=Yii::app()->functions->dateDifference($date_created,$date_now);
+		    			
 		    			if (is_array($date_interval) && count($date_interval)>=1){		    				
 		    				if ( $date_interval['days']>$can_edit){
 		    					$this->msg=t("Sorry but you cannot change the order status anymore. Order is lock by the website admin");
 		    					$this->details=json_encode($date_interval);
 		    					return ;
-		    				}		    			
-		    			}	    		
-		    			
-		    			
-	    			}
+		    				}		   
+		    				
+		    				$validate_time = false;
+		    				if(!empty($edit_times)){	    					
+		    					$times = explode(":",$edit_times);		    						    					
+		    					$hour = isset($times[0])?(integer)$times[0]:0;	    					
+		    					$minute = isset($times[1])?(integer)$times[1]:0;	    					
+		    					if($hour>0){
+		    						if($date_interval['hours']>$hour){
+		    							$validate_time=true;
+		    						}	    					
+		    					} else {	    						
+		    						if($date_interval['minutes']>$minute){
+		    							$validate_time=true;
+		    						}	    					
+		    					}	    				
+		    				}		    				 		
+		    				
+		    				if($validate_time){
+		    					$this->msg=t("Sorry but you cannot change the order status anymore. Order is lock by the website admin");	    					
+		    					return ;
+		    				}    			
+		    				    				 		
+		    			}/* end if*/	    			
+	    			}/* end if*/
 	    			
 	    			$mechant_sms_enabled= Yii::app()->functions->getOptionAdmin("mechant_sms_enabled");
 	    			
@@ -5424,6 +5640,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	$_SESSION['kr_export_stmt'] = substr($stmt,0,$pos);	
 	    		    	
 	    		    	
+	    	//dump($stmt);
 	    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){	    		
 	    		$iTotalRecords=0;
 				$stmt2="SELECT FOUND_ROWS()";
@@ -6749,6 +6966,21 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 
 	    	Yii::app()->functions->updateOptionAdmin("admin_menu_lazyload",
 	    	isset($this->data['admin_menu_lazyload'])?(integer)$this->data['admin_menu_lazyload']:'');    	
+	    	
+	    	Yii::app()->functions->updateOptionAdmin("admin_service_fee",
+	    	isset($this->data['admin_service_fee'])?(float)$this->data['admin_service_fee']:0);    	
+	    	
+	    	Yii::app()->functions->updateOptionAdmin("admin_service_fee_applytax",
+	    	isset($this->data['admin_service_fee_applytax'])?(integer)$this->data['admin_service_fee_applytax']:0);    	
+	    	
+	    	Yii::app()->functions->updateOptionAdmin("captcha_driver_signup",
+	    	isset($this->data['captcha_driver_signup'])?(integer)$this->data['captcha_driver_signup']:0);    	
+	    	
+	    	Yii::app()->functions->updateOptionAdmin("mobile2_hide_empty_category",
+	    	isset($this->data['mobile2_hide_empty_category'])?(integer)$this->data['mobile2_hide_empty_category']:0);    	
+	    	
+	    	Yii::app()->functions->updateOptionAdmin("merchant_time_can_edit_status",
+	    	isset($this->data['merchant_time_can_edit_status'])?trim($this->data['merchant_time_can_edit_status']):'');    	
 	    	
 	    	$this->code=1;
 	    	$this->msg=Yii::t("default","Setting saved");
@@ -8633,7 +8865,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	    	 	$params['email_verification_code']=$email_code;
 		    		    $params['status']='pending';
 	    	    	 }
-	    	    	 	    	    	 
+	    	    	 	    	    	 	    	    	 	    	    	
+                    $customer_token =FunctionsV3::generateCustomerToken();
+		    	    $params['token']=$customer_token;
 	    	    	 	    	    	 
 	    		    $command = Yii::app()->db->createCommand();
 					if ($res=$command->insert('{{client}}',$params)){		
@@ -8647,8 +8881,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			            $this->code=1;
 			            
 			            if(!empty($verification_type)){
+			            	$params['verification_link'] = websiteUrl()."/email_verification/?id=".urlencode($customer_token);
 			            	switch ($verification_type) {
-			            		case "sms":
+			            		case "sms":			            		    
 			            			FunctionsV3::sendEmailVerificationCode($params['email_address'],$email_code,$params);
 			            			break;
 			            				            		
@@ -8659,7 +8894,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			            	$this->msg=t("We have sent verification code to your email address");
 			            	
 			            	$this->details=array(
-			            	  'redirectverify'=>Yii::app()->createUrl('/store/emailverification',array('id'=>$client_id))
+			            	  'redirectverify'=>Yii::app()->createUrl('/store/email_verification',array('id'=>$customer_token))
 			            	);
 			            	
 			            } else {
@@ -8714,6 +8949,10 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 								));
 								
 								$resp = FunctionsV3::getNotificationTemplate('customer_forgot_password',$lang);
+								
+								$resp['email_content'] =  stripslashes($resp['email_content']);
+								$resp['email_subject'] =  stripslashes($resp['email_subject']);
+								
 								$email_content = $resp['email_content'];
 								$email_subject = $resp['email_subject'];
 								$data = array(
@@ -10384,9 +10623,6 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 		
 		public function applyVoucher()
 		{			
-			/*dump($this->data);
-			die();*/
-			
 			/*POINTS PROGRAM*/			
 			/*check if already applied a point redeem*/
 			if (FunctionsV3::hasModuleAddon("pointsprogram")){
@@ -10423,9 +10659,32 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 			}
 			
 			$_SESSION['voucher_code']='';				
-			if (isset($this->data['voucher_code'])){
-				if ( $res=Yii::app()->functions->getVoucherCodeNew($this->data['voucher_code'],$this->data['merchant_id']) ){
-					$res['voucher_code']=$res['voucher_name'];
+			$voucher_code = isset($this->data['voucher_code'])?$this->data['voucher_code']:'';
+			$merchant_id = isset($this->data['merchant_id'])?$this->data['merchant_id']:'';
+			$sub_total = isset($this->data['sub_total'])?(float)$this->data['sub_total']:0;
+			
+			if(!empty($voucher_code)){				
+				$mtid='"'.$merchant_id.'"';  $today = strtolower(date("l"));  	
+				$stmt="
+				SELECT *,				
+				(
+		    	select count(*) from
+		    	{{order}}
+		    	where
+		    	voucher_code=".q($voucher_code)."
+		    	and
+		    	client_id=".q(Yii::app()->functions->getClientId())."  	
+		    	LIMIT 0,1
+		    	) as found
+				
+				FROM {{voucher_new}} a
+				WHERE voucher_name = ".q($voucher_code)."
+				AND ".date("Y-m-d")." <= expiration
+				AND ".$today."=1
+			    AND ( merchant_id =".self::q($merchant_id)." OR joining_merchant LIKE ".q("%$mtid%")." )
+				";
+				
+				if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
 					
 					/*check if voucher code can be used only once*/
 					if ( $res['used_once']==2){
@@ -10435,88 +10694,42 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 						}
 					}
 					
-					if ( !empty($res['expiration'])){						
-						$expiration=$res['expiration'];
-						$now=date('Y-m-d');						
-						$date_diff=date_diff(date_create($now),date_create($expiration));						
-						if (is_object($date_diff)){
-							if ( $date_diff->invert==1){
-								if ( $date_diff->d>0){
-									$this->msg=t("Voucher code has expired");
-									return ;
-								}
-							}
-						}
+					if ( $res['found']>0){
+						$this->msg=Yii::t("default","Sorry but you have already use this voucher code");
+						return ;
 					}
-										
-					if ( $res['found']<=0){
-						$this->code=1;
-						$this->msg="OK";
-					    $_SESSION['voucher_code']=$res;				
-					} else $this->msg=Yii::t("default","Sorry but you have already use this voucher code");
 					
-				} else {
-					 if ( $res=Yii::app()->functions->getVoucherCodeAdmin($this->data['voucher_code'])){					 	
-					 	$res['voucher_code']=$res['voucher_name'];
-					 	
-					 	//dump($res);
-					 	if ( !empty($res['expiration'])){						
-							$expiration=$res['expiration'];
-							$now=date('Y-m-d');						
-							$date_diff=date_diff(date_create($now),date_create($expiration));						
-							if (is_object($date_diff)){
-								if ( $date_diff->invert==1){
-									if ( $date_diff->d>0){
-										$this->msg=t("Voucher code has expired");
-										return ;
-									}
-								}
-							}
-						}
-						
-						/*check if voucher code can be used only once*/
-						if ( $res['used_once']==2){
-							if ( $res['number_used']>0){
-								$this->msg=t("Sorry this voucher code has already been used");
-								return ;
-							}
-						}
-												
-						if (!empty($res['joining_merchant'])){							
-							$joining_merchant=json_decode($res['joining_merchant']);							
-							if (in_array($this->data['merchant_id'],(array)$joining_merchant)){								
-							} else {
-								$this->msg=t("Sorry this voucher code cannot be used on this merchant");
-								return ;
-							}
-						} else {
-							/*$this->msg=t("Sorry this voucher code cannot be used on this merchant");
-							return ;*/
-						}					 
-																	
-						/*CHECK IF BALANCE WILL BE NEGATIVE AFTER APPLYING VOUCHER*/
-						$less_amount = 0;
-						if ($res['voucher_type']=="percentage"){							
-							$less_amount = $this->data['sub_total']*($res['amount']/100);
-						} else {							
-							$less_amount = $res['amount'];
-						}						
-						$sub_total_after_less_voucher = $this->data['sub_total']-$less_amount; 
-						/*dump($less_amount);
-						dump($sub_total_after_less_voucher);*/
-						if($sub_total_after_less_voucher<=-1){
-							$this->msg = t("Sorry you cannot Voucher which the Sub Total will become negative when after applying the voucher");
-						} else {					 						 	
-							if ( $res['found']<=0){
-								$this->code=1;
-								$this->msg="OK";
-							    $_SESSION['voucher_code']=$res;				
-							} else $this->msg=Yii::t("default","Sorry but you have already use this voucher code");
-						}
-						
-					 } else $this->msg=Yii::t("default","Voucher code not found");					 
-				}
-			} else $this->msg=Yii::t("default","Missing parameters");
+					$min_order = isset($res['min_order'])?(float)$res['min_order']:0;
+					if($min_order>0){									
+						if($sub_total<=$min_order){
+							$this->msg = tt("Minimum order for this voucher is [min_order]",array(
+							  '[min_order]'=>Price_Formatter::formatNumber($min_order)
+							));
+						    return ;
+						}					
+					}									
+					
+					/*CHECK IF BALANCE WILL BE NEGATIVE AFTER APPLYING VOUCHER*/
+					$less_amount = 0;
+					if ($res['voucher_type']=="percentage"){							
+						$less_amount = $sub_total *($res['amount']/100);
+					} else {							
+						$less_amount = $res['amount'];
+					}						
+					
+					$sub_total_after_less_voucher = $sub_total - $less_amount; 
+					
+					if($sub_total_after_less_voucher<=-1){
+						$this->msg = t("Sorry you cannot Voucher which the Sub Total will become negative when after applying the voucher");
+						return ;
+					}
+					
+					$this->code=1;
+					$this->msg="OK";
+					$_SESSION['voucher_code']=$res;	
+										
+				} else $this->msg=Yii::t("default","Voucher code not found");
+			} else $this->msg = t("Please enter voucher code");
 		}
 		
 		public function removeVoucher()

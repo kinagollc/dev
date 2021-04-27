@@ -1066,10 +1066,7 @@ class FunctionsV3
     
 	public static function getMerchantBySlug($slug_id='')
 	{
-		
-		/*$p = new CHtmlPurifier();
-		$slug_id = $p->purify($slug_id);*/
-		
+				
 		$DbExt=new DbExt;
 		$DbExt->qry("SET SQL_BIG_SELECTS=1");
 		$stmt="SELECT *,
@@ -1239,19 +1236,7 @@ class FunctionsV3
 		} else $url_image=websiteUrl()."/cdn.php?height=320&image=/upload/$photo";		
 		return $url_image;
 	}		
-	public static function getMerchantHeader($merchant_id='',$logo='')
-    {        
-        $upload_path=Yii::getPathOfAlias('webroot')."/upload";     
-        if (!empty($logo)){
-            $merchant_logo=$logo;
-        } else $merchant_logo=Yii::app()->functions->getOption('merchant_photo_bg',$merchant_id);                     
-        if (!empty($merchant_logo)){
-            if (file_exists($upload_path."/".$merchant_logo)){
-               $merchant_logo=uploadURL()."/$merchant_logo";    
-            } else $merchant_logo=assetsURL()."/images/b-2.jpg";
-        } else $merchant_logo=assetsURL()."/images/b-2.jpg";
-        return $merchant_logo;
-    }
+	
     public static function getMerchantOpeningHours($merchant_id='')
 	{
         $stores_open_day=Yii::app()->functions->getOption("stores_open_day",$merchant_id);
@@ -1324,19 +1309,18 @@ class FunctionsV3
 		
     public static function merchantActiveVoucher($merchant_id='')
     {    	
-    	$mtid='"'.$merchant_id.'"';
-    	$DbExt=new DbExt;
+    	$mtid='"'.$merchant_id.'"';  $today = strtolower(date("l"));  	
 	    $stmt="SELECT * FROM
 			{{voucher_new}}
 			WHERE
 			status in ('publish','published')
 			AND
 			now() <= expiration
-			AND ( merchant_id =".self::q($merchant_id)." OR joining_merchant LIKE ".FunctionsV3::q($mtid)." )
+			AND ".$today."=1
+			AND ( merchant_id =".self::q($merchant_id)." OR joining_merchant LIKE ".q("%$mtid%")." )
 			LIMIT 0,10			
-		";	 	 
-	    //dump($stmt);   
-		if ( $res=$DbExt->rst($stmt)){			
+		";	 	 	    
+		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){			
 			return $res;
 		}
 		return false;
@@ -1898,6 +1882,7 @@ class FunctionsV3
     		if(!empty($tpl)){    			
     			$tpl=self::smarty('firstname',isset($info['first_name'])?$info['first_name']:'',$tpl );
     			$tpl=self::smarty('lastname',isset($info['last_name'])?$info['last_name']:'',$tpl );
+    			$tpl=self::smarty('verification_link',isset($info['verification_link'])?$info['verification_link']:'',$tpl );
     			$tpl=self::smarty('code',$code,$tpl );
     			$tpl=self::smarty('sitename',getOptionA('website_title'),$tpl);
     			$tpl=self::smarty('siteurl',websiteUrl(),$tpl);
@@ -3414,7 +3399,7 @@ public static function sticPrettyTime($time='')
 	    	   'order_id'=>'order_id',
 	    	   'restaurant_name'=>'merchant_name',
 	    	   'total_amount'=>'total_w_tax',
-	    	   'total_amount_order'=>Yii::app()->functions->normalPrettyPrice($data['total_w_tax']),
+	    	   'total_amount_order'=>Price_Formatter::formatNumberNoSymbol($data['total_w_tax']),
 	    	   'order_details'=>$sms_data,
 	    	   'sitename'=>getOptionA('website_title'),
 	    	   'siteurl'=>websiteUrl(),
@@ -3453,7 +3438,7 @@ public static function sticPrettyTime($time='')
     			case "total_w_tax":	
     			case "total_amount":
     			    $tpl=self::smarty($key,
-    				isset($data[$val])?FunctionsV3::prettyPrice($data[$val]):'',$tpl);
+    				isset($data[$val])?Price_Formatter::formatNumber($data[$val]):'',$tpl);
     			    break; 
     			case "expiration_date":    
     			case "date_booking":
@@ -5036,8 +5021,7 @@ public static function sticPrettyTime($time='')
    	   	   merchant_id=".self::q($merchant_id)."
    	   	   $and
    	   	   LIMIT 0,1
-   	   	   ";   	   	   
-   	   	   //dump($stmt);
+   	   	   ";   	   	      	   	   
    	   	   if ( $res=$DbExt->rst($stmt)){   	   	   	   
    	   	   	   return $res[0];
    	   	   }    	   	   
@@ -5091,8 +5075,7 @@ public static function sticPrettyTime($time='')
    	   	   		}
    	   	   		break;
    	   	   }
-   	   	   
-   	   	   $DbExt=new DbExt;
+   	   	      	   	   
    	   	   $stmt="SELECT * FROM
    	   	   {{view_location_rate}}
    	   	   WHERE
@@ -5100,13 +5083,89 @@ public static function sticPrettyTime($time='')
    	   	   $and
    	   	   ORDER BY rate_id ASC
    	   	   LIMIT 0,1
-   	   	   ";    	   	   
-   	   	   if ( $res=$DbExt->rst($stmt)){
-   	   	   	   $res=$res[0];
+   	   	   ";    	   	      	   	   
+   	   	   if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
    	   	   	   $fee=$res['fee'];
    	   	   } else $fee=$default_fee;
    	   } else $fee=$default_fee;
    	   return $fee;
+   }
+   
+   public static function getLocationDeliveryFeeWithMinimum($merchant_id='',$default_fee='',
+   $default_minimum_order=0,$data='')
+   {
+   	
+   	   $fee=0; $minimum_order=0; $and='';  $free_above_subtotal=0; 	      	   
+   	   if ( is_array($data) && count($data)>=1){
+   	   	   switch ($data['location_type']) {
+   	   	   	case 2:   	   	   		   	   	   	    
+   	   	   	    $state_id = isset($data['state_id'])?(integer)$data['state_id']:0;
+   	   	   	    $city_id = isset($data['city_id'])?(integer)$data['city_id']:0; 
+   	   	   		
+   	   	   	    $and.=" AND state_id=".self::q($state_id)." ";
+   	   	   	    
+   	   	   	    if($city_id>0){
+   	   	   		$and.=" AND city_id=".self::q($city_id)." ";
+   	   	   	    }
+   	   	   		
+   	   	   		$area_id = isset($data['area_id'])?(integer)$data['area_id']:0;
+   	   	   		if($area_id>0){
+   	   	   		   $and.=" AND area_id=".self::q($area_id)." ";
+   	   	   		}
+   	   	   		break;
+   	   	   		
+   	   	   	case 3:
+   	   	   		$postal_code = isset($data['postal_code'])?(integer)$data['postal_code']:0;
+   	   	   		$city_id = isset($data['city_id'])?(integer)$data['city_id']:0; 
+   	   	   		$area_id = isset($data['area_id'])?(integer)$data['area_id']:0;
+   	   	   		
+   	   	   		if($postal_code>0){
+   	   	   	      $and.=" AND postal_code=".self::q($postal_code)." ";   	   	   		   	   	   	    
+   	   	   		}
+   	   	   		if($city_id>0){
+   	   	   		   $and.=" AND city_id=".self::q($city_id)." ";
+   	   	   		}
+   	   	   		if($area_id>0){
+   	   	   		   $and.=" AND area_id=".self::q($area_id)." ";
+   	   	   		}
+   	   	   		break;	
+   	   	   	 	
+   	   	   	default:
+   	   	   		$city_id = isset($data['city_id'])?(integer)$data['city_id']:0;
+   	   	   		$area_id = isset($data['area_id'])?(integer)$data['area_id']:0;
+   	   	   		$and.=" AND city_id=".self::q($city_id)." ";
+   	   	   		if($area_id>0){
+   	   	   		   $and.=" AND area_id=".self::q($area_id)." ";
+   	   	   		}
+   	   	   		break;
+   	   	   }
+   	   	      	   	   
+   	   	   $stmt="SELECT * FROM
+   	   	   {{view_location_rate}}
+   	   	   WHERE
+   	   	   merchant_id=".self::q($merchant_id)."
+   	   	   $and
+   	   	   ORDER BY rate_id ASC
+   	   	   LIMIT 0,1
+   	   	   ";    	   	      	   	   
+   	   	   if($res = Yii::app()->db->createCommand($stmt)->queryRow()){   	   	   	   
+   	   	   	   $fee=$res['fee']>0?$res['fee']:$default_fee;
+   	   	   	   $minimum_order=$res['minimum_order']>0?$res['minimum_order']:$default_minimum_order;
+   	   	   	   $free_above_subtotal=$res['free_above_subtotal']>0?$res['free_above_subtotal']:0;
+   	   	   }  else {
+   	   	   	  $fee=$default_fee;
+   	   	   	  $minimum_order = $default_minimum_order;
+   	   	   }
+   	   } else {
+   	   	   $fee=$default_fee;
+   	   	   $minimum_order = $default_minimum_order;
+   	   }       	      	   
+   	   
+   	   return array(
+   	     'fee'=>$fee,
+   	     'minimum_order'=>$minimum_order,
+   	     'free_above_subtotal'=>$free_above_subtotal
+   	   );
    }
       
    public static function getFeatureMerchant()
@@ -5969,9 +6028,8 @@ public static function sticPrettyTime($time='')
    	   
    }
    
-    public static function getOffersByMerchantNew($merchant_id='')
-    {
-    	$DbExt=new DbExt; 
+    public static function getOffersByMerchantNew($merchant_id='' , $exchange_rate=1)
+    {    	
     	$offer_list = array(); 
     	$offer = '';
     	
@@ -5984,7 +6042,7 @@ public static function sticPrettyTime($time='')
 			AND merchant_id =".self::q($merchant_id)."
 			ORDER BY valid_from ASC
 		";	    
-		if ( $res=$DbExt->rst($stmt)){
+		if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
 			foreach ($res as $val) {				
 				$applicable_to_list = '';
 				if(isset($val['applicable_to'])){
@@ -5998,11 +6056,11 @@ public static function sticPrettyTime($time='')
     			}    		 
     			if (!empty($applicable_to_list)){
     				$offer=number_format($val['offer_percentage'],0)."% ".t("Off over");
-	    			$offer.=" ".self::prettyPrice($val['offer_price']);
+	    			$offer.=" ".Price_Formatter::formatNumber( (float)$val['offer_price'] *  (float)$exchange_rate );
 	    			$offer.=" ".t("if")." ".$applicable_to_list;
     			} else {
 	    			$offer=number_format($val['offer_percentage'],0)."% ".t("Off over");
-	    			$offer.=" ".self::prettyPrice($val['offer_price']);
+	    			$offer.=" ".Price_Formatter::formatNumber( (float) $val['offer_price'] *  (float)$exchange_rate );
     			}
     			$offer_list[] =$offer;
 			}
@@ -7273,6 +7331,7 @@ public static function sticPrettyTime($time='')
     
     public static function getDateList($merchant_id='')
     {
+    	$dates = array();
     	$mt_timezone=Yii::app()->functions->getOption("merchant_timezone",$merchant_id);
 		if(!empty($mt_timezone)){
 			Yii::app()->timeZone=$mt_timezone;
@@ -7801,6 +7860,16 @@ public static function sticPrettyTime($time='')
 		if( !self::checkIfTableExist('item_translation')){
 			$new++;
 		}		
+		
+		/*5.4.4*/
+		if( !self::checkIfTableExist('item_meta')){
+			$new++;
+		}		
+		$new_fields=array('min_order'=>"min_order");
+		if ( !self::checkTableFields('voucher_new',$new_fields)){			
+			$new++;
+		}		
+		
 		
 		if ($new>0){
 			return true;
@@ -8491,7 +8560,7 @@ public static function sticPrettyTime($time='')
 		return false;
 	}
 	
-	public static function registerScript($script=array(), $script_name='reg_script')
+	public static function registerScript($script=array(), $script_name='reg_script',$position=CClientScript::POS_HEAD)
 	{
 		$reg_script='';
 		if(is_array($script) && count($script)>=1){		
@@ -8502,7 +8571,7 @@ public static function sticPrettyTime($time='')
 			$cs->registerScript(
 			  $script_name,
 			  "$reg_script",
-			  CClientScript::POS_HEAD
+			  $position
 			);		
 		}
 	}
@@ -8803,6 +8872,8 @@ public static function sticPrettyTime($time='')
 		b.used_currency,
 		b.base_currency,
 		b.exchange_rate,
+		b.service_fee,
+		b.service_fee_applytax,
 		
 		c.restaurant_name as merchant_name,
 		c.restaurant_phone as merchant_contact_phone,
@@ -8835,7 +8906,7 @@ public static function sticPrettyTime($time='')
 		a.order_id=".q($order_id)."
 		$and
 		LIMIT 0,1
-		";			
+		";					
 		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
 			/*FIXED OLD DATA*/
 			if(empty( trim($res['full_name']) )){				
@@ -8919,6 +8990,74 @@ public static function sticPrettyTime($time='')
 		 	 }
 	 	}
 	}
+	
+	
+    public static function getClientByID($client_id='')
+    {
+		$stmt="SELECT 
+    	a.client_id,
+    	a.first_name,
+    	a.last_name,
+    	a.email_address,
+    	a.contact_phone,	    	
+    	concat(b.street) as address,
+    	b.city,
+    	b.country_code as country
+    	FROM
+    	{{client}} a
+    	left join {{address_book}} b
+		ON
+		a.client_id = b.client_id
+    	WHERE a.client_id=".q($client_id)."       	
+    	LIMIT 0,1
+    	";		
+    	if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
+    		return $res;
+    	}
+    	return false;
+    }
+    
+    public static function deleteCustomerGuest($client_id='',$email_address='')
+    {    	
+    	$stmt="
+    	DELETE FROM {{client}}
+    	WHERE email_address = ".q($email_address)."
+    	AND is_guest=1
+    	AND client_id NOT IN ($client_id)
+    	";    	
+    	Yii::app()->db->createCommand($stmt)->query();
+    }
+    
+    public static function dayList()
+    {
+    	return array(
+    	  'monday'=>t("monday"),
+    	  'tuesday'=>t("tuesday"),
+    	  'wednesday'=>t("wednesday"),
+    	  'thursday'=>t("thursday"),
+    	  'friday'=>t("friday"),
+    	  'saturday'=>t("saturday"),
+    	  'sunday'=>t("sunday")
+    	);
+    }
+    	
+    
+    public static function generateCustomerToken() 
+	{
+		$token=self::generateCode(70);
+		$db=new DbExt;
+		$stmt="
+		SELECT token
+		FROM {{client}}
+		WHERE
+		token=".self::q($token)."
+		LIMIT 0,1
+		";
+		if ( $res=$db->rst($stmt)){
+			$token=self::generateCustomerToken();
+		}
+		return $token;
+	}	
 	
 }/* end class*/
 

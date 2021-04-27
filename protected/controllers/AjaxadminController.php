@@ -1624,5 +1624,75 @@ class AjaxadminController extends CController
         }
         $this->jsonResponse();     
 	}
+	
+	public function actiondeleteDishes()
+	{
+		try {						
+			$id = isset($this->data['id'])?(integer)$this->data['id']:0;						
+			ItemClass::deleteDishes($id);
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>"refresh_table"
+			);
+		} catch (Exception $e) {
+		    $this->msg = t($e->getMessage());
+		}
+
+		$this->jsonResponse();
+	}
+	
+	public function actionMigration_itemsubitem()
+	{
+		$this->data=$_POST; $page_limit = ItemClass::paginateMigrate(); $data= array();			
+		if (isset($this->data['page'])){        	
+        	$page = (integer)$this->data['page'];
+        } else  $page = 0;  
+        
+        $total_item = isset($this->data['total'])?(integer)$this->data['total']:0;
+        $total_item_paginate = ceil( (integer)$total_item / (integer) $page_limit);
+        
+        $stmt="
+		SELECT merchant_id, merchant_id, item_id, item_name, addon_item
+		FROM {{item}} a		 
+		WHERE 
+		TRIM(IFNULL(addon_item,'')) <> ''
+		AND
+		item_id NOT IN (
+		  select item_id from {{item_relationship_subcategory_item}}
+		  where item_id = a.item_id
+		)
+		LIMIT 0,$page_limit
+		";	                         
+        if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
+         	foreach ($res as $val) {         		
+         		$addon_item = json_decode($val['addon_item'],true);         		
+         		ItemClass::insertItemRelationshipSubcategory( (integer)$val['merchant_id'], (integer)$val['item_id'], (array)$addon_item);
+         	}
+         	
+         	$_page = $page+1;
+            
+            $this->code = 1;
+            $this->msg = Yii::t("default","Processing [page] of [total]",array(
+               '[page]'=>$_page,
+              '[total]'=>$total_item_paginate,                  
+            ));
+            $this->details = array(
+               'next_action' => "continue_migration",
+               'id'=>"itemsubitem",
+               'total'=>$total_item,
+               'page'=>$_page
+            );
+            
+        } else {
+        	$this->code = 1;
+        	$this->msg = t("Done");
+        	$this->details = array(
+                   'next_action' => "done_migration",
+                   'id'=>"itemsubitem"                   
+                );
+        }
+        $this->jsonResponse();
+	}
 		
 } /*end class*/

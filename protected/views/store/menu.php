@@ -17,7 +17,6 @@ $merchant_info=array(
   'merchant_address'=>$data['merchant_address'],
   'cuisine'=>$data['cuisine'],
   'restaurant_name'=>$data['restaurant_name'],
-  'restaurant_slug'=>$data['restaurant_slug'],
   'background'=>$merchant_photo_bg,
   'merchant_website'=>$merchant_website,
   'merchant_logo'=>FunctionsV3::getMerchantLogo($merchant_id),
@@ -53,6 +52,8 @@ $checkout=FunctionsV3::isMerchantcanCheckout($merchant_id);
 Item_menu::init( $merchant_id );
 Item_menu::$language = Yii::app()->language;    
 Item_menu::$currency_code = Yii::app()->session['currency'];
+Item_menu::$time_now = date("H:i");
+Item_menu::$todays_day = strtolower(date("l"));
 
 if($menu_lazyload!=1){    
     $menu = Item_menu::getMenu($merchant_id , date("l") );        

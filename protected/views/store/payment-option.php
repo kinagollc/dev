@@ -14,7 +14,7 @@ $this->renderPartial('/front/order-progress-bar',array(
 $s=$_SESSION;
 $continue=false;
 
-$merchant_address=''; $restaurant_slug='';		
+$merchant_address=''; $restaurant_slug='';	$location_search_data = array();
 $merchant_id = isset($s['kr_merchant_id'])?(integer)$s['kr_merchant_id']:0;
 if ($merchant_info=Yii::app()->functions->getMerchant($merchant_id)){	
 	$merchant_address=$merchant_info['street']." ".$merchant_info['city']." ".$merchant_info['state'];
@@ -670,6 +670,17 @@ Yii::app()->functions->getOptionAdmin("admin_currency_position"));
 	         <?php 	         
 	         $minimum_order=Yii::app()->functions->getOption('merchant_minimum_order',$merchant_id);
 	         $maximum_order=getOption($merchant_id,'merchant_maximum_order');	         
+	         
+	         if($search_by_location){
+	         	 $delivery_fee_resp=FunctionsV3::getLocationDeliveryFeeWithMinimum(
+	    	      $merchant_id,
+	    	      0,
+	    	      $minimum_order,
+	    	      $location_search_data
+	    	    );		
+	    	    $minimum_order = (float)$delivery_fee_resp['minimum_order'];
+	         }	         
+	         
 	         if ( $s['kr_delivery_options']['delivery_type']=="pickup"){
 	         	
 	          	  $minimum_order=Yii::app()->functions->getOption('merchant_minimum_order_pickup',$merchant_id);
@@ -680,7 +691,8 @@ Yii::app()->functions->getOptionAdmin("admin_currency_position"));
 	         	  $maximum_order=getOption($merchant_id,'merchant_maximum_order_dinein');
 	         }	        
 	         $minimum_order = (float)$minimum_order * $exchange_rate;
-	         $maximum_order = (float)$maximum_order * $exchange_rate;	         
+	         $maximum_order = (float)$maximum_order * $exchange_rate;	 
+	         	         
 	         ?>
 	         
 	         <?php 

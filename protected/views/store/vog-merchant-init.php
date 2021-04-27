@@ -42,7 +42,7 @@ $this->renderPartial('/front/order-progress-bar',array(
 	  )));
 	  	  
 	  echo CHtml::hiddenField('fail_url',FunctionsV3::getHostURL().Yii::app()->createUrl('/store/voginit',array(
-	    'id'=>$_GET['id'],	    
+	    'order_id_token'=>isset($_GET['order_id_token'])?$_GET['order_id_token']:'',	    
 	    'failed'=>1
 	  )));
 	  echo CHtml::hiddenField('success_url',FunctionsV3::getHostURL().Yii::app()->createUrl('/store/vogsuccess',array(

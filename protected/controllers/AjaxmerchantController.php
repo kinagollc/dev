@@ -192,18 +192,20 @@ class AjaxmerchantController extends CController
 	public function actionSaveRate()
 	{		
 		$mtid = Yii::app()->functions->getMerchantID();
-		if(!empty($mtid)){
+		if(!empty($mtid)){			
 			$params=array(
-			  'merchant_id'=>$mtid,
-			  'country_id'=>$this->data['rate_country_id'],
-			  'state_id'=>$this->data['rate_state_id'],
-			  'city_id'=>$this->data['rate_city_id'],
-			  'area_id'=>$this->data['rate_area_id'],
-			  'fee'=>$this->data['fee'],
+			  'merchant_id'=>(integer)$mtid,
+			  'country_id'=>(integer)$this->data['rate_country_id'],
+			  'state_id'=> (integer)$this->data['rate_state_id'],
+			  'city_id'=> (integer) $this->data['rate_city_id'],
+			  'area_id'=> (integer) $this->data['rate_area_id'],
+			  'fee'=>(float) $this->data['fee'],
+			  'minimum_order'=>isset($this->data['minimum_order'])? (float) $this->data['minimum_order']:0,
+			  'free_above_subtotal'=>isset($this->data['free_above_subtotal'])? (float) $this->data['free_above_subtotal']:0,
 			  'date_created'=>FunctionsV3::dateNow(),
 			  'ip_address'=>$_SERVER['REMOTE_ADDR']
-			);			
-			$DbExt=new DbExt;
+			);					
+			$DbExt = new DbExt();
 			if ( isset($this->data['rate_id'])){
 				if ( $DbExt->updateData("{{location_rate}}",$params,'rate_id',$this->data['rate_id'])){
 					$this->code=1; $this->msg=t("Successful");
@@ -239,6 +241,7 @@ class AjaxmerchantController extends CController
 		$mtid = Yii::app()->functions->getMerchantID();
 		if(!empty($mtid)){
 			if ( $res = FunctionsV3::GetLocationRateByMerchantWithName($mtid)){
+				
 				$html='';
 				foreach ($res as $val) {
 					$id=$val['rate_id'];
@@ -255,7 +258,9 @@ class AjaxmerchantController extends CController
 					$html.="<td>".$val['city_name']."</td>";
 					$html.="<td>".$val['area_name']."</td>";
 					$html.="<td>".$val['postal_code']."</td>";
-					$html.="<td>".FunctionsV3::prettyPrice($val['fee'])."</td>";
+					$html.="<td>".Price_Formatter::formatNumber($val['fee'])."</td>";
+					$html.="<td>".Price_Formatter::formatNumber($val['minimum_order'])."</td>";
+					$html.="<td>".Price_Formatter::formatNumber($val['free_above_subtotal'])."</td>";
 					$html.="</tr>";
 				}
 				$this->code=1; $this->msg="OK";
@@ -763,5 +768,145 @@ class AjaxmerchantController extends CController
 		$this->jsonResponse();
 	}
 	
+	public function actionfreeDeliverySettings()
+	{
+		$mtid = (integer) Yii::app()->functions->getMerchantID();	
+		if($mtid>0){
+			Yii::app()->functions->updateOption("free_delivery_above_price",
+	    	isset($this->data['free_delivery_above_price'])?$this->data['free_delivery_above_price']:'',$mtid);
+		}
+    	
+    	$this->code=1;
+    	$this->msg=Yii::t("default","Setting saved");
+		$this->jsonResponse();
+	}
+	
+	public function actionTimeManagementForm()
+	{
+		$mtid = (integer) Yii::app()->functions->getMerchantID();	
+		if($mtid<=0){
+			die();
+		}
+		
+		$data = array();
+		$id = isset($this->data['id'])?(integer)$this->data['id']:0;
+		
+		$transaction_list = array(
+		  'delivery'=>t("Delivery"),
+		  'pickup'=>t("Pickup"),
+		  'dinein'=>t("Dinein"),
+		);
+		
+		if($id>0){
+			$stmt="
+			SELECT id,group_id,transaction_type,start_time,end_time,number_order_allowed,
+			order_status,
+			GROUP_CONCAT(days) as days
+			 FROM
+			{{order_time_management}}
+			WHERE
+			merchant_id= ".q($mtid)."
+			and group_id = ".q($id)."
+			GROUP BY group_id			
+			";		
+			if($data = Yii::app()->db->createCommand($stmt)->queryRow()){
+				//
+			}
+		}
+		
+		$order_status_list = Yii::app()->functions->orderStatusList2(true);
+		unset($order_status_list[0]);
+		
+		$this->renderPartial('/merchant/order_time_form',array(
+		  'transaction_list'=>$transaction_list,
+		  'day_list'=>FunctionsV3::dayList(),
+		  'order_status_list'=>$order_status_list,
+		  'data'=>$data
+		));
+	}
+	
+	public function actionSaveTimeManagement()
+	{
+		$mtid = (integer) Yii::app()->functions->getMerchantID();	
+		if($mtid<=0){
+			die();
+		}
+		
+		$group_id=1;
+		$max = Yii::app()->db->createCommand()->select('max(id) as max')->from('{{order_time_management}}')->queryScalar();		
+		$group_id = ($max + 1);		
+
+		$edit_group_id = isset($this->data['edit_group_id'])?(integer)$this->data['edit_group_id']:0;
+		if($edit_group_id>0){
+			$group_id=$edit_group_id;
+		}
+				
+				
+		if (is_array($this->data['days']) && count($this->data['days'])>=1){
+			
+			if($edit_group_id>0){
+				Yii::app()->db->createCommand("
+				DELETE FROM {{order_time_management}}
+				WHERE group_id=".q($edit_group_id)."
+				AND merchant_id=".q($mtid)."
+				")->query();
+			}
+			
+			foreach ($this->data['days'] as $day) {
+								
+				$params = array(
+				  'group_id'=>$group_id,
+				  'merchant_id'=>(integer)$mtid,
+				  'transaction_type'=>isset($this->data['transaction_type'])?$this->data['transaction_type']:'',
+				  'days'=>$day,
+				  'start_time'=>isset($this->data['start_time'])?$this->data['start_time']:'',
+				  'end_time'=>isset($this->data['end_time'])?$this->data['end_time']:'',
+				  'number_order_allowed'=>isset($this->data['number_order_allowed'])?(integer)$this->data['number_order_allowed']:'',
+				  'order_status'=>isset($this->data['order_status'])?json_encode($this->data['order_status'],true):'',
+				);								
+				Yii::app()->db->createCommand()->insert("{{order_time_management}}",$params);
+			}
+			$this->code = 1; $this->msg = t("Succesful");
+		} else $this->msg = t("Invalid days");
+		$this->jsonResponse();
+	}
+	
+	public function actiondeleteTimeManagement()
+	{
+		$mtid = (integer) Yii::app()->functions->getMerchantID();	
+		if($mtid<=0){
+			die();
+		}
+
+		$id = isset($this->data['id'])?(integer)$this->data['id']:0;
+		if($id>0){
+			Yii::app()->db->createCommand("
+			DELETE FROM {{order_time_management}}
+			WHERE group_id=".q($id)."
+			AND merchant_id=".q($mtid)."
+			")->query();
+			$this->code = 1; $this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>'refresh_table_close_fb'
+			);
+		} else $this->msg = t("Invalid id");
+		
+		$this->jsonResponse();
+	}
+	
+	public function actionTimeOrderManagmentSettings()
+	{
+		$mtid = (integer) Yii::app()->functions->getMerchantID();	
+		if($mtid<=0){
+			die();
+		}
+		
+		$enabled = isset($this->data['enabled'])?(integer)$this->data['enabled']:0;
+		Yii::app()->functions->updateOption("merchant_time_order_management",$enabled,$mtid);
+	    	
+		$this->code=1;
+    	$this->msg=Yii::t("default","Setting saved");
+		$this->jsonResponse();
+	}
 	
 } /*end class*/

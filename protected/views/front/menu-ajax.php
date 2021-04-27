@@ -5,6 +5,7 @@
 	 $this->renderPartial('/front/menu-category',array(
 	  'merchant_id'=>$merchant_id,
 	  'menu'=>$menu,
+	  'menu_lazyload'=>$menu_lazyload,
 	  'show_image_category'=>getOption($merchant_id, 'merchant_show_category_image')
 	 ));
 	 ?>
@@ -65,7 +66,9 @@
  		$this->renderPartial('/front/menu-merchant-2',array(
 		  'merchant_id'=>$merchant_id,
 		  'menu'=>$menu,
-		  'disabled_addcart'=>$disabled_addcart
+		  'disabled_addcart'=>$disabled_addcart,
+		  'menu_lazyload'=>$menu_lazyload,
+		  'activated_menu'=>$admin_activated_menu
 		));
  		break;
  		
@@ -73,7 +76,9 @@
  		$this->renderPartial('/front/menu-merchant-3',array(
 		  'merchant_id'=>$merchant_id,
 		  'menu'=>$menu,
-		  'disabled_addcart'=>$disabled_addcart
+		  'disabled_addcart'=>$disabled_addcart,
+		  'menu_lazyload'=>$menu_lazyload,
+		  'activated_menu'=>$admin_activated_menu
 		));
  		break;
  			
@@ -85,6 +90,8 @@
 		  'tc'=>$tc,
 		  'merchant_apply_tax'=>getOption($merchant_id,'merchant_apply_tax'),
 		  'merchant_tax'=>$merchant_tax>0?$merchant_tax:0,
+		  'menu_lazyload'=>$menu_lazyload,
+		  'activated_menu'=>$admin_activated_menu
 		));
     break;
  }			 

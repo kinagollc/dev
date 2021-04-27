@@ -17,7 +17,8 @@
 <?php endif;?>
 
 <?php 
-$has_already_used=false;
+$days_list = FunctionsV3::dayList();
+$has_already_used=false; $selected_days = array();
 if (isset($_GET['id'])){
 	if (!$data=Yii::app()->functions->getVoucherCodeByIdNew($_GET['id'])){
 		echo "<div class=\"uk-alert uk-alert-danger\">".
@@ -30,6 +31,14 @@ if (isset($_GET['id'])){
 			$has_already_used=true;
 		}
 	}
+	
+	foreach ($days_list as $day=>$dayval) {
+		if(isset($data[$day])){
+			if($data[$day]==1){
+				$selected_days[]=$day;
+			}
+		}
+	}		
 }
 ?>                                 
 
@@ -62,6 +71,24 @@ Yii::app()->functions->voucherType(),array(
   normalPrettyPrice($data['amount'])
   ,array('data-validation'=>'required','class'=>'numeric_only'))?>
   <span class="uk-text-muted"><?php echo Yii::t("default","Voucher amount discount.")?></span>
+</div>
+
+
+<div class="uk-form-row">
+  <label class="uk-form-label"><?php echo Yii::t("default","Minimum Order")?></label>  
+  <?php echo CHtml::textField('min_order',
+  normalPrettyPrice($data['min_order'])
+  ,array('data-validation'=>'requiredx','class'=>'numeric_only'))?>  
+</div>
+
+<div class="uk-form-row">
+  <label class="uk-form-label"><?php echo Yii::t("default","Days Available")?></label>
+  <?php echo CHtml::dropDownList('days[]',
+  (array)$selected_days,$days_list,array(
+  'class'=>"chosen uk-form-width-large",
+  'data-validation'=>'required',
+  'multiple'=>true
+  ))?>
 </div>
 
 <div class="uk-form-row">

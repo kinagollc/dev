@@ -9,7 +9,8 @@ $this->renderPartial('/front/order-progress-bar',array(
    'show_bar'=>true
 ));
 
-require_once "buy.php";
+//require_once "buy.php";
+require_once('buy_new.php');
 
 $client_token=''; $label=''; 
 $payment_code = "btr";

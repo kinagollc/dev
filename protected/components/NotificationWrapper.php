@@ -262,16 +262,18 @@ class NotificationWrapper
 		$cooking_ref_translation = Item_migration::GetTranslation("cooking_ref","cooking_ref_translation","cook_id");			
 		$item_translation = Item_migration::GetTranslation("item","item_translation","item_id");			
 		$cuisine_translation = Item_migration::GetTranslation("cuisine","cuisine_translation","cuisine_id");			
+		$item_sub_item = Item_migration::getItemSubcategoryItem();		
 		
-		$total_to_migrate = (integer)$items + (integer)$subaddon_item ;
+		$total_to_migrate = (integer)$items + (integer)$subaddon_item + (integer) $item_sub_item;
 		
 		if ( Yii::app()->functions->multipleField()){
-			$total_to_migrate = (integer)$items + (integer)$subaddon_item + (integer)$translation_category + 
+			$total_to_migrate = (integer)$items + (integer)$subaddon_item  + (integer) $item_sub_item + (integer)$translation_category + 
 			(integer)$sizetranslation + (integer)$subcategory_translation + 
 			(integer)$subcategory_item_translation + (integer)$ingredients_translation +  (integer)$cooking_ref_translation + (integer)$item_translation +
 			(integer)$cuisine_translation;
 		}
 				
+		
 		if($total_to_migrate>0){
 			$error = Yii::t("default","[total] items for migration",array(
 				 '[total]'=>$total_to_migrate
