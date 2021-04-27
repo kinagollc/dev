@@ -3850,7 +3850,9 @@ class ApiController extends CController
 				  'driver_photo'=>$driver_photo,
 				  'task_status'=>$task_status,
 				  'task_color'=>$task_color,
-				  'task_remarks'=>$task_remarks
+				  'task_remarks'=>$task_remarks,
+				  'stic_customer_name'=>$val['customer_name'],
+				  'stic_delivery_address'=>$val['full_address']
 				);							
 				$x++;
 			}		
@@ -7501,6 +7503,29 @@ class ApiController extends CController
 				
 		$this->code = 1;
 		$this->msg = $value=="yes"?translate("Your store is now close"):translate("Your store is now open");
+		$this->output();
+	}
+
+	public function actionupdateDarkMode()
+	{
+		$merchant_id = $this->validateToken(); 
+		$value = isset($this->data['value'])?$this->data['value']:'';		
+		$stic_dark_theme = isset($this->data['value'])?(integer)$this->data['value']:0;
+		$value = $value==1?"yes":'';
+		
+		$params = array(
+		  'stic_dark_theme'=>$stic_dark_theme
+		);		
+		
+        Yii::app()->db->createCommand()->update("{{merchant}}",$params,
+  	    'merchant_id=:merchant_id',
+	  	    array(
+	  	      ':merchant_id'=>$merchant_id
+	  	    )
+  	    );
+				
+		$this->code = 1;
+		$this->msg = $value=="yes"?translate("Dark mode enabled"):translate("Dark mode disabled");
 		$this->output();
 	}
 	
