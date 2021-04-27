@@ -7,6 +7,8 @@ class ApiController extends CController
 	public $details='';		
 	public $device_uiid;
 	public $merchant_token;
+	public $item_utility = false;
+	public $default_currency='';
 	
 	public function __construct()
 	{			
@@ -37,6 +39,18 @@ class ApiController extends CController
         	$this->output();
         	return false;
         }	
+        
+        $this->default_currency = FunctionsV3::getCurrencyCode();
+        
+        if( Merchant_utility::fileExist("components/Item_utility.php") && 
+            Merchant_utility::fileExist("components/Price_Formatter.php") ){
+            	
+        	$this->item_utility = true;
+        	$mc_currency = FunctionsV3::getCurrencyCode();
+        	Merchant_utility::$price_formater = true;
+            Merchant_utility::InitMultiCurrency($mc_currency);                                    
+            
+        }
                 
         return true;
 	}
@@ -46,7 +60,8 @@ class ApiController extends CController
     	
        if (!isset($this->data['debug'])){    		
        	  header('Access-Control-Allow-Origin: *');       	  
-          header('Content-type: application/javascript;charset=utf-8');          
+          header('Content-type: application/javascript;charset=utf-8');    
+          //header('Content-Type: application/json');      
        } 
        
 	   $resp=array(
