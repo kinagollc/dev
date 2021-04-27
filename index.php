@@ -51,7 +51,7 @@
 
 define('YII_ENABLE_ERROR_HANDLER', false);
 define('YII_ENABLE_EXCEPTION_HANDLER', false);
-ini_set("display_errors",false);
+ini_set("display_errors",true);
 //error_reporting(E_ALL & ~E_NOTICE);
 
 // include Yii bootstrap file
