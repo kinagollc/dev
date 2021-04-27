@@ -174,7 +174,7 @@ class UpdateController extends CController
 			  'distance_unit'=>"varchar(20) NOT NULL DEFAULT 'mi'",
 			  'delivery_distance_covered'=>"float(14,2) NOT NULL DEFAULT '0.00'"
 			));	
-						
+
 			$loger[] = DatataseMigration::addColumn("{{merchant}}",array(
 			  'stic_dark_theme'=>"int(1) NOT NULL DEFAULT '0'",
 			));	
@@ -233,6 +233,67 @@ class UpdateController extends CController
 				  'auto_print_after_accepted'=>"varchar(1) NOT NULL DEFAULT '0' AFTER auto_print",
 				));	
 			}
+			
+			
+			/*1.0.7*/
+			$loger[] = DatataseMigration::addColumn("{{order_delivery_address}}",array(
+				'service_fee'=>"float(14,5) NOT NULL DEFAULT '0'",
+		        'service_fee_applytax'=>"integer(14) NOT NULL DEFAULT '0'",
+			));	
+			
+			$loger[] = DatataseMigration::addColumn("{{location_rate}}",array(
+				'free_above_subtotal'=>"float(14,5) NOT NULL DEFAULT '0' AFTER fee",
+		         'minimum_order'=>"float(14,5) NOT NULL DEFAULT '0' AFTER fee",		   		  
+			));	
+			
+			$loger[] = DatataseMigration::addColumn("{{category}}",array(
+			   'monday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'monday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'tuesday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'tuesday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'wednesday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'wednesday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'thursday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'thursday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'friday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'friday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'saturday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'saturday_end'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'sunday_start'=>"varchar(5) NOT NULL DEFAULT ''", 
+			   'sunday_end'=>"varchar(5) NOT NULL DEFAULT ''"
+			));	
+			
+			$loger[] = DatataseMigration::addColumn("{{voucher_new}}",array(
+			   'min_order'=>"float(14,5) NOT NULL DEFAULT '0'",
+			   'monday'=>"int(1) NOT NULL DEFAULT '0'",
+			   'tuesday'=>"int(1) NOT NULL DEFAULT '0'",
+			   'wednesday'=>"int(1) NOT NULL DEFAULT '0'",
+			   'thursday'=>"int(1) NOT NULL DEFAULT '0'",
+			   'friday'=>"int(1) NOT NULL DEFAULT '0'",
+			   'saturday'=>"int(1) NOT NULL DEFAULT '0'",
+			   'sunday'=>"int(1) NOT NULL DEFAULT '0'",
+			));	
+			
+			$loger[] = DatataseMigration::createTable("{{order_time_management}}",array(
+			    'id'=>'pk',
+		        'group_id'=>"integer(14) NOT NULL DEFAULT '0'",
+		        'merchant_id'=>"integer(14) NOT NULL DEFAULT '0'",
+		        'transaction_type'=>"varchar(100) NOT NULL DEFAULT ''",
+	            'days'=>"varchar(200) NOT NULL DEFAULT ''",
+	            'start_time'=>"varchar(5) NOT NULL DEFAULT ''",
+	            'end_time'=>"varchar(5) NOT NULL DEFAULT ''",
+	            'number_order_allowed'=>"integer(14) NOT NULL DEFAULT '0'",
+	            'order_status'=>"text"
+			));
+			
+			$loger[] = DatataseMigration::createIndex("{{order_time_management}}",array(
+			  'group_id'=>"group_id",			  
+			  'merchant_id'=>"merchant_id",
+			  'transaction_type'=>"transaction_type",
+			  'days'=>"days",
+			  'start_time'=>"start_time",
+			  'end_time'=>"end_time",
+			));
 			
 		} catch (Exception $e) {
 			$loger[]  = $e->getMessage();
@@ -446,9 +507,9 @@ class UpdateController extends CController
 		LEFT JOIN ".$table_prefix."merchant d
 		ON
 		a.merchant_id = d.merchant_id";
-		if (Yii::app()->db->createCommand($stmt)->query()){
+		/*if (Yii::app()->db->createCommand($stmt)->query()){
 			$loger[] = "Create table {{view_order}} done";
-		} else $loger[] = "Create table {{view_order}} failed";
+		} else $loger[] = "Create table {{view_order}} failed";*/
 		
 		
 		$stmt="
@@ -537,7 +598,8 @@ class UpdateController extends CController
 			c.delivery_charge,
 			c.payment_type,
 			c.status as order_status,
-			c.opt_contact_delivery		
+			c.opt_contact_delivery,
+			c.delivery_instruction
 				
 			FROM
 			".$table_prefix."driver_task a

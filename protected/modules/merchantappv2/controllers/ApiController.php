@@ -8,6 +8,9 @@ class ApiController extends CController
 	public $device_uiid;
 	public $merchant_token;
 	
+	public $item_utility = false;
+	public $default_currency='';
+	
 	public function __construct()
 	{			
 		$website_timezone=getOptionA('website_timezone');
@@ -37,6 +40,18 @@ class ApiController extends CController
         	$this->output();
         	return false;
         }	
+        
+        $this->default_currency = FunctionsV3::getCurrencyCode();
+        
+        if( Merchant_utility::fileExist("components/Item_utility.php") && 
+            Merchant_utility::fileExist("components/Price_Formatter.php") ){
+            	
+        	$this->item_utility = true;
+        	$mc_currency = FunctionsV3::getCurrencyCode();
+        	Merchant_utility::$price_formater = true;
+            Merchant_utility::InitMultiCurrency($mc_currency);                                    
+            
+        }
                 
         return true;
 	}
@@ -46,7 +61,8 @@ class ApiController extends CController
     	
        if (!isset($this->data['debug'])){    		
        	  header('Access-Control-Allow-Origin: *');       	  
-          header('Content-type: application/javascript;charset=utf-8');          
+          header('Content-type: application/javascript;charset=utf-8');    
+          //header('Content-Type: application/json');      
        } 
        
 	   $resp=array(
@@ -73,13 +89,13 @@ class ApiController extends CController
     private function getGETData()
 	{
 		$this->device_uiid = isset($this->data['device_uiid'])?$this->data['device_uiid']:'';
-        $this->merchant_token = isset($this->data['merchant_token'])?$this->data['merchant_token']:'';
+        $this->merchant_token = isset($this->data['merchant_token'])?trim($this->data['merchant_token']):'';
 	}
 	
 	private function getPOSTData()
 	{
 		$this->device_uiid = isset($_POST['device_uiid'])?$_POST['device_uiid']:'';
-        $this->merchant_token = isset($_POST['merchant_token'])?$_POST['merchant_token']:'';
+        $this->merchant_token = isset($_POST['merchant_token'])?trim($_POST['merchant_token']):'';
 	}
 	
     public function actionIndex(){
@@ -91,7 +107,12 @@ class ApiController extends CController
 		$set_language = getOptionA('set_language');		
 		$data = array();
 		$data['dashboard_menu'] = MerchantWrapper::dashboardMenu();
-		$data['services'] = Yii::app()->functions->Services();		
+		$data['services'] = Yii::app()->functions->Services();	
+		$data['transaction_type_list'] = array(
+		  'delivery'=>t("Delivery"),
+		  'pickup'=>t("Pickup"),
+		  'dinein'=>t("Dinein")
+		);
 		$data['two_flavor_options'] = MerchantWrapper::twoFlavorOptions();
 		$data['distance_unit'] = Yii::app()->functions->distanceOption();
 		$data['tip_list'] = MerchantWrapper::tipList();		
@@ -99,7 +120,7 @@ class ApiController extends CController
 		$data['voucher_type']=MerchantWrapper::voucherType();
 		$data['time_list_ready']=MerchantWrapper::timeListReady();
 		$data['reason_decline']=MerchantWrapper::reasonDeclineList();
-		$data['order_status_list']=OrderWrapper::orderStatusList();		
+		$data['order_status_list']=OrderWrapper::orderStatusList(0,true);		
 		$data['options'] = MerchantWrapper::getOptionsSettings();		
 		$data['map_provider'] = MapsWrapperTemp::getMapProvider();
 		$data['default_map_location'] = array(
@@ -119,6 +140,11 @@ class ApiController extends CController
 		);
 		
 		$data['location_message']=MerchantWrapper::AcessFineLocationMessage();
+		$data['multi_translation']=Yii::app()->functions->multipleField();		
+		if($data['multi_translation']){
+			$multi_lang = FunctionsV3::getLanguageList(false);
+			$data['multi_lang']=$multi_lang;
+		}		
 		
 		$dict = Merchantappv2Module::$global_dict;		
 		$data['dictionary'] = $dict;				
@@ -130,10 +156,13 @@ class ApiController extends CController
 		$this->code = 1;
 		$this->msg = translate("OK");		
 				
-		$data = self::appSettings();
+		$data = self::appSettings();		
+		
 				
 		try {
-			$resp = MerchantUserWrapper::validateToken($this->merchant_token);				
+			$resp = MerchantUserWrapper::validateToken($this->merchant_token);							
+			$resp['is_commission'] = Yii::app()->functions->isMerchantCommission( (integer)$resp['merchant_id'] );
+			
 			$this->code = 1; $this->msg = "OK";
 			
 			if( strlen($resp['pin'])>2 ){			   
@@ -156,8 +185,8 @@ class ApiController extends CController
 		} catch (Exception $e) {			
 			$data['next_action']="show_login";
 			$this->details = $data;	
-		}			
-					
+		}	
+									
 		$this->output();
 	}
 	
@@ -237,7 +266,7 @@ class ApiController extends CController
             $close_store = $close_store=="yes"?1:0;
             $data['merchant_info']['merchant_close_store']=$close_store;
 
-			$this->details = $data;
+			$this->details = $data;			
 			
 		} catch (Exception $e) {
 			$this->msg = translate($e->getMessage());
@@ -545,8 +574,7 @@ class ApiController extends CController
         	$refresh=1;
         }
                					        
-		if ($resp = FoodItemWrapper::getAllCategory($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
+		if ($resp = FoodItemWrapper::getAllCategory($merchant_id,$page,$page_limit,$search_string)){						
 			
 			$data = array();$x=0;
 			foreach ($resp as $val) {
@@ -556,8 +584,8 @@ class ApiController extends CController
 				}								
 				$data[] = array(
 				  'id'=>$val['cat_id'],
-				  'name'=>$val['category_name'],
-				  'description'=>$val['category_description'],
+				  'name'=>stripslashes($val['category_name']),
+				  'description'=>stripslashes($val['category_description']),
 				  'thumbnail'=>FoodItemWrapper::getImage($val['photo']),
 				  'status'=>t($val['status']),
 				  'date_created'=>OrderWrapper::prettyDateTime($val['date_created'])
@@ -608,14 +636,21 @@ class ApiController extends CController
 	{
 		$merchant_id = $this->validateToken();		
 		$id = isset($this->data['id'])?(array)$this->data['id']:0;
+		$cat_id = isset($this->data['id'])?(integer)$this->data['id']:0;
 		try {
-						
-			FoodItemWrapper::deleteCategory($merchant_id,$id);
+			
+			if( Merchant_utility::fileExist("components/ItemClass.php")){				
+				ItemClass::deleteCategory( (integer)$merchant_id, (integer)$cat_id );
+			} else {				
+				FoodItemWrapper::deleteCategory($merchant_id,$id);				
+			}		
+			
 			$this->code = 1;
 			$this->msg = "OK";
 			$this->details = array(
 			  'next_action'=>'list_reload'			  
 			);
+			
 			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
@@ -635,11 +670,13 @@ class ApiController extends CController
 						
 			$data = array(
 			  'cat_id'=>$resp['cat_id'],
-			  'category_name'=>$resp['category_name'],
-			  'category_description'=>$resp['category_description'],
+			  'category_name'=>stripslashes($resp['category_name']),
+			  'category_description'=>stripslashes($resp['category_description']),
 			  'photo'=>$resp['photo'],
 			  'thumbnail'=>FoodItemWrapper::getImage($resp['photo']),
-			  'status'=>$resp['status']
+			  'status'=>$resp['status'],
+			  'category_name_trans'=>isset($resp['category_name_trans'])?json_decode($resp['category_name_trans'],true):array(),
+			  'category_description_trans'=>isset($resp['category_description_trans'])?json_decode($resp['category_description_trans'],true):array(),
 			);
 			$this->code = 1;
 			$this->msg = "OK";
@@ -647,7 +684,7 @@ class ApiController extends CController
 			  'next_action'=>'fill_form',
 			  'form_id'=>"category_form.html",
 			  'data'=>$data
-			);
+			);			
 			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
@@ -656,7 +693,7 @@ class ApiController extends CController
 	}
 	
 	public function actionAddCategory()
-	{
+	{		
 		$merchant_id = $this->validateToken();
 		$id = isset($this->data['id'])?(integer)$this->data['id']:0;		
 		$params = array(
@@ -668,11 +705,31 @@ class ApiController extends CController
 		  'date_created'=>FunctionsV3::dateNow(),
 		  'ip_address'=>$_SERVER['REMOTE_ADDR']
 		);
+		if(isset($this->data['category_name_trans'])){
+			$params['category_name_trans'] = json_encode($this->data['category_name_trans']);
+		}
+		if(isset($this->data['category_description_trans'])){
+			$params['category_description_trans'] = json_encode($this->data['category_description_trans']);
+		}		
 		try {
 								
 			FoodItemWrapper::insertCategory($merchant_id,$params,$id);
 			$this->code = 1;
 			$this->msg = $id>0?translate("Succesfully updated"):translate("Successful");
+			
+			if( Merchant_utility::fileExist("components/Item_translation.php")){
+				
+				Item_translation::insertTranslation( 
+				(integer) $id>0?$id: FoodItemWrapper::$last_inserted_id ,
+				'cat_id',
+				'category_name',
+				'category_description',
+				array(	                  
+				  'category_name'=>isset($this->data['category_name_trans'])?$this->data['category_name_trans']:'',
+				  'category_description'=>isset($this->data['category_description_trans'])?$this->data['category_description_trans']:'',
+				),"{{category_translation}}");
+			}		
+			
 			$this->details = array(
 			  'next_action'=>'pop_form'			  
 			);
@@ -699,8 +756,7 @@ class ApiController extends CController
         	$refresh=1;
         }
                					        
-		if ($resp = FoodItemWrapper::getAllAddon($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
+		if ($resp = FoodItemWrapper::getAllAddon($merchant_id,$page,$page_limit,$search_string)){						
 			
 			$data = array();$x=0;
 			foreach ($resp as $val) {
@@ -710,8 +766,8 @@ class ApiController extends CController
 				}				
 				$data[] = array(
 				  'id'=>$val['subcat_id'],
-				  'name'=>$val['subcategory_name'],
-				  'description'=>$val['subcategory_description'],
+				  'name'=>stripslashes($val['subcategory_name']),
+				  'description'=>stripslashes($val['subcategory_description']),
 				  'thumbnail'=>FoodItemWrapper::getImage(''),
 				  'status'=>t($val['status']),
 				  'date_created'=>OrderWrapper::prettyDateTime($val['date_created'])
@@ -757,6 +813,12 @@ class ApiController extends CController
 		  'date_created'=>FunctionsV3::dateNow(),
 		  'ip_address'=>$_SERVER['REMOTE_ADDR']
 		);		
+		if(isset($this->data['subcategory_name_trans'])){
+			$params['subcategory_name_trans'] = json_encode($this->data['subcategory_name_trans']);
+		}
+		if(isset($this->data['subcategory_description_trans'])){
+			$params['subcategory_description_trans'] = json_encode($this->data['subcategory_description_trans']);
+		}				
 		try {
 			
 			FoodItemWrapper::insertAddonCategory($merchant_id,$params,$id);
@@ -765,6 +827,22 @@ class ApiController extends CController
 			$this->details = array(
 			  'next_action'=>'pop_form'			  
 			);
+						
+			if( Merchant_utility::fileExist("components/Item_translation.php")){
+				if(isset($this->data['subcategory_name_trans'])){
+					$this->data['subcategory_name_trans']['default'] = isset($this->data['subcategory_name'])?$this->data['subcategory_name']:'';
+					$this->data['subcategory_description_trans']['default'] = isset($this->data['subcategory_description'])?$this->data['subcategory_description']:'';
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $id>0?$id:FoodItemWrapper::$last_inserted_id,
+				'subcat_id',
+				'subcategory_name',
+				'subcategory_description',
+				array(	                  
+				  'subcategory_name'=>isset($this->data['subcategory_name_trans'])?$this->data['subcategory_name_trans']:'',
+				  'subcategory_description'=>isset($this->data['subcategory_description_trans'])?$this->data['subcategory_description_trans']:'',
+				),"{{subcategory_translation}}");
+			}
 			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
@@ -776,9 +854,14 @@ class ApiController extends CController
 	{
 		$merchant_id = $this->validateToken();		
 		$id = isset($this->data['id'])?(array)$this->data['id']:0;
+		$id2 = isset($this->data['id'])?(integer)$this->data['id']:0;
 		try {
 						
-			FoodItemWrapper::deleteAddonCategory($merchant_id,$id);
+			if( Merchant_utility::fileExist("components/ItemClass.php")){
+				ItemClass::deleteAddonCategory( $merchant_id, $id2);
+			} else {
+			    FoodItemWrapper::deleteAddonCategory($merchant_id,$id);
+			}
 			$this->code = 1;
 			$this->msg = "OK";
 			$this->details = array(
@@ -803,10 +886,12 @@ class ApiController extends CController
 						
 			$data = array(
 			  'subcat_id'=>$resp['subcat_id'],
-			  'subcategory_name'=>$resp['subcategory_name'],
-			  'subcategory_description'=>$resp['subcategory_description'],
+			  'subcategory_name'=>stripslashes($resp['subcategory_name']),
+			  'subcategory_description'=>stripslashes($resp['subcategory_description']),
 			  'thumbnail'=>FoodItemWrapper::getImage(''),
-			  'status'=>$resp['status']
+			  'status'=>$resp['status'],
+			  'subcategory_name_trans'=>isset($resp['subcategory_name_trans'])?json_decode($resp['subcategory_name_trans'],true):array(),
+			  'subcategory_description_trans'=>isset($resp['subcategory_description_trans'])?json_decode($resp['subcategory_description_trans'],true):array(),
 			);
 			$this->code = 1;
 			$this->msg = "OK";
@@ -814,7 +899,7 @@ class ApiController extends CController
 			  'next_action'=>'fill_form',
 			  'form_id'=>"addon_form.html",
 			  'data'=>$data
-			);
+			);			
 			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
@@ -838,15 +923,14 @@ class ApiController extends CController
         	$refresh=1;
         }
                					        
-		if ($resp = FoodItemWrapper::getAllAddonItem($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
+		if ($resp = FoodItemWrapper::getAllAddonItem($merchant_id,$page,$page_limit,$search_string)){						
 			
 			$data = array();$x=0;
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['sub_item_id'],
-				  'name'=>$val['sub_item_name'],
-				  'description'=>$val['item_description'],
+				  'name'=>stripslashes($val['sub_item_name']),
+				  'description'=>stripslashes($val['item_description']),
 				  'thumbnail'=>FoodItemWrapper::getImage($val['photo']),
 				  'price'=>FunctionsV3::prettyPrice($val['price'])
 				);				
@@ -936,6 +1020,13 @@ class ApiController extends CController
 		  'ip_address'=>$_SERVER['REMOTE_ADDR']
 		);			
 		
+        if(isset($this->data['sub_item_name_trans'])){
+			$params['sub_item_name_trans'] = json_encode($this->data['sub_item_name_trans']);
+		}
+		if(isset($this->data['item_description_trans'])){
+			$params['item_description_trans'] = json_encode($this->data['item_description_trans']);
+		}		
+		
 		if(empty($params['category'])){
 			$this->msg = translate("Category is required");
 			$this->output();
@@ -952,6 +1043,23 @@ class ApiController extends CController
 			  'next_action'=>'pop_form'			  
 			);
 			
+			if(isset($this->data['sub_item_name_trans'])){
+				$this->data['sub_item_name_trans']['default'] = isset($this->data['sub_item_name'])?$this->data['sub_item_name']:'';
+				$this->data['item_description_trans']['default'] = isset($this->data['item_description'])?$this->data['item_description']:'';
+			}	              
+						 
+			if( Merchant_utility::fileExist("components/Item_translation.php")){
+				Item_translation::insertTranslation( 
+				(integer) $id>0?$id:FoodItemWrapper::$last_inserted_id,
+				'sub_item_id',
+				'sub_item_name',
+				'item_description',
+				array(	                  
+				  'sub_item_name'=>isset($this->data['sub_item_name_trans'])?$this->data['sub_item_name_trans']:'',
+				  'item_description'=>isset($this->data['item_description_trans'])?$this->data['item_description_trans']:'',
+				),"{{subcategory_item_translation}}");
+			}
+			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
 		}		
@@ -962,9 +1070,14 @@ class ApiController extends CController
 	{
 		$merchant_id = $this->validateToken();		
 		$id = isset($this->data['id'])?(array)$this->data['id']:0;
+		$id2 = isset($this->data['id'])?(integer)$this->data['id']:0;
 		try {
 						
-			FoodItemWrapper::deleteSubItem($merchant_id,$id);
+			if( Merchant_utility::fileExist("components/ItemClass.php")){				
+			  ItemClass::deleteAddonItem( $merchant_id, $id2);
+			} else {
+			   FoodItemWrapper::deleteSubItem($merchant_id,$id);
+			}
 			$this->code = 1;
 			$this->msg = "OK";
 			$this->details = array(
@@ -988,13 +1101,15 @@ class ApiController extends CController
 			));					
 			$data = array(
 			  'sub_item_id'=>$resp['sub_item_id'],
-			  'sub_item_name'=>$resp['sub_item_name'],
-			  'item_description'=>$resp['item_description'],
+			  'sub_item_name'=>stripslashes($resp['sub_item_name']),
+			  'item_description'=>stripslashes($resp['item_description']),
 			  'price'=>normalPrettyPrice($resp['price']),
 			  'thumbnail'=>FoodItemWrapper::getImage($resp['photo']),
 			  'photo'=>$resp['photo'],			  
 			  'category'=>!empty($resp['category'])?json_decode($resp['category'],true):'',
 			  'status'=>$resp['status'],
+			  'sub_item_name_trans'=>isset($resp['sub_item_name_trans'])?json_decode($resp['sub_item_name_trans'],true):array(),
+			  'item_description_trans'=>isset($resp['item_description_trans'])?json_decode($resp['item_description_trans'],true):array(),
 			);					
 			$this->code = 1;
 			$this->msg = "OK";
@@ -1027,13 +1142,12 @@ class ApiController extends CController
         }
                					        
 		if ($resp = FoodItemWrapper::getAllingredients($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
 			
 			$data = array();$x=0;
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['ingredients_id'],
-				  'name'=>$val['ingredients_name'],
+				  'name'=>stripslashes($val['ingredients_name']),
 				  'description'=>'',
 				  'thumbnail'=>FoodItemWrapper::getImage(''),
 				  'status'=>t($val['status']),
@@ -1078,7 +1192,11 @@ class ApiController extends CController
 		  'status'=>isset($this->data['status'])?$this->data['status']:'',		  
 		  'date_created'=>FunctionsV3::dateNow(),
 		  'ip_address'=>$_SERVER['REMOTE_ADDR']
-		);			
+		);	
+				
+		if(isset($this->data['ingredients_name_trans'])){
+			$params['ingredients_name_trans'] = json_encode($this->data['ingredients_name_trans']);
+		}	
 		try {
 						
 			FoodItemWrapper::insertIngredients($merchant_id,$params,$id);
@@ -1087,6 +1205,22 @@ class ApiController extends CController
 			$this->details = array(
 			  'next_action'=>'pop_form'			  
 			);
+			
+			if( Merchant_utility::fileExist("components/ItemClass.php")):
+				$new_id = (integer) $id>0?$id:FoodItemWrapper::$last_inserted_id;
+				
+				if(isset($this->data['ingredients_name_trans'])){
+					$this->data['ingredients_name_trans']['default'] = isset($this->data['ingredients_name'])?$this->data['ingredients_name']:'';				
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $new_id ,
+				'ingredients_id',
+				'ingredients_name',
+				'',
+				array(	                  
+				  'ingredients_name'=>isset($this->data['ingredients_name_trans'])?$this->data['ingredients_name_trans']:'',			  
+				),"{{ingredients_translation}}");
+			endif;
 			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
@@ -1106,10 +1240,12 @@ class ApiController extends CController
 						
 			$data = array(
 			  'ingredients_id'=>$resp['ingredients_id'],
-			  'ingredients_name'=>$resp['ingredients_name'],			  
+			  'ingredients_name'=>stripslashes($resp['ingredients_name']),			  
 			  'thumbnail'=>FoodItemWrapper::getImage(''),
-			  'status'=>$resp['status']
+			  'status'=>$resp['status'],
+			  'ingredients_name_trans'=>isset($resp['ingredients_name_trans'])?json_decode($resp['ingredients_name_trans'],true):array(),
 			);
+			
 			$this->code = 1;
 			$this->msg = "OK";
 			$this->details = array(
@@ -1129,9 +1265,14 @@ class ApiController extends CController
 	{
 		$merchant_id = $this->validateToken();		
 		$id = isset($this->data['id'])?(array)$this->data['id']:0;
+		$id2 = isset($this->data['id'])?(integer)$this->data['id']:0;
 		try {
 						
-			FoodItemWrapper::deleteIngredients($merchant_id,$id);
+			if( Merchant_utility::fileExist("components/ItemClass.php")){	
+			   ItemClass::deleteIngredients( $merchant_id,  $id2 );
+			} else {
+				FoodItemWrapper::deleteIngredients($merchant_id,$id);
+			}			
 			$this->code = 1;
 			$this->msg = "OK";
 			$this->details = array(
@@ -1161,13 +1302,12 @@ class ApiController extends CController
         }
                					        
 		if ($resp = FoodItemWrapper::getAllCooking($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
 			
 			$data = array();$x=0;
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['cook_id'],
-				  'name'=>$val['cooking_name'],
+				  'name'=>stripslashes($val['cooking_name']),
 				  'description'=>'',
 				  'thumbnail'=>FoodItemWrapper::getImage(''),
 				  'status'=>t($val['status']),
@@ -1212,7 +1352,13 @@ class ApiController extends CController
 		  'status'=>isset($this->data['status'])?$this->data['status']:'',		  
 		  'date_created'=>FunctionsV3::dateNow(),
 		  'ip_address'=>$_SERVER['REMOTE_ADDR']
-		);			
+		);	
+
+		
+        if(isset($this->data['cooking_name_trans'])){
+			$params['cooking_name_trans'] = json_encode($this->data['cooking_name_trans']);
+		}
+			
 		try {
 						
 			FoodItemWrapper::insertCookingRef($merchant_id,$params,$id);
@@ -1221,6 +1367,24 @@ class ApiController extends CController
 			$this->details = array(
 			  'next_action'=>'pop_form'			  
 			);
+			
+			$new_id = (integer) $id>0?$id:FoodItemWrapper::$last_inserted_id;
+			
+			if( Merchant_utility::fileExist("components/ItemClass.php")):
+			
+			    if(isset($this->data['cooking_name'])){
+					$this->data['cooking_name_trans']['default'] = isset($this->data['cooking_name'])?$this->data['cooking_name']:'';					
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $new_id ,
+				'cook_id',
+				'cooking_name',
+				'',		
+				array(	                  
+				  'cooking_name'=>isset($this->data['cooking_name_trans'])?$this->data['cooking_name_trans']:'',				  
+				),"{{cooking_ref_translation}}");
+			
+			endif;
 			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
@@ -1232,9 +1396,14 @@ class ApiController extends CController
 	{
 		$merchant_id = $this->validateToken();		
 		$id = isset($this->data['id'])?(array)$this->data['id']:0;
+		$id2 = isset($this->data['id'])?(integer)$this->data['id']:0;
 		try {
 						
-			FoodItemWrapper::deleteCookingRef($merchant_id,$id);
+			if( Merchant_utility::fileExist("components/ItemClass.php")){
+				ItemClass::deleteCookingRef( $merchant_id, $id2);
+			} else {
+			    FoodItemWrapper::deleteCookingRef($merchant_id,$id);
+			}
 			$this->code = 1;
 			$this->msg = "OK";
 			$this->details = array(
@@ -1259,9 +1428,10 @@ class ApiController extends CController
 						
 			$data = array(
 			  'cook_id'=>$resp['cook_id'],
-			  'cooking_name'=>$resp['cooking_name'],			  
+			  'cooking_name'=>stripslashes($resp['cooking_name']),			  
 			  'thumbnail'=>FoodItemWrapper::getImage(''),
-			  'status'=>$resp['status']
+			  'status'=>$resp['status'],
+			  'cooking_name_trans'=>isset($resp['cooking_name_trans'])?json_decode($resp['cooking_name_trans'],true):array(),
 			);
 			$this->code = 1;
 			$this->msg = "OK";
@@ -1269,7 +1439,7 @@ class ApiController extends CController
 			  'next_action'=>'fill_form',
 			  'form_id'=>"cooking_form.html",
 			  'data'=>$data
-			);
+			);			
 			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
@@ -1294,7 +1464,6 @@ class ApiController extends CController
         }
                					        
 		if ($resp = FoodItemWrapper::getAllitem($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
 						
 			$data = array();$x=0; 
 			foreach ($resp as $val) {				
@@ -1334,8 +1503,8 @@ class ApiController extends CController
 				
 				$data[] = array(
 				  'id'=>$val['item_id'],
-				  'name'=>$val['item_name'],
-				  'description'=>$val['item_description'],
+				  'name'=>stripslashes($val['item_name']),
+				  'description'=>stripslashes($val['item_description']),
 				  'thumbnail'=>FoodItemWrapper::getImage($val['photo']),
 				  'prices'=>$prices,
 				  'item_status'=>$item_status
@@ -1365,7 +1534,7 @@ class ApiController extends CController
 				  'is_search'=>!empty($search_string)?true:false
 				);
 			}
-		}
+		}		
 		$this->output();
 	}	
 	
@@ -1422,6 +1591,14 @@ class ApiController extends CController
 		);		
 		
 		
+        if(isset($this->data['item_name_trans'])){
+			$params['item_name_trans'] = json_encode($this->data['item_name_trans']);
+		}
+		if(isset($this->data['item_description_trans'])){
+			$params['item_description_trans'] = json_encode($this->data['item_description_trans']);
+		}		
+				
+		
 	    if(empty($params['category'])){
 			$this->msg = translate("Category is required");
 			$this->output();
@@ -1435,6 +1612,70 @@ class ApiController extends CController
 			$this->details = array(
 			  'next_action'=>'pop_form'			  
 			);
+			
+			/*ITEM DATA AND RELATIONSHIP*/
+			
+			$new_item_id = (integer) $item_id>0?$item_id:FoodItemWrapper::$last_inserted_id;
+			
+			 if( Merchant_utility::fileExist("components/ItemClass.php")):
+			
+			 ItemClass::insertItemRelationship(
+                (integer)$merchant_id,
+                (integer) $new_item_id,
+                isset($this->data['category'])?(array)$this->data['category']:''
+            );
+			
+            ItemClass::insertItemRelationshipSubcategory(
+                (integer)$merchant_id,
+                (integer) $new_item_id,
+                isset($this->data['sub_item_id'])?(array)$this->data['sub_item_id']:''
+            );
+                        
+            ItemClass::insertItemRelatinship(
+              (integer)$merchant_id,
+              (integer) $new_item_id,
+              array(
+               'size'=>isset($this->data['size'])?(array)$this->data['size']:'',
+               'price'=>isset($this->data['price'])?(array)$this->data['price']:''
+              )		              
+            );
+            
+            ItemClass::insertMeta( 
+               (integer)$merchant_id,
+              (integer)$new_item_id,'cooking_ref',
+              isset($this->data['cooking_ref'])?(array)$this->data['cooking_ref']:''
+            );
+                        
+            ItemClass::insertMeta( 
+              (integer)$merchant_id,
+              (integer)$new_item_id,'ingredients',
+              isset($this->data['ingredients'])?(array)$this->data['ingredients']:''
+            );
+            
+            ItemClass::insertMeta( 
+              (integer)$merchant_id,
+              (integer)$new_item_id,'dish',
+              isset($this->data['dish'])?(array)$this->data['dish']:''
+            );
+	
+			/*TRANSLATION*/			
+			if(isset($this->data['item_name_trans'])){
+				$this->data['item_name_trans']['default'] = isset($this->data['item_name'])?$this->data['item_name']:'';
+				$this->data['item_description_trans']['default'] = isset($this->data['item_description'])?$this->data['item_description']:'';
+			}	                
+						
+			Item_translation::insertTranslation( 
+			(integer) $new_item_id,
+			'item_id',
+			'item_name',
+			'item_description',
+			array(	                  
+			  'item_name'=>isset($this->data['item_name_trans'])?$this->data['item_name_trans']:'',
+			  'item_description'=>isset($this->data['item_description_trans'])?$this->data['item_description_trans']:'',
+			),"{{item_translation}}");
+			
+			endif;
+			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
 		}		
@@ -1460,14 +1701,13 @@ class ApiController extends CController
 			}
 		} 
 		
-		if($resp = FoodItemWrapper::getItem($merchant_id,$id)){			
-			$resp = Yii::app()->request->stripSlashes($resp);			
+		if($resp = FoodItemWrapper::getItem($merchant_id,$id)){						
 			$data = array(
 			  'item_id'=>$resp['item_id'],
-			  'item_name'=>$resp['item_name'],			  			  
-			  'item_description'=>$resp['item_description'],	
+			  'item_name'=>stripslashes($resp['item_name']),			  			  
+			  'item_description'=>stripslashes($resp['item_description']),	
 			  'not_available'=>$resp['not_available'],
-			  'status'=>$resp['status'],			  
+			  'status'=>stripslashes($resp['status']),			  
 			  'category'=>!empty($resp['category'])?json_decode($resp['category'],true):'',
 			  'price'=>!empty($resp['price'])?json_decode($resp['price'],true):'',
 			  'cooking_ref'=>!empty($resp['cooking_ref'])?json_decode($resp['cooking_ref'],true):'',
@@ -1484,7 +1724,9 @@ class ApiController extends CController
 			  'gallery_photo'=>!empty($resp['gallery_photo'])?json_decode($resp['gallery_photo'],true):'',
 			  'packaging_fee'=>$resp['packaging_fee']>0?normalPrettyPrice($resp['packaging_fee']):'',
 			  'packaging_incremental'=>$resp['packaging_incremental'],
-			  'addon_item'=>!empty($resp['addon_item'])?json_decode($resp['addon_item'],true):'',			  
+			  'addon_item'=>!empty($resp['addon_item'])?json_decode($resp['addon_item'],true):'',
+			  'item_name_trans'=>isset($resp['item_name_trans'])?json_decode($resp['item_name_trans'],true):array(),
+			  'item_description_trans'=>isset($resp['item_description_trans'])?json_decode($resp['item_description_trans'],true):array(),		  
 			);							
 			$this->code = 1;
 			$this->msg = "OK";
@@ -1502,9 +1744,14 @@ class ApiController extends CController
 	{
 		$merchant_id = $this->validateToken();		
 		$id = isset($this->data['id'])?(array)$this->data['id']:0;		
+		$id2 = isset($this->data['id'])?(integer)$this->data['id']:0;
 		try {
-						
-			FoodItemWrapper::deleteItem($merchant_id,$id);
+			
+			if( Merchant_utility::fileExist("components/ItemClass.php")){
+				ItemClass::deleteFoodItem( $merchant_id, $id2);
+			} else {
+			   FoodItemWrapper::deleteItem($merchant_id,$id);
+			}
 			$this->code = 1;
 			$this->msg = "OK";
 			$this->details = array(
@@ -1530,14 +1777,13 @@ class ApiController extends CController
         $refresh  = isset($this->data['refresh'])?(integer)$this->data['refresh']:0;
         $field  = isset($this->data['field'])?trim($this->data['field']):'';        
         
-		if ($resp = FoodItemWrapper::getListCategory($merchant_id,$page,$page_limit)){		
-			$resp = Yii::app()->request->stripSlashes($resp);
+		if ($resp = FoodItemWrapper::getListCategory($merchant_id,$page,$page_limit)){					
 			
 			$data = array();
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['cat_id'],
-				  'name'=>$val['category_name']
+				  'name'=>stripslashes($val['category_name'])
 				);
 			}
 			
@@ -1583,13 +1829,12 @@ class ApiController extends CController
         
 		if ($resp = FoodItemWrapper::getAllCooking($merchant_id,$page,$page_limit,
 		$search_string,'a.cooking_name','ASC', false)){		
-			$resp = Yii::app()->request->stripSlashes($resp);
 			
 			$data = array();
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['cook_id'],
-				  'name'=>$val['cooking_name']
+				  'name'=>stripslashes($val['cooking_name'])
 				);
 			}
 			
@@ -1636,13 +1881,13 @@ class ApiController extends CController
 		if ($resp = FoodItemWrapper::getAllingredients($merchant_id,$page,$page_limit,$search_string,
 		'a.ingredients_name','ASC',false
 		)){		
-			$resp = Yii::app()->request->stripSlashes($resp);
+			
 			
 			$data = array();
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['ingredients_id'],
-				  'name'=>$val['ingredients_name']
+				  'name'=>stripslashes($val['ingredients_name'])
 				);
 			}
 			
@@ -1688,13 +1933,12 @@ class ApiController extends CController
         $field  = isset($this->data['field'])?trim($this->data['field']):'';  
         
 		if ($resp = FoodItemWrapper::getAllDish($merchant_id,$page,$page_limit,$search_string)){		
-			$resp = Yii::app()->request->stripSlashes($resp);
 			
 			$data = array();
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['dish_id'],
-				  'name'=>$val['dish_name']
+				  'name'=>stripslashes($val['dish_name'])
 				);
 			}
 			
@@ -1740,14 +1984,13 @@ class ApiController extends CController
         	$refresh=1;
         }
                					        
-		if ($resp = FoodItemWrapper::getAllSize($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
+		if ($resp = FoodItemWrapper::getAllSize($merchant_id,$page,$page_limit,$search_string)){						
 			
 			$data = array();$x=0;
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['size_id'],
-				  'name'=>$val['size_name'],
+				  'name'=>stripslashes($val['size_name']),
 				  'description'=>'',
 				  'thumbnail'=>FoodItemWrapper::getImage(''),
 				  'status'=>t($val['status']),
@@ -1794,10 +2037,12 @@ class ApiController extends CController
 						
 			$data = array(
 			  'size_id'=>$resp['size_id'],
-			  'size_name'=>$resp['size_name'],			  
+			  'size_name'=>stripslashes($resp['size_name']),			  
 			  'thumbnail'=>FoodItemWrapper::getImage(''),
-			  'status'=>$resp['status']
+			  'status'=>$resp['status'],
+			  'size_name_trans'=>isset($resp['size_name_trans'])?json_decode($resp['size_name_trans'],true):array(),
 			);
+			
 			$this->code = 1;
 			$this->msg = "OK";
 			$this->details = array(
@@ -1823,6 +2068,11 @@ class ApiController extends CController
 		  'date_created'=>FunctionsV3::dateNow(),
 		  'ip_address'=>$_SERVER['REMOTE_ADDR']
 		);				
+		
+		if(isset($this->data['size_name_trans'])){
+			$params['size_name_trans'] = json_encode($this->data['size_name_trans']);
+		}	
+		
 		try {
 						
 			FoodItemWrapper::insertSize($merchant_id,$params,$id);
@@ -1831,6 +2081,23 @@ class ApiController extends CController
 			$this->details = array(
 			  'next_action'=>'pop_form'			  
 			);
+			
+			if( Merchant_utility::fileExist("components/ItemClass.php")):
+			   $new_id = (integer) $id>0?$id:FoodItemWrapper::$last_inserted_id;
+			
+			   if(isset($this->data['size_name_trans'])){
+					$this->data['size_name_trans']['default'] = isset($this->data['size_name'])?$this->data['size_name']:'';					
+				}	                
+				Item_translation::insertTranslation( 
+				(integer) $new_id ,
+				'size_id',
+				'size_name',
+				'',
+				array(	                  
+				  'size_name'=>isset($this->data['size_name_trans'])?$this->data['size_name_trans']:'',				  
+				),"{{size_translation}}");
+			   
+			endif;
 			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
@@ -1842,9 +2109,14 @@ class ApiController extends CController
 	{
 		$merchant_id = $this->validateToken();		
 		$id = isset($this->data['id'])?(array)$this->data['id']:0;
+		$id2 = isset($this->data['id'])?(integer)$this->data['id']:0;
 		try {
 						
-			FoodItemWrapper::deleteSize($merchant_id,$id);
+			if( Merchant_utility::fileExist("components/ItemClass.php")){
+			   ItemClass::deleteSize($merchant_id,$id2);			
+			} else {
+			   FoodItemWrapper::deleteSize($merchant_id,$id);
+			}
 			$this->code = 1;
 			$this->msg = "OK";
 			$this->details = array(
@@ -1900,8 +2172,7 @@ class ApiController extends CController
         	$refresh=1;
         }
                					        
-		if ($resp = FoodItemWrapper::getAllShipping($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
+		if ($resp = FoodItemWrapper::getAllShipping($merchant_id,$page,$page_limit,$search_string)){				
 			
 			$data = array();$x=0;
 			foreach ($resp as $val) {				
@@ -2058,6 +2329,18 @@ class ApiController extends CController
 		$this->output();
 	}
 	
+	public function actionenabled_category_sked_time()
+	{
+		$merchant_id = $this->validateToken();		
+		$enabled = isset($this->data['enabled_category_sked_time'])?(integer)$this->data['enabled_category_sked_time']:0;				
+
+		Yii::app()->functions->updateOption("enabled_category_sked_time",$enabled,$merchant_id);	
+		
+		$this->code = 1;
+		$this->msg = translate("Settings saved");
+		$this->output();
+	}
+	
     public function actionOffersList()
 	{		
 		$merchant_id = $this->validateToken();
@@ -2075,7 +2358,6 @@ class ApiController extends CController
         }
                					        
 		if ($resp = FoodItemWrapper::getAllOffers($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
 						
 			$data = array();$x=0;
 			foreach ($resp as $val) {		
@@ -2325,7 +2607,6 @@ class ApiController extends CController
         }
                					        
 		if ($resp = FoodItemWrapper::getAllVouchers($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
 						
 			$data = array();$x=0;
 			foreach ($resp as $val) {		
@@ -2387,7 +2668,7 @@ class ApiController extends CController
 			$resp = FoodItemWrapper::getData("voucher_new","voucher_id=:voucher_id",array(
 			 ':voucher_id'=>$id
 			));
-						
+								
 			$data = array(
 			  'id'=>$resp['voucher_id'],
 			  'voucher_name'=>$resp['voucher_name'],
@@ -2396,6 +2677,14 @@ class ApiController extends CController
 			  'expiration'=>$resp['expiration'],
 			  'used_once'=>$resp['used_once'],
 			  'status'=>$resp['status'],
+			  'min_order'=>isset($resp['min_order'])?normalPrettyPrice($resp['min_order']):'',			  
+			  'monday'=>isset($resp['monday'])? (integer) $resp['monday']:'',
+			  'tuesday'=>isset($resp['tuesday'])? (integer) $resp['tuesday']:'',
+			  'wednesday'=>isset($resp['wednesday'])? (integer) $resp['wednesday']:'',
+			  'thursday'=>isset($resp['thursday'])? (integer) $resp['thursday']:'',
+			  'friday'=>isset($resp['friday'])? (integer) $resp['friday']:'',
+			  'saturday'=>isset($resp['saturday'])? (integer) $resp['saturday']:'',
+			  'sunday'=>isset($resp['sunday'])? (integer) $resp['sunday']:'',
 			);			
 			$this->code = 1;
 			$this->msg = "OK";
@@ -2403,8 +2692,7 @@ class ApiController extends CController
 			  'next_action'=>'fill_form',
 			  'form_id'=>"voucher_form.html",
 			  'data'=>$data
-			);
-			
+			);			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
 		}		
@@ -2414,7 +2702,8 @@ class ApiController extends CController
 	public function actionAddVoucher()
 	{
 		$merchant_id = $this->validateToken();
-		$id = isset($this->data['id'])?(integer)$this->data['id']:0;					
+		$id = isset($this->data['id'])?(integer)$this->data['id']:0;			
+		$days = MerchantWrapper::dayList(); 		
 		$params = array(
 		  'merchant_id'=>(integer)$merchant_id,	
 		  'voucher_name'=>isset($this->data['voucher_name'])?$this->data['voucher_name']:'',
@@ -2425,9 +2714,24 @@ class ApiController extends CController
 		  'status'=>isset($this->data['status'])?$this->data['status']:'pending',
 		  'date_created'=>FunctionsV3::dateNow(),
 		  'date_modified'=>FunctionsV3::dateNow(),
-		  'ip_address'=>$_SERVER['REMOTE_ADDR']
+		  'ip_address'=>$_SERVER['REMOTE_ADDR'],
+		  'min_order'=>isset($this->data['min_order'])?(float)$this->data['min_order']:0		  
 		);		
 		
+		$days_found = false;
+		foreach ($days as $day=>$dayname) {
+			$params[$day] = isset($this->data[$day])?(integer)$this->data[$day]:0;
+			if(isset($this->data[$day])){
+				$days_found=true;
+			}	
+		}
+		
+		if(!$days_found){
+			$this->msg = translate("Please select days available");
+			$this->output();
+		}	
+		
+			
 		try {
 			
 			if($id>0){
@@ -2483,7 +2787,6 @@ class ApiController extends CController
         }
                					        
 		if ($resp = FoodItemWrapper::getAllMinTable($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
 						
 			$data = array();$x=0;
 			foreach ($resp as $val) {		
@@ -2610,6 +2913,7 @@ class ApiController extends CController
 	{		
 		$merchant_id = $this->validateToken();
 		$enabled_category_sked = getOption($merchant_id,'enabled_category_sked');
+		$enabled_category_sked_time = getOption($merchant_id,'enabled_category_sked_time');
 				
 		$page_limit = MerchantWrapper::paginateLimit();
 		
@@ -2624,7 +2928,6 @@ class ApiController extends CController
         }
                					        
 		if ($resp = FoodItemWrapper::getAllSchedulerList($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
 						
 			$data = array();$x=0;
 			foreach ($resp as $val) {											
@@ -2654,8 +2957,9 @@ class ApiController extends CController
 			 'next_action'=>'set_list_column',
 			 'refresh'=>$refresh,
 			 'data'=>$data,
-			 'enabled_category_sked'=>$enabled_category_sked
-			);						
+			 'enabled_category_sked'=>$enabled_category_sked,
+			 'enabled_category_sked_time'=>$enabled_category_sked_time
+			);									
 		} else {
 			if(isset($this->data['page'])){
 				$this->code = 1;
@@ -2685,7 +2989,8 @@ class ApiController extends CController
 			$resp = FoodItemWrapper::getData("category","cat_id=:cat_id",array(
 			 ':cat_id'=>$id
 			));
-						
+			
+					
 			$data = array(
 			  'cat_id'=>$resp['cat_id'],
 			  'category_name'=>$resp['category_name'],			  
@@ -2696,6 +3001,20 @@ class ApiController extends CController
 			  'friday'=>$resp['friday'],
 			  'saturday'=>$resp['saturday'],
 			  'sunday'=>$resp['sunday'],
+			  'monday_start'=>isset($resp['monday_start'])?$resp['monday_start']:'',
+			  'monday_end'=>isset($resp['monday_end'])?$resp['monday_end']:'',
+			  'tuesday_start'=>isset($resp['tuesday_start'])?$resp['tuesday_start']:'',
+			  'tuesday_end'=>isset($resp['tuesday_end'])?$resp['tuesday_end']:'',
+			  'wednesday_start'=>isset($resp['wednesday_start'])?$resp['wednesday_start']:'',
+			  'wednesday_end'=>isset($resp['wednesday_end'])?$resp['wednesday_end']:'',
+			  'thursday_start'=>isset($resp['thursday_start'])?$resp['thursday_start']:'',
+			  'thursday_end'=>isset($resp['thursday_end'])?$resp['thursday_end']:'',
+			  'friday_start'=>isset($resp['friday_start'])?$resp['friday_start']:'',
+			  'friday_end'=>isset($resp['friday_end'])?$resp['friday_end']:'',
+			  'saturday_start'=>isset($resp['saturday_start'])?$resp['saturday_start']:'',
+			  'saturday_end'=>isset($resp['saturday_end'])?$resp['saturday_end']:'',
+			  'sunday_start'=>isset($resp['sunday_start'])?$resp['sunday_start']:'',
+			  'sunday_end'=>isset($resp['sunday_end'])?$resp['sunday_end']:'',
 			);
 						
 			$this->code = 1;
@@ -2704,7 +3023,7 @@ class ApiController extends CController
 			  'next_action'=>'fill_form',
 			  'form_id'=>"scheduler_form.html",
 			  'data'=>$data
-			);
+			);			
 			
 		} catch (Exception $e) {			
 			$this->msg = translate($e->getMessage());			
@@ -2715,20 +3034,20 @@ class ApiController extends CController
 	public function actionAddScheduler()
 	{
 		$merchant_id = $this->validateToken();
-		$id = isset($this->data['id'])?(integer)$this->data['id']:0;		
-		$params = array(
-		  'monday'=>isset($this->data['monday'])?(integer)$this->data['monday']:0,
-		  'tuesday'=>isset($this->data['tuesday'])?(integer)$this->data['tuesday']:0,
-		  'wednesday'=>isset($this->data['wednesday'])?(integer)$this->data['wednesday']:0,
-		  'thursday'=>isset($this->data['thursday'])?(integer)$this->data['thursday']:0,
-		  'friday'=>isset($this->data['friday'])?(integer)$this->data['friday']:0,
-		  'saturday'=>isset($this->data['saturday'])?(integer)$this->data['saturday']:0,
-		  'sunday'=>isset($this->data['sunday'])?(integer)$this->data['sunday']:0,
-		  'date_modified'=>FunctionsV3::dateNow(),
-		  'ip_address'=>$_SERVER['REMOTE_ADDR']
-		);		
+		$id = isset($this->data['id'])?(integer)$this->data['id']:0;			
+		
+		$days = MerchantWrapper::dayList(); $params = array();
+		foreach ($days as $day=>$dayname) {
+			$params[$day] = isset($this->data[$day])?(integer)$this->data[$day]:0;
+			$params[$day."_start"] = isset($this->data[$day."_start"])?trim($this->data[$day."_start"]):'';
+			$params[$day."_end"] = isset($this->data[$day."_end"])?trim($this->data[$day."_end"]):'';
+		}
+		
+		$params['date_modified']=FunctionsV3::dateNow();
+		$params['ip_address']=$_SERVER['REMOTE_ADDR'];
+		
 		try {
-									
+											
 			FoodItemWrapper::insertCategoryScheduler($merchant_id,$params,$id);
 			$this->code = 1;
 			$this->msg = $id>0?translate("Succesfully updated"):translate("Successful");
@@ -2803,18 +3122,18 @@ class ApiController extends CController
 		    		}
 		    	}
             }		   
-                                   
-            if(FunctionsV3::isMerchantPaymentToUseAdmin($merchant_id)){                  	            	
-            	if(array_key_exists('pyr',$available)){            		
+            
+            if(FunctionsV3::isMerchantPaymentToUseAdmin($merchant_id)){                  	
+            	if(array_key_exists('pyr',$available)){            		            		
             		$available=array();
             		$available["pyr"]=array(
 		    		  'code'=>"pyr",
 		    		  'name'=>t("Pay On Delivery"),
 		    		  'icon'=>FoodItemWrapper::getImage('',"payment/pyr.png")
-		    		);
+		    		);		    		
             	} else $available=array();
             } 
-
+            
             $new_available = $available;
             if(is_array($user_access) && count($user_access)>=1){            	
             	$new_available = array();
@@ -3245,16 +3564,15 @@ class ApiController extends CController
         }
                					        
 		if ($resp = MerchantWrapper::getAllBankDeposit($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
 						
 			$data = array();$x=0;
 			foreach ($resp as $val) {		
 												
 				$data[] = array(
 				  'id'=>$val['id'],	
-				  'name'=>$val['customer_name'],
+				  'name'=>stripslashes($val['customer_name']),
 				  'description'=>translate("Branch code:[branch_code]",array(
-				   '[branch_code]'=>$val['branch_code']
+				   '[branch_code]'=>stripslashes($val['branch_code'])
 				  )),
 				  'thumbnail'=>FoodItemWrapper::getImage($val['scanphoto']),
 				  'status'=>t($val['status']),
@@ -3364,6 +3682,12 @@ class ApiController extends CController
 		  'option_name'=>"merchant_cancel_order_phone",
 		  'option_value'=>getOption($merchant_id,'merchant_cancel_order_phone')
 		);
+		
+		$settings[]=array(
+		  'option_name'=>"merchant_invoice_email",
+		  'option_value'=>getOption($merchant_id,'merchant_invoice_email')
+		);
+		
 		$this->code = 1;
 		$this->msg = "OK";
 		$this->details = array(
@@ -3395,29 +3719,38 @@ class ApiController extends CController
         if(!empty($search_string)){
         	$refresh=1;
         }
-                
+                                
+        $task_remarks = ''; $task_status=''; $task_color = 'orange';
+        $driver_task = Yii::app()->db->schema->getTable("{{driver_task}}");
+                      
 		if ($resp = OrderWrapper::getAllOrder($new,$order_type,$merchant_id,$page,$page_limit,$search_string)){			
 						
 			$stmt="SELECT FOUND_ROWS() as total_row"; $total = 0;
 			if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
 				$total = $res['total_row'];
 			}						
-			$resp = Yii::app()->request->stripSlashes($resp);
 										
 			$data = array();$x=0;
-			foreach ($resp as $val) {												
+			foreach ($resp as $val) {	
+
+				
+				/*MC*/
+				$used_currency = isset($val['used_currency'])?$val['used_currency']: $this->default_currency;				
+				if($this->item_utility){
+					Price_Formatter::init( $used_currency );
+				}			
 						
 				$pre_order = 0; $pre_order_msg='';
 				$delivery_date=$val['delivery_date'];
 				$delivery_date=date("Ymd",strtotime($delivery_date));				
 				$datediff = Yii::app()->functions->dateDifference($delivery_date,$date_now);
 				
-				//dump("$delivery_date=>$date_now");
 				
 				if($delivery_date>$date_now){					
 					$pre_order = 1;
+					$dtime = date("g:ia",strtotime($val['delivery_time']));
 					$pre_order_msg = translate("This is advance order on [date]",array(					  
-					  '[date]'=>FunctionsV3::prettyDate($val['delivery_date'])
+					  '[date]'=>FunctionsV3::prettyDate($val['delivery_date'])." $dtime"
 					));
 				}
 								
@@ -3449,6 +3782,40 @@ class ApiController extends CController
 					   	} 
 					}
 				}
+				
+				if($driver_task):
+				$task_remarks = '';
+				$stmt_task = "
+				SELECT status,
+				CASE 
+				    WHEN status ='declined' THEN 
+				    (select CONCAT_WS('|',remarks,remarks2,remarks_args) from {{order_history}} 
+				    where order_id=a.order_id and status='declined' limit 0,1  )
+				    
+				    WHEN status ='cancelled' THEN 
+				    (select CONCAT_WS('|',remarks,remarks2,remarks_args) from {{order_history}} 
+				    where order_id=a.order_id and status='declined' limit 0,1  )
+				    				    
+				    
+				END as task_remarks
+				FROM {{driver_task}} a
+				WHERE order_id=".q( (integer)$val['order_id'] )."
+				LIMIT 0,1			
+				";				
+				if($task_res = Yii::app()->db->createCommand($stmt_task)->queryRow()){				
+					$task_status = $task_res['status'];
+					$remarks = explode("|",$task_res['task_remarks']);
+					if(is_array($remarks) && count($remarks)>=1){						
+						$remarks0 = isset($remarks[0])?$remarks[0]:'';
+						$remarks1 = isset($remarks[1])?$remarks[1]:'';
+						$remarks2 = isset($remarks[2])?$remarks[2]:'';												
+						if(!empty($remarks1) && !empty($remarks2)){							
+							$task_remarks = translate($remarks1,json_decode($remarks2,true));
+						} else $stmt_task = $remarks0;				
+					}				
+				}
+				endif;
+																			
 								
 				$data[] = array(
 				  'order_id'=>$val['order_id'],
@@ -3457,11 +3824,11 @@ class ApiController extends CController
 				  )),
 				  'total_items'=>$val['total_items'],
 				  'items'=>translate("Items for [customer_name]",array(
-				    '[customer_name]'=>$val['customer_name']
+				    '[customer_name]'=>stripslashes($val['customer_name'])
 				  )),
 				  'delivery_date'=>$val['delivery_date'],
 				  'date_created'=>PrettyDateTime::parse(new DateTime($val['date_created'])),
-				  'total_order_amount'=>FunctionsV3::prettyPrice($val['total_order_amount']),
+				  'total_order_amount'=>Merchant_utility::formatNumber($val['total_order_amount']),
 				  'status'=>t($val['status']),
 				  'status_raw'=>$val['status_raw'],
 				  'trans_type'=>t($val['trans_type']),
@@ -3481,6 +3848,9 @@ class ApiController extends CController
 				  'driver_id'=>$driver_id,
 				  'driver_name'=>$driver_name,
 				  'driver_photo'=>$driver_photo,
+				  'task_status'=>$task_status,
+				  'task_color'=>$task_color,
+				  'task_remarks'=>$task_remarks,
 				  'stic_customer_name'=>$val['customer_name'],
 				  'stic_delivery_address'=>$val['full_address']
 				);							
@@ -3495,7 +3865,7 @@ class ApiController extends CController
 			 'total'=>$total,
 			 'data'=>$data,
 			 'page_id'=>$page_id
-			);						
+			);							
 		} else {
 			if(isset($this->data['page'])){
 				$this->code = 1;
@@ -3514,7 +3884,7 @@ class ApiController extends CController
 				  'is_search'=>!empty($search_string)?true:false
 				);
 			}
-		}				
+		}						
 		$this->output();
 	}
 	
@@ -3534,7 +3904,7 @@ class ApiController extends CController
 		if(!$order = OrderWrapper::validateOrder($merchant_id,$order_id)){
 			$this->msg = translate("Order not found");
 		    $this->output();	
-		}
+		}		
 				
 		if($order_id>0){
 			
@@ -3547,8 +3917,16 @@ class ApiController extends CController
 				);
 				$this->output();	
 			}	
-						
-										  	  	    	  	   
+			
+			$status = OrderWrapper::getActionStatus('accept');
+			
+			if(OrderWrapper::validateChangeStatus($order_id,$status)){
+			   $this->msg = translate("This order already change to [status]",array(
+				'[status]'=>$status
+			   ));
+			   $this->output();
+			}		
+														  	  	    	  	  
 			try {
 							
 				$accepted_based_time = (integer)getOptionA('accepted_based_time');
@@ -3592,6 +3970,7 @@ class ApiController extends CController
 				}										
 										
 				$estimated_date_time = date("Y-m-d H:i:s",strtotime($delivery_date." ".$delivery_time));
+				$estimateddatetime = date('h:ia', strtotime("+$time minutes", strtotime($estimated_date_time)));
 					
 				$params = array(
 				  'estimated_time'=>$time,
@@ -3604,23 +3983,41 @@ class ApiController extends CController
 			  	      ':order_id'=>$order_id
 			  	    )
 		  	    );
-		  	    
-		  	   $status = OrderWrapper::getActionStatus('accept');
 		  	   
-		  	   $estimated_words = "estimated food ready in [minute] mins";		  	   		  	   
+		  	   
+		  	   $estimated_words = "estimated food ready in [minute] mins";		
+
+		  	   $remarks = translate($estimated_words,array(
+		  	     '[minute]'=>$time
+		  	   ));		  	   	  	  
 		  	   
 		  	   /*CHECK IF DATE IS FUTURE ORDER*/
 		  	   $chk_delivery_date = new DateTime($delivery_date);
 		  	   $current_date = new DateTime();
 		  	   
 		  	   if ($chk_delivery_date > $current_date) {
-		  	    	$estimated_words = "Order accepted and will be ready on time.";
+		  	    	$estimated_words = "Order accepted and will be ready on time";
+		  	    	$remarks = $estimated_words; 	  	  
 		  	   }
-		  	    
-		  	   $remarks = translate($estimated_words,array(
-		  	     '[minute]'=>$time
-		  	   ));
-		  	   		  	  		  	   		  	   	  	        	  	   		  	   		  	
+		  	    		  	   
+		  	   
+		  	   /*CHECK IF ORDER IS ADVANCE ORDER*/		  	   
+		  	   $time_diff=Yii::app()->functions->dateDifference($datetime_now,$date_created);
+		  	   if(is_array($time_diff) && count($time_diff)>=1){
+		  	   	  if($time_diff['hours']>0){
+					 $estimated_words = "order will be ready in [estimated_time]";
+					 $remarks = translate($estimated_words,array(
+					  '[estimated_time]'=>$estimateddatetime
+					 ));
+				  }							  
+				  if($time_diff['minutes']>30){
+					 $estimated_words = "order will be ready in [estimated_time]";
+					 $remarks = translate($estimated_words,array(
+					  '[estimated_time]'=>$estimateddatetime
+					 ));
+				  }							  
+		  	   }
+		  	   		  	   		  	  		  	   		  	   	  	        	  	   		  	   		  
 		  	   $params = array(
 				  'order_id'=>$order_id,
 				  'status'=>$status,
@@ -3628,8 +4025,12 @@ class ApiController extends CController
 				  'date_created'=>FunctionsV3::dateNow(),
 				  'ip_address'=>$_SERVER['REMOTE_ADDR'],
 				  'remarks2'=>$estimated_words,
-				  'remarks_args'=>json_encode(array('[minute]'=>$time))
-			   );		
+				  'remarks_args'=>json_encode(
+				  array( 
+				   '[minute]'=>$time,
+				   '[estimated_time]'=>$estimateddatetime
+				   )),				  
+			   );	
 			   
 	           $params2 = array(
 				  'status'=>$status,
@@ -3663,6 +4064,7 @@ class ApiController extends CController
 				  'application.modules.driver.components.*',
 			    ));
 			    Driver::addToTask($order_id);
+			    //OrderWrapper::updateTaskDeliveryDate($order_id,(float)$time);
 			}		   
 			
 			/*UPDATE POINTS BASED ON ORDER STATUS*/
@@ -3712,6 +4114,7 @@ class ApiController extends CController
 		    $this->output();	
 		}
 				
+				
 		/*check if merchant can change the status*/
 		if(!OrderWrapper::canChangeOrderStatus($order)){
 			$this->msg=translate("Sorry but you cannot change the order status anymore. Order is lock by the website admin");
@@ -3728,14 +4131,9 @@ class ApiController extends CController
 				if(empty($reason)){
 				   $this->msg = translate("Reason is required");
 		 		   $this->output();
-				}
-				if(!empty($notes)){
-					/*$reason = translate("[reason], additional comments: [comment]",array(
-		   	    	  '[reason]'=>$reason,
-		   	    	  '[comment]'=>$notes
-		   	    	));	
-		   	    	$notes='';*/
-					$remarks = "[reason], additional comments: [comment]";
+				}				
+				if(!empty($notes) || !empty($reason)){					
+					$remarks = !empty($notes)?"[reason], additional comments: [comment]":"[reason]";
 					$remarks_args = array(
 					  '[reason]'=>$reason,
 		   	    	  '[comment]'=>$notes
@@ -3762,7 +4160,8 @@ class ApiController extends CController
 				}						
 				break;
 				
-			case "manual_change_status":	
+			case "manual_change_status":
+												    		
 			    if(empty($reason)){
 				   $this->msg = translate("Order status is required");
 		 		   $this->output();
@@ -3776,12 +4175,24 @@ class ApiController extends CController
 				}	
 			   break;
 			   
-			case "food_is_done":
-				//$reason = $notes; $notes='';				
+			case "food_is_done":				
+				if(!empty($notes)){					
+					$remarks = "additional comments: [comment]";
+					$remarks_args = array(
+					  '[reason]'=>$reason,
+		   	    	  '[comment]'=>$notes
+					);
+				}						
 			   break;	 
 			   
-			case "approved_cancel_order":   
-			   //$reason = $notes; $notes='';
+			case "approved_cancel_order":   			   
+			   if(!empty($notes)){					
+					$remarks = "additional comments: [comment]";
+					$remarks_args = array(
+					  '[reason]'=>$reason,
+		   	    	  '[comment]'=>$notes
+					);
+				}		
 			break;	 
 			
 			case "decline_cancel_order":
@@ -3789,12 +4200,7 @@ class ApiController extends CController
 				   $this->msg = translate("Reason is required");
 		 		   $this->output();
 				}
-				if(!empty($notes)){
-					/*$reason = translate("[reason], additional comments: [comment]",array(
-		   	    	  '[reason]'=>$reason,
-		   	    	  '[comment]'=>$notes
-		   	    	));	
-		   	    	$notes='';*/
+				if(!empty($notes)){					
 					$remarks = "[reason], additional comments: [comment]";
 					$remarks_args = array(
 					  '[reason]'=>$reason,
@@ -3810,7 +4216,7 @@ class ApiController extends CController
 		try {
 						
 			
-			/*HISTORY*/
+			/*HISTORY*/						
 			$remarks2 = $remarks;
 			$params = array(
 			  'order_id'=>$order_id,
@@ -3822,6 +4228,8 @@ class ApiController extends CController
 			  'date_created'=>FunctionsV3::dateNow(),
 			  'ip_address'=>$_SERVER['REMOTE_ADDR']			  
 			);	
+			
+			$reason = $params['remarks'];
 			
 			/*ORDER*/
 			$params2 = array(
@@ -3840,11 +4248,7 @@ class ApiController extends CController
 				$params['status']='decline';
 			}
 						
-			/*dump($params);
-			dump($params2);
-			die();*/
-
-					
+							
 			OrderWrapper::updateOrderHistory($order_id,$merchant_id,$params,$params2);
 			$this->code = 1;
 			$this->msg = "OK";
@@ -3860,6 +4264,17 @@ class ApiController extends CController
 				    OrderWrapper::updateEstimationTime($order_id,(float)$reason);	
 				    OrderWrapper::updateTaskDeliveryDate($order_id,(float)$reason);							    				   
 					break;
+					
+				case "decline":
+					OrderWrapper::updateTaskStatus($order_id,"declined");
+					break;
+					
+				case "cancel_order":	
+				    OrderWrapper::updateTaskStatus($order_id,"cancelled");
+				    break;
+				    
+				case "food_is_done":   
+				    break;
 												
 				default:
 					break;
@@ -3928,7 +4343,7 @@ class ApiController extends CController
 		    $order_id  = isset($this->data['order_id'])?(integer)$this->data['order_id']:0;		
 		    
 			$resp = OrderWrapper::prepareReceipt($order_id);
-			//dump($resp);die();
+						
 			$resp = Yii::app()->request->stripSlashes($resp);
 			$resp['timezone']=Yii::app()->timeZone;
 			
@@ -3971,8 +4386,7 @@ class ApiController extends CController
 			 'refresh'=>$refresh,
 			 'data'=>$resp,
 			 'history'=>$history,			 
-			);						
-						
+			);																			
 		} catch (Exception $e) {
 		    $this->msg = translate($e->getMessage());
 		}		
@@ -4067,12 +4481,11 @@ class ApiController extends CController
 	public function actiongetProfile()
 	{		
 		try {
-			$resp = MerchantUserWrapper::validateToken($this->merchant_token);
-			$resp = Yii::app()->request->stripSlashes($resp);
+			$resp = MerchantUserWrapper::validateToken($this->merchant_token);			
 			$data = array(
-			  'username'=>$resp['username'],
-			  'email_address'=>$resp['email_address'],
-			  'mobile_number'=>$resp['contact_number'],
+			  'username'=>stripslashes($resp['username']),
+			  'email_address'=>stripslashes($resp['email_address']),
+			  'mobile_number'=>stripslashes($resp['contact_number']),
 			);
 			$this->code = 1;
 			$this->msg = "OK";
@@ -4703,8 +5116,7 @@ class ApiController extends CController
                               
 		if ($resp = MerchantWrapper::getViewNotification($list_type,$this->device_uiid,$merchant_id,
 		    $page,$page_limit,$search_string)){
-		    	
-			$resp = Yii::app()->request->stripSlashes($resp);			
+		    				
 			$data = array();
 			foreach ($resp as $val) {	        		  		        	
         		$val['date_created']=OrderWrapper::prettyDateTime($val['date_created']);
@@ -4846,7 +5258,7 @@ class ApiController extends CController
          Yii::app()->functions->updateOption("merchant_invoice_email",
          isset($this->data['merchant_invoice_email'])?$this->data['merchant_invoice_email']:'',
          $merchant_id);		  
-
+         
         $this->code = 1;
 		$this->msg = translate("Settings saved");
 			 
@@ -5277,7 +5689,7 @@ class ApiController extends CController
         }
                					        
 		if ($resp = MerchantWrapper::getAllReview($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);			
+			
 			$data = array();$x=0;
 			foreach ($resp as $val) {			
 				$description = $val['review'];	
@@ -5288,7 +5700,7 @@ class ApiController extends CController
 				}
 				$data[] = array(
 				  'id'=>$val['id'],
-				  'name'=>$val['customer_name'],
+				  'name'=>stripslashes($val['customer_name']),
 				  'description'=>$description,
 				  'thumbnail'=>FoodItemWrapper::getImage(''),
 				  'status'=>t($val['status']),
@@ -5427,13 +5839,12 @@ class ApiController extends CController
         }
                					        
 		if ($resp = FoodItemWrapper::merchantStatusList($merchant_id,$page,$page_limit,$search_string)){			
-			$resp = Yii::app()->request->stripSlashes($resp);
 			
 			$data = array();$x=0;
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['stats_id'],
-				  'name'=>$val['description'],
+				  'name'=>stripslashes($val['description']),
 				  'description'=>'',
 				  'thumbnail'=>FoodItemWrapper::getImage(''),
 				  'status'=>' ',
@@ -5673,13 +6084,20 @@ class ApiController extends CController
         if(!empty($search_string)){
         	$refresh=1;
         }
-                
+                        
         
         if ($resp = ReportsWrapper::salesReport($merchant_id,$page,$page_limit,$search_string,
         $start_date,$end_date,$order_status)){
         	$data = array();
         	
         	foreach ($resp as $val) {
+        		        		
+        		/*MC*/
+				$used_currency = isset($val['used_currency'])?$val['used_currency']: $this->default_currency;				
+				if($this->item_utility){
+					Price_Formatter::init( $used_currency );
+				}		
+        		
         		$val['status']=t($val['status']);
         		
         		$val['payment_type'] = FunctionsV3::prettyPaymentType('payment_order',$val['payment_type_raw'],
@@ -5689,7 +6107,7 @@ class ApiController extends CController
         		$val['order_number']= translate("Order No. #[order_id]",array( 
         		  '[order_id]'=>$val['order_id']
         		));
-        		$val['total_amount'] = FunctionsV3::prettyPrice($val['total_amount']);
+        		$val['total_amount'] = Merchant_utility::formatNumber($val['total_amount']);
         		$val['date_created'] = OrderWrapper::prettyDateTime($val['date_created']);
         		$data[]=$val;
         	}
@@ -5702,7 +6120,7 @@ class ApiController extends CController
 			 'refresh'=>$refresh,
 			 'pull_hook'=>$pull_hook,
 			 'data'=>$data
-			);				
+			);			
         } else {
 			if(isset($this->data['page'])){
 				$this->code = 1;
@@ -5789,13 +6207,13 @@ class ApiController extends CController
         
         if ($resp = ReportsWrapper::salesSummaryReport($merchant_id,$page,$page_limit,$search_string,
         $start_date,$end_date,$order_status)){
-        	        
+        	
         	$data = array();
         	
         	foreach ($resp as $val) {        		
         		$total_amount = (float)$val['total_qty']*(float)$val['price_raw'];
-        		$val['price'] = FunctionsV3::prettyPrice($val['price']);
-        		$val['total_amount'] = FunctionsV3::prettyPrice($total_amount);
+        		$val['price'] = Merchant_utility::formatNumber($val['price_raw']);
+        		$val['total_amount'] = Merchant_utility::formatNumber($total_amount);
         		$data[]=$val;
         	}
         	        	
@@ -5807,7 +6225,10 @@ class ApiController extends CController
 			 'refresh'=>$refresh,
 			 'pull_hook'=>$pull_hook,
 			 'data'=>$data
-			);							
+			);					
+			
+			//dump($this->details);		
+			
         } else {
 			if(isset($this->data['page'])){
 				$this->code = 1;
@@ -6172,13 +6593,12 @@ class ApiController extends CController
 	public function actionAddBroadcast()
 	{
 		$merchant_id = $this->validateToken();
-		
-	
+				
 		$id = '';
 		$params = array(
 		  'push_title'=>isset($this->data['push_title'])?$this->data['push_title']:'',
 		  'push_message'=>isset($this->data['push_message'])?$this->data['push_message']:'',
-		  'device_platform'=>"/topics/broadcast",
+		  'device_platform'=>"/topics/merchant_subscription_$merchant_id",
 		  'date_created'=>FunctionsV3::dateNow(),
 		  'ip_address'=>$_SERVER['REMOTE_ADDR'],
 		  'merchant_id'=>$merchant_id,
@@ -6193,7 +6613,7 @@ class ApiController extends CController
 		try {
 
 			MerchantWrapper::verifyLastBroadcast($merchant_id);
-			
+						
 			MerchantWrapper::addBroadcast($merchant_id,$params,'');
 			$this->code = 1;
 			$this->msg = $id>0?translate("Succesfully updated"):translate("Successful");
@@ -6230,8 +6650,8 @@ class ApiController extends CController
 			foreach ($resp as $val) {				
 				$data[] = array(
 				  'id'=>$val['broadcast_id'],
-				  'name'=>Yii::app()->request->stripSlashes($val['push_title']),
-				  'description'=>Yii::app()->request->stripSlashes($val['push_message']),
+				  'name'=>stripslashes($val['push_title']),
+				  'description'=>stripslashes($val['push_message']),
 				  'thumbnail'=>FoodItemWrapper::getImage('','chatting.png'),
 				  'status'=>t($val['status']),
 				  'date_created'=>FunctionsV3::prettyDate($val['date_created'])." ".FunctionsV3::prettyTime($val['date_created'])
@@ -6347,7 +6767,7 @@ class ApiController extends CController
 				
 				$data[] = array(
 				  'id'=>$val['driver_id'],
-				  'name'=>Yii::app()->request->stripSlashes($val['driver_name']),
+				  'name'=>stripslashes($val['driver_name']),
 				  'description'=>$description,
 				  'thumbnail'=>$thumbnail,
 				  'status'=>'',
@@ -6399,7 +6819,11 @@ class ApiController extends CController
 		$team_id = isset($driver_info['team_id'])?$driver_info['team_id']:'';
 		$driver_name = isset($driver_info['driver_name'])?$driver_info['driver_name']:'';
 		
-		if ( $task = DriverWrapper::getTaskByOrderID($order_id)){
+		
+		$order = OrderWrapper::getReceiptByID($order_id);		
+		$current_order_status = isset($order['status'])?$order['status']:'unassigned';		
+		
+		if ( $task = DriverWrapper::getTaskByOrderID($order_id)){		
 			$task_id = (integer)$task['task_id'];
 			$old_driver = (integer)$task['driver_id'];
 
@@ -6436,7 +6860,8 @@ class ApiController extends CController
 			);
 		} else {
 		    // INSERTT AS NEW TASK
-		    if( $order = OrderWrapper::getReceiptByID($order_id) ){
+		    //if( $order = OrderWrapper::getReceiptByID($order_id) ){
+		    if($order){
 		    	
 		    	$user_type='merchant'; $user_id = $order['merchant_id'];
 		    	$driver_owner_task = getOptionA('driver_owner_task');
@@ -6505,10 +6930,11 @@ class ApiController extends CController
 		if($task_id>0){
 			if($res=Driver::getTaskId( (integer) $task_id )){
 				$assigned_task='assigned';
-				$status_pretty = Driver::prettyStatus($res['status'],$assigned_task);
+				//$status_pretty = Driver::prettyStatus($res['status'],$assigned_task);
+				$status_pretty = Driver::prettyStatus($current_order_status,$assigned_task);
 				
 				$remarks_args=array(
-				  '{from}'=>$res['status'],
+				  '{from}'=>$current_order_status,
 				  '{to}'=>$assigned_task
 				);
 				$params_history=array(
@@ -6901,11 +7327,16 @@ class ApiController extends CController
 	{
 		$merchant_id = $this->validateToken(); $data = array();
 		$order_id = isset($this->data['order_id'])?(integer)$this->data['order_id']:'';		
-		$data[0] = array(
-		  'name'=> translate("FP-80WC 80mm WIFI printer"),
-		  'id'=>-1,
-		  'order_id'=>$order_id
-		);
+		
+		$enabled_printer_fp_wifi = getOptionA('print_enabled_printer_fp_wifi');
+		
+		if($enabled_printer_fp_wifi==1){
+			$data[0] = array(
+			  'name'=> translate("FP-80WC 80mm WIFI printer"),
+			  'id'=>-1,
+			  'order_id'=>$order_id
+			);
+		}
 		if ( $res = Bluetooth::getPrinterList($merchant_id,$this->device_uiid,0,100)){
 			foreach ($res as $val) {				
 				$data[] = array(
@@ -7074,7 +7505,7 @@ class ApiController extends CController
 		$this->msg = $value=="yes"?translate("Your store is now close"):translate("Your store is now open");
 		$this->output();
 	}
-	
+
 	public function actionupdateDarkMode()
 	{
 		$merchant_id = $this->validateToken(); 
@@ -7248,6 +7679,562 @@ class ApiController extends CController
 		);			
 		$this->output();
 	}
+	
+	public function actionquickAcceptOrder()
+	{		
+		$merchant_id = $this->validateToken();
+		MerchantWrapper::setMerchantTimezone($merchant_id);
+		$order_id  = isset($this->data['order_id'])?(integer)$this->data['order_id']:0;
+		$pre_order  = isset($this->data['pre_order'])?(integer)$this->data['pre_order']:0;
+		
+		if(!$order = OrderWrapper::validateOrder($merchant_id,$order_id)){
+			$this->msg = translate("Order not found");
+		    $this->output();	
+		}	
+		if($order_id>0){
+			
+			/*check if merchant can change the status*/
+			if(!OrderWrapper::canChangeOrderStatus($order)){
+				$this->msg=translate("Sorry but you cannot change the order status anymore. Order is lock by the website admin");
+				$this->details = array(
+				  'next_action'=>"close_all_dialog_order",
+				  'order_id'=>$order_id
+				);
+				$this->output();	
+			}	
+			
+			try {
+				
+				$status = OrderWrapper::getActionStatus('accept');
+								
+				if(OrderWrapper::validateChangeStatus($order_id,$status)){
+				   $this->msg = translate("This order already change to [status]",array(
+				    '[status]'=>$status
+				   ));
+				   $this->output();
+				}				
+				
+				$remarks=''; $remarks2=''; $remarks_args = array();
+				
+				if($pre_order==1){
+					$remarks = "your order will be ready on-time";
+					$remarks2 =  $remarks;
+					$remarks_args = array(
+					  '[none]'=>'none' 	    	  
+					);
+					
+					$time = isset($this->data['mins'])?(integer)$this->data['mins']:15;
+					
+					$delivery_date = $order['delivery_date'];
+					$delivery_time = !empty($order['delivery_time'])?$order['delivery_time']:date("H:i:s");
+										
+					$estimated_date_time = date("Y-m-d H:i:s",strtotime($delivery_date." ".$delivery_time));
+					
+					$params_estimation = array(
+						'estimated_time'=>$time,
+						'estimated_date_time'=>date('Y-m-d H:i:s', strtotime("+$time minutes", strtotime($estimated_date_time))),
+					);
+					
+					Yii::app()->db->createCommand()->update("{{order_delivery_address}}",$params_estimation,
+						'order_id=:order_id',
+						array(
+						':order_id'=>$order_id
+						)
+					);
+				}			
+				
+				$params = array(
+				  'order_id'=>$order_id,
+				  'status'=>$status,
+				  'remarks'=>$remarks,
+				  'remarks2'=>$remarks2,
+				  'remarks_args'=>json_encode($remarks_args),
+				  'date_created'=>FunctionsV3::dateNow(),
+				  'ip_address'=>$_SERVER['REMOTE_ADDR']				  
+			   );	
+			   
+			   $params2 = array(
+				  'status'=>$status,
+				  'date_modified'=>FunctionsV3::dateNow(),
+				  'ip_address'=>$_SERVER['REMOTE_ADDR']
+			   );		
+			   
+			   OrderWrapper::updateOrderHistory($order_id,$merchant_id,$params,$params2);
+	  	       $this->code = 1;
+		  	   $this->msg = "OK";
+		  	   $this->details = array(
+		  	      'next_action'=>"pop_dialog_order",
+		  	      'order_id'=>$order_id,
+		  	      'action_taken'=>'accepted'
+		  	   );
+		  	   
+		  	   /*SEND NOTIFICATION*/
+		  	  if(method_exists("FunctionsV3","notifyCustomerOrderStatusChange")){		  	   	   
+			  	   FunctionsV3::notifyCustomerOrderStatusChange(
+					  $order_id,
+					  $status,
+					  $remarks
+				   );
+		  	  }		 
+		  	  
+		  	  if (FunctionsV3::hasModuleAddon("driver")){
+			    	/*Driver app*/
+			    	Yii::app()->setImport(array(			
+					  'application.modules.driver.components.*',
+				    ));
+				    Driver::addToTask($order_id);			    
+			  }		 	  
+			  
+			  /*UPDATE POINTS BASED ON ORDER STATUS*/
+				if (FunctionsV3::hasModuleAddon("pointsprogram")){	    						    					
+					if (method_exists('PointsProgram','updateOrderBasedOnStatus')){
+					   PointsProgram::updateOrderBasedOnStatus($status,$order_id);
+					}
+					if (method_exists('PointsProgram','udapteReviews')){
+					   PointsProgram::udapteReviews($order_id,$status);
+					}							
+				}
+				
+				/*INVENTORY ADDON*/				
+				if (method_exists('FunctionsV3','inventoryEnabled')){
+				if (FunctionsV3::inventoryEnabled($merchant_id)){
+					try {							  
+					   InventoryWrapper::insertInventorySale($order_id,$status);	
+					} catch (Exception $e) {										    
+					  // echo $e->getMessage();		    					    	  
+					}		    					    	
+				}
+				}  
+				
+			} catch (Exception $e) {
+				$this->msg = translate($e->getMessage());
+			}	 
+			
+		} else $this->msg = translate("Invalid order id");			
+		$this->output();
+	}
+	
+	public function actionupdateItemAvailable()
+	{		
+		$merchant_id = $this->validateToken();
+		$item_id = isset($this->data['item_id'])?(integer)$this->data['item_id']:0;
+		$available = isset($this->data['available'])?(integer)$this->data['available']:0;
+		if($item_id>0){
+			$params = array(
+			  'not_available'=>(integer)$available,			  
+			  'date_modified'=>FunctionsV3::dateNow(),			  
+			  'ip_address'=>$_SERVER['REMOTE_ADDR']
+			);
+						
+	        Yii::app()->db->createCommand()->update("{{item}}",$params,
+	  	    'item_id=:item_id AND merchant_id=:merchant_id',
+		  	    array(
+		  	      ':item_id'=>$item_id,
+		  	      ':merchant_id'=>$merchant_id
+		  	    )
+	  	    );
+	  	    $this->code = 1;
+	  	    $this->msg = t("Succesfully updated");
+	  	    $this->details = array(
+			  'next_action'=>"refresh"
+			);
+
+		} else $this->msg = t("Invalid item id");
+		$this->output();
+	}
+	
+	public function actionTimeList()
+	{
+			
+		$merchant_id = $this->validateToken();
+				
+		$page_limit = MerchantWrapper::paginateLimit();
+		
+		if (isset($this->data['page'])){
+        	$page = $this->data['page'] * $page_limit;
+        } else  $page = 0;  
+        
+        $refresh  = isset($this->data['refresh'])?(integer)$this->data['refresh']:0;
+        $search_string  = isset($this->data['s'])?trim($this->data['s']):'';
+        if(!empty($search_string)){
+        	$refresh=1;
+        }
+        
+        $search_string = isset($this->data['s'])?trim($this->data['s']):'';
+        $and='';
+        if(!empty($search_string)){
+        	$and.="
+			AND (
+			  transaction_type LIKE ".q("$search_string%")." 
+			  OR
+			  days LIKE ".q("$search_string%")." 
+			  OR
+			  order_status LIKE ".q("$search_string%")." 
+			)
+			";
+        }	
+        
+        $stmt="
+		SELECT id,group_id,transaction_type,start_time,end_time,number_order_allowed,order_status,
+		GROUP_CONCAT(days) as days
+		 FROM
+		{{order_time_management}}
+		WHERE
+		merchant_id= ".q($merchant_id)."
+		$and
+		GROUP BY group_id
+		ORDER BY id DESC
+		LIMIT $page,$page_limit
+		";		        
+		if($resp = Yii::app()->db->createCommand($stmt)->queryAll()){			
+			$data = array();$x=0;
+			foreach ($resp as $val) {		
+
+				$order_status_inline='';
+				$order_status = !empty($val['order_status'])?json_decode($val['order_status'],true):array();	
+				if(is_array($order_status) && count($order_status)>=1){
+					foreach ($order_status as $order_status_val) {
+						$order_status_inline.=t($order_status_val).",\n";
+					}
+					$order_status_inline = substr($order_status_inline,0,-2);
+				}			
+				
+				$days_inline='';
+				$days = !empty($val['days'])? explode(",",$val['days']):array();	
+				if(is_array($days) && count($days)>=1){
+					foreach ($days as $days_val) {
+						$days_inline.=t($days_val).",\n";
+					}
+					$days_inline = substr($days_inline,0,-2);
+				}		
+							
+				$data[] = array(
+				  'id'=>$val['group_id'],
+				  'name'=>t($val['transaction_type']),
+				  'description'=>$days_inline,
+				  'thumbnail'=>FoodItemWrapper::getImage(''),
+				  'status'=>$order_status_inline,
+				  'date_created'=>''
+				);				
+				$x++;
+			}
+												
+			$this->code = 1;
+			$this->msg = "OK";			
+			$this->details = array(
+			 'next_action'=>'set_list_column',
+			 'refresh'=>$refresh,
+			 'data'=>$data
+			);						
+		} else {
+			if(isset($this->data['page'])){
+				$this->code = 1;
+				$this->details = array(
+				  'next_action'=>'end_of_list',
+				  'refresh'=>$refresh
+				);
+			} else {
+				$this->code = 1;
+				$this->msg = translate("No results");
+				$this->details = array(
+				  'next_action'=>'clear_list',
+				  'is_search'=>!empty($search_string)?true:false
+				);
+			}
+		}		
+		$this->output();
+	}
+	
+	public function actiongetDaysList()
+	{		
+		$refresh  = isset($this->data['refresh'])?(integer)$this->data['refresh']:0;
+		 
+		if(method_exists("FunctionsV3","dayList")){
+			$days = FunctionsV3::dayList();
+			$data = array();
+			foreach ($days as $key=>$day) {
+				$data[] = array(
+				  'id'=>$key,
+				  'name'=>t($day)
+				);
+			}		
+			$this->code = 1;
+			$this->msg = "OK";			
+			$this->details = array(
+			 'next_action'=>'display_selected',
+			 'refresh'=>$refresh,
+			 'data'=>$data
+			);		
+		} else $this->msg = translate("Please update your kmrs");
+		$this->output();
+	}
+	
+	public function actiongetStatusList()
+	{		
+		$merchant_id = $this->validateToken();				
+		$refresh  = isset($this->data['refresh'])?(integer)$this->data['refresh']:0;
+		$page_limit = 15;
+		
+		if (isset($this->data['page'])){
+        	$page = $this->data['page'] * $page_limit;
+        } else  $page = 0;  
+                 		
+        $resp = OrderWrapper::orderStatusList($merchant_id);
+		if ($resp && $page<=0){			
+			$data = array();
+			foreach ($resp as $key=>$val) {							
+				$data[] = array(
+				  'id'=>$val['value'],
+				  'name'=>t($val['label'])
+				);
+			}		
+			$this->code = 1;
+			$this->msg = "OK";			
+			$this->details = array(
+			 'next_action'=>'display_selected',
+			 'refresh'=>$refresh,
+			 'data'=>$data
+			);		
+		} else {
+			if(isset($this->data['page'])){
+				$this->code = 1;
+				$this->details = array(
+				  'next_action'=>'end_of_list',
+				  'refresh'=>$refresh
+				);
+			} else $this->msg = translate("No results");		   
+		}	
+				
+		
+		$this->output();
+	}
+	
+	public function actionAddTime()
+	{
+		$merchant_id = $this->validateToken();
+		$id = isset($this->data['id'])?(integer)$this->data['id']:0;					
+		
+		
+		$group_id=1;
+		$max = Yii::app()->db->createCommand()->select('max(id) as max')->from('{{order_time_management}}')->queryScalar();		
+		$group_id = ($max + 1);		
+
+		$edit_group_id = $id;
+		if($edit_group_id>0){
+			$group_id=$edit_group_id;
+		}
+				
+		
+		if (is_array($this->data['days']) && count($this->data['days'])>=1){
+			
+			if($edit_group_id>0){
+				Yii::app()->db->createCommand("
+				DELETE FROM {{order_time_management}}
+				WHERE group_id=".q($edit_group_id)."
+				AND merchant_id=".q($merchant_id)."
+				")->query();
+			}
+			
+			foreach ($this->data['days'] as $day) {
+								
+				$params = array(
+				  'group_id'=>$group_id,
+				  'merchant_id'=>(integer)$merchant_id,
+				  'transaction_type'=>isset($this->data['transaction_type'])?$this->data['transaction_type']:'',
+				  'days'=>$day,
+				  'start_time'=>isset($this->data['start_time'])?$this->data['start_time']:'',
+				  'end_time'=>isset($this->data['end_time'])?$this->data['end_time']:'',
+				  'number_order_allowed'=>isset($this->data['number_order_allowed'])?(integer)$this->data['number_order_allowed']:'',
+				  'order_status'=>isset($this->data['order_status'])?json_encode($this->data['order_status'],true):'',
+				);							
+				Yii::app()->db->createCommand()->insert("{{order_time_management}}",$params);
+			}
+			
+			$this->code = 1;
+			$this->msg = $id>0?translate("Succesfully updated"):translate("Successful");
+			$this->details = array(
+			  'next_action'=>'pop_form'			  
+			);
+			
+		} else $this->msg = translate("Invalid days");
+		
+		$this->output();
+	}
+	
+	public function actionTimeDelete()
+	{
+		$merchant_id = $this->validateToken();		
+		$id = isset($this->data['id'])?(integer)$this->data['id']:0;		
+		try {
+												
+			Yii::app()->db->createCommand("
+			DELETE FROM {{order_time_management}}
+			WHERE group_id=".q($id)."
+			AND merchant_id=".q($merchant_id)."
+			")->query();
+			
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>'list_reload'			  
+			);
+			
+		} catch (Exception $e) {			
+			$this->msg = translate($e->getMessage());			
+		}		
+		$this->output();
+	}
+	
+	public function actionTimeGetByID()
+	{
+	   $merchant_id = $this->validateToken();		
+	   $id = isset($this->data['id'])?(integer)$this->data['id']:0;	
+	   $stmt="
+		SELECT id,group_id,transaction_type,start_time,end_time,number_order_allowed,
+		order_status,
+		GROUP_CONCAT(days) as days
+		 FROM
+		{{order_time_management}}
+		WHERE
+		merchant_id= ".q($merchant_id)."
+		and group_id = ".q($id)."
+		GROUP BY group_id			
+		";		
+		if($data = Yii::app()->db->createCommand($stmt)->queryRow()){
+			$data['order_status'] = json_decode($data['order_status'],true);
+			$data['days']=explode(",",$data['days']);
+			
+			$this->code = 1;
+			$this->msg = "OK";
+			$this->details = array(
+			  'next_action'=>'fill_form',
+			  'form_id'=>"time_form.html",
+			  'data'=>$data
+			);
+			
+		} else $this->msg = translate("Record not found");
+		$this->output();			
+	}
+	
+	public function actionInvoiceList()
+	{
+		$and='';
+		$merchant_id = $this->validateToken();				
+		$refresh  = isset($this->data['refresh'])?(integer)$this->data['refresh']:0;
+		$page_limit = 15;
+		
+		$refresh  = isset($this->data['refresh'])?(integer)$this->data['refresh']:0;
+        $search_string  = isset($this->data['s'])?trim($this->data['s']):'';
+        if(!empty($search_string)){
+        	$refresh=1;
+        	$and=" AND 
+        	( 
+        	invoice_number =".q($search_string)."
+        	OR
+        	payment_status LIKE ".q("%$search_string%")."
+        	)
+        	";
+        }
+		
+		if (isset($this->data['page'])){
+        	$page = $this->data['page'] * $page_limit;
+        } else  $page = 0;  
+        
+        
+        $stmt = "
+        SELECT invoice_number,merchant_name,invoice_terms,date_from,date_to,
+        pdf_filename,payment_status
+        FROM {{invoice}}
+        WHERE 
+        merchant_id = ".q($merchant_id)."
+        $and
+        ORDER BY invoice_number DESC
+        LIMIT $page,$page_limit
+        ";             	
+                
+        $resp = Yii::app()->db->createCommand($stmt)->queryAll();        
+		if ($resp && $page<=0){			
+			
+			$data = array();$x=0;
+			foreach ($resp as $val) {				
+				$data[] = array(
+				  'id'=>$val['invoice_number'],
+				  'name'=>translate("Invoice #[invoice_number] Terms [terms]",array(
+				   '[invoice_number]'=>$val['invoice_number'],
+				   '[terms]'=>FunctionsV3::prettyInvoiceTerms($val['invoice_terms'])
+				  )),
+				  'description'=>translate("Period [start] - [end]",array(
+				    '[start]'=>FunctionsV3::prettyDate($val['date_from']),
+				    '[end]'=>FunctionsV3::prettyDate($val['date_to']),
+				  )),
+				  'thumbnail'=>FoodItemWrapper::getImage(''),
+				  'status'=>t($val['payment_status']),
+				  'date_created'=>""
+				);				
+				$x++;
+			}			
+			$this->code = 1;
+			$this->msg = "OK";			
+			$this->details = array(
+			 'next_action'=>'set_list_column',
+			 'refresh'=>$refresh,
+			 'data'=>$data
+			);			
+		} else {
+			if(isset($this->data['page'])){
+				$this->code = 1;
+				$this->details = array(
+				  'next_action'=>'end_of_list',
+				  'refresh'=>$refresh
+				);
+			} else {
+				$this->code = 1;
+				$this->msg = translate("No results");
+				$this->details = array(
+				  'next_action'=>'clear_list',
+				  'is_search'=>!empty($search_string)?true:false
+				);
+			}		
+		}						
+		$this->output();
+	}
+	
+	public function actionInvoiceGetByID()
+	{
+		$merchant_id = $this->validateToken();		
+		$id = isset($this->data['id'])?(integer)$this->data['id']:0;
+		$stmt = "
+        SELECT pdf_filename,viewed
+        FROM {{invoice}}
+        WHERE 
+        merchant_id = ".q($merchant_id)."
+        AND invoice_number =".q($id)."        
+        ";             			
+		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){			
+			$link=websiteUrl()."/upload/invoice/".$res['pdf_filename'];			
+			
+			if($res['viewed']!=1){
+		        Yii::app()->db->createCommand()->update("{{invoice}}",array(
+		         'viewed'=>1	         
+		        ),
+		  	    'invoice_number=:invoice_number',
+			  	    array(
+			  	      ':invoice_number'=>$id
+			  	    )
+		  	    );
+			}
+			
+			$this->code = 1;
+			$this->msg = "OK";			
+			$this->details = array(
+			 'next_action'=>'webview',			 
+			 'link'=>$link
+			);			
+			
+		} else $this->msg = translate("PDF not found");
+		$this->output();
+	}
+	
 
 }
 /*end class*/
