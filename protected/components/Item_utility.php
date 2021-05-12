@@ -152,6 +152,19 @@ class Item_utility
 		';
 		return $stmt;
 	}
+
+	
+    public static function transportType()
+	{
+		return array(		  
+		  'truck'=>t("Truck"),
+		  'car'=>t("Car"),
+		  'bike'=>t("Bike"),
+		  'bicycle'=>t("Bicycle"),
+		  'scooter'=>t("Scooter"),
+		  'walk'=>t("Walk"),
+		);
+	}
 	
 }
 /*end class*/

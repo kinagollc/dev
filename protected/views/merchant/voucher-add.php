@@ -39,6 +39,9 @@ if (isset($_GET['id'])){
 		}
 	}		
 }
+
+$selected_customer = isset($data['selected_customer'])?json_decode($data['selected_customer'],true):array();
+$pre_selected = FunctionsV3::getCustomerPreSelected($selected_customer);
 ?>                                 
 
 <div class="uk-form-row">
@@ -104,16 +107,46 @@ Yii::app()->functions->voucherType(),array(
 </div>
 
 <div class="uk-form-row">
-  <label class="uk-form-label"><?php echo Yii::t("default","Used only once")?></label>  
-  <?php  
-  echo CHtml::checkBox('used_once',
-  $data['used_once']==2?true:false,
-  array( 
-  'class'=>"icheck",
-  'value'=>2
-))
-?>
+  <label class="uk-form-label"><?php echo Yii::t("default","Voucher options")?></label>  
+   <?php echo CHtml::dropDownList('used_once',
+  isset($data['used_once'])?$data['used_once']:"",
+  array(
+    1=>t("Unlimited for all user"),
+    2=>t("Use only once"),
+    3=>t("Once per user"),
+    4=>t("Once for new user first order"),   
+    5=>t("Custom limit per user"),
+    6=>t("Only to selected customer")
+  ), 
+  array(
+  'class'=>'uk-form-width-large used_once',
+  'data-validation'=>"required"
+  ))?>
 </div>
+
+
+<div class="uk-form-row" id="max_number_use_div">
+  <label class="uk-form-label"><?php echo Yii::t("default","Define max number of use")?></label>  
+  <?php echo CHtml::textField('max_number_use',
+  isset($data['max_number_use'])?$data['max_number_use']:''
+  ,
+  array(    
+    'class'=>"numeric_only"
+  ))?>
+</div>
+
+
+<div class="uk-form-row" id="selected_customer_div">
+  <label class="uk-form-label"><?php echo Yii::t("default","Select Customer")?></label>  
+  <?php echo CHtml::dropDownList('selected_customer',
+  (array)$selected_customer,
+  $pre_selected, 
+  array(
+  'multiple'=>true,
+  'class'=>'uk-form-width-large ajax_selected_customer',   
+  ))?>
+</div>
+
 
 <div class="uk-form-row">
   <label class="uk-form-label">Status</label>

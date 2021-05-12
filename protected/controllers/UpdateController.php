@@ -1976,7 +1976,7 @@ echo "(Done)<br/>";
 	        'merchant_id'=>"integer(14) NOT NULL DEFAULT '0'",
             'item_id'=>"integer(14) NOT NULL DEFAULT '0'",
             'meta_name'=>"varchar(255) NOT NULL DEFAULT ''", 
-            'meta_id'=>"integer(14) NOT NULL DEFAULT '0'", 
+            'meta_id'=>"varchar(255) NOT NULL DEFAULT ''", 
 	      ),
 		 'ENGINE=InnoDB DEFAULT CHARSET=utf8');
 		}
@@ -2087,7 +2087,38 @@ echo "(Done)<br/>";
 		);
 		$this->alterTable('voucher_new',$new_field);
 		
+		$new_field=array( 		
+		   'payment_gateway_type'=>"varchar(100) NOT NULL DEFAULT ''",    
+		);
+		$this->alterTable('order',$new_field);
+		
+		$new_field=array( 		
+		   'payment_gateway_type'=>"varchar(100) NOT NULL DEFAULT ''",    
+		);
+		$this->alterTable('merchant',$new_field);
+		
 		/*END 5.4.4*/
+		
+		/*5.4.5*/
+		$new_field=array( 		
+		   'delivery_options'=>"text",    
+		);
+		$this->alterTable('item',$new_field);
+		
+		$new_field=array( 		
+		   'delivery_vehicle'=>"text",    
+		);
+		$this->alterTable('order',$new_field);
+		
+		$new_field=array( 		
+		   'max_number_use'=>"integer(14) NOT NULL DEFAULT '0'",
+		   'selected_customer'=>"text"
+		);
+		$this->alterTable('voucher_new',$new_field);
+		
+		Yii::app()->db->createCommand()->alterColumn("{{item_meta}}",'meta_id',"varchar(255) NOT NULL DEFAULT ''");
+		
+		/*END 5.4.5*/
 		
 		/*ADD INDEX*/
 		/*MERCHANT TABLE*/
@@ -2529,7 +2560,8 @@ echo "(Done)<br/>";
 		a.delivery_asap,
 		a.delivery_instruction,
 		a.date_created,
-		a.request_cancel
+		a.request_cancel,
+		a.delivery_vehicle
 		
 		FROM  {{order}} a
 		

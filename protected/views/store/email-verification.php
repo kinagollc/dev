@@ -18,7 +18,7 @@ if (isset($_GET['checkout'])){
    <div class="row top30">
      
      <div class="inner">
-         <h1><?php echo t("We have sent verification code to your email address")?></h1>
+         <h1><?php echo t("OTP Verification")?></h1>
 	     <div class="box-grey rounded">	     	     	    
 	     <form class="forms bottom20" id="forms" onsubmit="return false;">
 	     <?php echo CHtml::hiddenField('action','verifyEmailCode')?>         
@@ -28,6 +28,19 @@ if (isset($_GET['checkout'])){
          <?php if (isset($_GET['checkout'])):?>
          <?php echo CHtml::hiddenField('redirect', Yii::app()->createUrl('/store/paymentoption') )?>
          <?php endif;?>
+         
+          <p class="text-muted"><?php echo tt("We have sent verification code to your email address [email_address]",array(
+           '[email_address]'=>isset($data['email_address'])?$data['email_address']:''
+         ));?></p>        
+         <p class="text-small text-center block">
+	     <?php echo t("Wrong email address")?>? 
+	     <a href="javascript:;" class="reg-change-phone" 
+         data-id="<?php echo $data['token']?>"
+         data-verification_type="email"
+         >
+	     <?php echo t("Click here to change")?>
+	     </a>
+	     </p>
                   
          <?php FunctionsV3::sectionHeader('Please enter you verification code');?>
                

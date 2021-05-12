@@ -111,9 +111,9 @@ class NotificationWrapper
 			   from {{cuisine_merchant}}
 			   where merchant_id=a.merchant_id
 			)
-			GROUP by a.merchant_id
+			GROUP by a.merchant_id,a.cuisine
 			LIMIT 0,1
-			";					
+			";								
 			if($res = Yii::app()->db->createCommand($stmt)->queryRow()){							
 				if($res['total']>0){
 					$error = Yii::t("default","Cuisine table needs update [total] records. click here",array(

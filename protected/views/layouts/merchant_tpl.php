@@ -47,6 +47,7 @@
 
 <link href="<?php echo Yii::app()->request->baseUrl; ?>/assets/vendor/rupee/rupyaINR.css" rel="stylesheet" />
 
+<link href="<?php echo Yii::app()->request->baseUrl; ?>/assets/vendor/select2/select2.min.css" rel="stylesheet" />
 
 </head>
 <body id="merchant">
@@ -269,6 +270,7 @@ var jsLanguageValidator=<?php echo json_encode($js_lang_validator)?>;
 <script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl;?>/assets/vendor/jquery.creditCardValidator.js"></script>
 
 <script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl;?>/assets/vendor/jquery.mask.js"></script>
+<script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl;?>/assets/vendor/select2/select2.min.js"></script>
 
 <script src="<?php echo Yii::app()->request->baseUrl; ?>/assets/js/admin.js?ver=1" type="text/javascript"></script>  
 

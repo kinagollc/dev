@@ -642,7 +642,7 @@ class ItemClass
             [1] => 4
         )
 	*/
-	public static function insertMeta($merchant_id='',$item_id='', $meta_name='', $meta_id=array())
+	public static function insertMeta($merchant_id='',$item_id='', $meta_name='', $meta_id=array() , $default=true)
 	{
 		if(!Yii::app()->db->schema->getTable("{{item_meta}}")){
 			return false;
@@ -652,14 +652,19 @@ class ItemClass
 		
 		$stmt_insert = '';
 		if(is_array($meta_id) && count($meta_id)>=1){
-			foreach ($meta_id as $id) {				
-				$stmt_insert.= "(NULL,".(integer)$merchant_id.",".q( (integer) $item_id).",".q($meta_name).",".q( (integer) $id)." ),";
+			foreach ($meta_id as $id) {		
+				if($default){		
+				    $stmt_insert.= "(NULL,".(integer)$merchant_id.",".q( (integer) $item_id).",".q($meta_name).",".q( (integer) $id)." ),";				    
+				} else {
+					
+					$stmt_insert.= "(NULL,".(integer)$merchant_id.",".q( (integer) $item_id).",".q($meta_name).",".q( $id)." ),";
+				}
 			}
 			$stmt_insert = substr($stmt_insert,0,-1);
 			$stmt = "
 			INSERT INTO {{item_meta}} 
 			VALUES $stmt_insert;
-			";						
+			";								
 			if(Yii::app()->db->createCommand($stmt)->query()){
 				return true;
 			}

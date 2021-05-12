@@ -1491,7 +1491,8 @@ if (!class_exists('AjaxAdmin'))
 			  'gallery_photo'=>isset($this->data['gallery_photo'])?json_encode($this->data['gallery_photo']):"",
 			  'packaging_fee'=>isset($this->data['packaging_fee'])?$this->data['packaging_fee']:0,
 			  'packaging_incremental'=>isset($this->data['packaging_incremental'])?$this->data['packaging_incremental']:0,
-			  'item_token'=>ItemClass::generateFoodToken()
+			  'item_token'=>ItemClass::generateFoodToken(),
+			  'delivery_options'=>isset($this->data['delivery_options'])?json_encode($this->data['delivery_options']):''
 			);			
 			
 			if(!is_numeric($params['packaging_fee'])){
@@ -1622,6 +1623,13 @@ if (!class_exists('AjaxAdmin'))
 	                  (integer)$this->data['id'],'dish',
 	                  isset($this->data['dish'])?(array)$this->data['dish']:''
 	                );
+	                	                
+	                ItemClass::insertMeta( 
+	                  $merchant_id,
+	                  (integer)$this->data['id'],'delivery_vehicle',
+	                  isset($this->data['delivery_options'])?(array)$this->data['delivery_options']:''
+	                  ,false
+	                );
 	                									
 				} else $this->msg=Yii::t("default","ERROR: cannot update");
 			} else {								
@@ -1671,6 +1679,13 @@ if (!class_exists('AjaxAdmin'))
 	                  $merchant_id,
 	                  (integer)$item_id,'dish',
 	                  isset($this->data['dish'])?(array)$this->data['dish']:''
+	                );
+	                
+	                ItemClass::insertMeta( 
+	                  $merchant_id,
+	                  (integer)$item_id,'delivery_vehicle',
+	                  isset($this->data['delivery_options'])?(array)$this->data['delivery_options']:''
+	                  ,false
 	                );
 	                         
 	            } else $this->msg=Yii::t("default",'ERROR. cannot insert data.');
@@ -4041,6 +4056,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
                     $raw=Yii::app()->functions->details['raw'];	   
                     
                     $exchange_rate = isset($rates['exchange_rate'])? (float) $rates['exchange_rate']:1;
+                    $delivery_vehicle = isset($raw['delivery_vehicle'])?$raw['delivery_vehicle']:array();                    
                                                             
                     if($multi_currency_enabled && $exchange_rate!=1){                            
                        $order_item = Cart_utility::reFormat($order_item,$exchange_rate);                       
@@ -4068,7 +4084,8 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    				  'order_change'=>isset($this->data['order_change'])?str_replace(",",'',$this->data['order_change']):'',
 	    				  'payment_provider_name'=>isset($this->data['payment_provider_name'])?$this->data['payment_provider_name']:'',
 	    				  'apply_food_tax'=>$apply_tax,
-	    				  'calculation_method'=>FunctionsV3::getReceiptCalculationMethod()
+	    				  'calculation_method'=>FunctionsV3::getReceiptCalculationMethod(),
+	    				  'delivery_vehicle'=>json_encode($delivery_vehicle)
 	    				);	    			
 	    				
 	    				/*FIXED ORDER STATUS*/	    					    				
@@ -4125,7 +4142,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			            		
 			            		if($service_resp){
 			            			$params['total_commission'] = (float)$params['total_commission'] + (float)$service_resp['service_fee'];
-			            		    $params['merchant_earnings'] = (float)$params['merchant_earnings'] - (float)$service_resp['service_fee'];
+			            		    //$params['merchant_earnings'] = (float)$params['merchant_earnings'] - (float)$service_resp['service_fee'];
 			            		}
 			            	}			
 			            	
@@ -4146,7 +4163,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 			            		
 			            		if($service_resp){			            					            				
 			            				$params['total_commission'] = (float)$params['total_commission'] + (float)$service_resp['service_fee'];
-			            				$params['merchant_earnings'] = (float)$params['merchant_earnings'] - (float)$service_resp['service_fee'];
+			            				//$params['merchant_earnings'] = (float)$params['merchant_earnings'] - (float)$service_resp['service_fee'];
 			            		}			            	
 			            		
 			            	}            
@@ -6031,7 +6048,7 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 					    			  standardPrettyFormat($val['sub_total'],$merchant_id),
 					    			  standardPrettyFormat($val['taxable_total'],$merchant_id),
 					    			  standardPrettyFormat($val['total_w_tax'],$merchant_id),
-					    			  ucwords($val['status']),
+					    			  t($val['status']),
 					    			  ucwords($val['request_from']),
 					    			  $date,
 			    			    );
@@ -6981,6 +6998,9 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    	
 	    	Yii::app()->functions->updateOptionAdmin("merchant_time_can_edit_status",
 	    	isset($this->data['merchant_time_can_edit_status'])?trim($this->data['merchant_time_can_edit_status']):'');    	
+	    	
+	    	Yii::app()->functions->updateOptionAdmin("captcha_contact_form",
+	    	isset($this->data['captcha_contact_form'])?(integer)$this->data['captcha_contact_form']:0);    	
 	    	
 	    	$this->code=1;
 	    	$this->msg=Yii::t("default","Setting saved");
@@ -8674,6 +8694,18 @@ $resto_info.="<p><span class=\"uk-text-bold\">".Yii::t("default","Delivery Est")
 	    		    	
 	    	$validator=new Validator;
 	    	$validator->required($required,$this->data);
+	    	
+	    	/*CHECK RECAPCHA*/
+			$captcha = getOptionA('captcha_contact_form');			
+			if ( $captcha==1){
+	    		try {	    				    			
+	    			$recaptcha_token = isset($this->data['recaptcha_v3'])?$this->data['recaptcha_v3']:'';	    			
+	    			GoogleCaptchaV3::validateToken($recaptcha_token);	    			
+	    		} catch (Exception $e) {	    			
+	    			 $validator->msg[] = $e->getMessage();	    			 	    			 
+	    		}
+	    	} 		
+	    		    		    
 	    	if ($validator->validate()){    		
 	    		$lang=Yii::app()->language;
 	    		$to=getOptionA('contact_email_receiver');
@@ -10664,40 +10696,13 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 			$sub_total = isset($this->data['sub_total'])?(float)$this->data['sub_total']:0;
 			
 			if(!empty($voucher_code)){				
-				$mtid='"'.$merchant_id.'"';  $today = strtolower(date("l"));  	
-				$stmt="
-				SELECT *,				
-				(
-		    	select count(*) from
-		    	{{order}}
-		    	where
-		    	voucher_code=".q($voucher_code)."
-		    	and
-		    	client_id=".q(Yii::app()->functions->getClientId())."  	
-		    	LIMIT 0,1
-		    	) as found
-				
-				FROM {{voucher_new}} a
-				WHERE voucher_name = ".q($voucher_code)."
-				AND ".date("Y-m-d")." <= expiration
-				AND ".$today."=1
-			    AND ( merchant_id =".self::q($merchant_id)." OR joining_merchant LIKE ".q("%$mtid%")." )
-				";
-				
-				if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
+				try {	    	
 					
-					/*check if voucher code can be used only once*/
-					if ( $res['used_once']==2){
-						if ( $res['number_used']>0){
-							$this->msg=t("Sorry this voucher code has already been used");
-							return ;
-						}
-					}
+					$client_id = Yii::app()->functions->getClientId();
+					$datenow = date("Y-m-d"); 
+					$days = strtolower(date("l")); 
 					
-					if ( $res['found']>0){
-						$this->msg=Yii::t("default","Sorry but you have already use this voucher code");
-						return ;
-					}
+					$res = DiscountPromo::validateVoucher($merchant_id,$voucher_code,$client_id,$datenow,$days);
 					
 					$min_order = isset($res['min_order'])?(float)$res['min_order']:0;
 					if($min_order>0){									
@@ -10707,7 +10712,7 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 							));
 						    return ;
 						}					
-					}									
+					}		
 					
 					/*CHECK IF BALANCE WILL BE NEGATIVE AFTER APPLYING VOUCHER*/
 					$less_amount = 0;
@@ -10727,8 +10732,10 @@ $last_login=$val['last_login']=="0000-00-00 00:00:00"?"":date('M d,Y G:i:s',strt
 					$this->code=1;
 					$this->msg="OK";
 					$_SESSION['voucher_code']=$res;	
-										
-				} else $this->msg=Yii::t("default","Voucher code not found");
+					
+	    		} catch (Exception $e) {
+	    			 $this->msg = t($e->getMessage());
+	    		}
 			} else $this->msg = t("Please enter voucher code");
 		}
 		

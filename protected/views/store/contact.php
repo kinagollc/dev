@@ -35,6 +35,11 @@ if (!empty($fields)){
              <?php echo CHtml::hiddenField('action','contacUsSubmit')?>
              <?php echo CHtml::hiddenField('currentController','store')?>
              <?php FunctionsV3::addCsrfToken();?>
+             
+             <?php if ($captcha_contact_form==1):?>
+	           <div class="recaptcha_v3"></div> 
+	         <?php endif;?> 			
+             
              <?php if (is_array($fields) && count($fields)>=1):?>
              <?php foreach ($fields as $val):?>
              <?php  

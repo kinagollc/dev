@@ -654,7 +654,8 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."item (
   `item_token` varchar(50) NOT NULL DEFAULT '',
   `with_size` integer(1) NOT NULL DEFAULT '0',
   `track_stock` integer(1) NOT NULL DEFAULT '1',
-  `supplier_id` integer(14) NOT NULL DEFAULT '0'
+  `supplier_id` integer(14) NOT NULL DEFAULT '0',
+  `delivery_options` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE  ".$table_prefix."item
@@ -1096,7 +1097,8 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."order (
   `dinein_table_number` varchar(50) NOT NULL DEFAULT '',
   `payment_gateway_ref` varchar(255) NOT NULL DEFAULT '',
   `distance` varchar(100) NOT NULL DEFAULT '',
-  `cancel_reason` text
+  `cancel_reason` text,
+  `delivery_vehicle` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE  ".$table_prefix."order
@@ -1744,7 +1746,9 @@ CREATE TABLE IF NOT EXISTS  ".$table_prefix."voucher_new (
   `thursday` int(1) NOT NULL DEFAULT '0',
   `friday` int(1) NOT NULL DEFAULT '0',
   `saturday` int(1) NOT NULL DEFAULT '0',
-  `sunday` int(1) NOT NULL DEFAULT '0'
+  `sunday` int(1) NOT NULL DEFAULT '0',
+  `max_number_use` int(14) NOT NULL DEFAULT '0',
+  `selected_customer` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE  ".$table_prefix."voucher_new
@@ -2215,7 +2219,7 @@ CREATE TABLE IF NOT EXISTS {{item_meta}} (
   `merchant_id` int(14) NOT NULL DEFAULT '0',
   `item_id` int(14) NOT NULL DEFAULT '0',
   `meta_name` varchar(255) NOT NULL DEFAULT '',
-  `meta_id` int(14) NOT NULL DEFAULT '0'
+  `meta_id` varchar(255) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -2537,5 +2541,62 @@ from {{order}} a
 left join {{order_delivery_address}} b
 on
 a.order_id = b.order_id
+";
+
+$tbl['view_order']="
+create OR REPLACE VIEW {{view_order}} as
+SELECT 
+a.order_id,
+a.order_id_token,
+a.client_id,
+concat(b.first_name,' ',b.last_name) as customer_name,
+concat(c.first_name,' ',c.last_name) as profile_customer_name,
+b.first_name,
+b.last_name,
+b.contact_email,
+b.contact_phone,
+c.contact_phone as profile_contact_phone,
+b.dinein_number_of_guest,
+b.dinein_special_instruction,
+b.dinein_table_number,
+b.opt_contact_delivery,
+b.estimated_time,
+b.estimated_date_time,
+b.used_currency,
+b.base_currency,
+b.exchange_rate,
+b.service_fee,
+b.service_fee_applytax,
+
+c.payment_customer_id ,
+c.payment_customer_type,
+a.merchant_id,
+d.restaurant_name,
+a.trans_type,
+a.payment_type,
+a.total_w_tax as total_amount,
+a.delivery_charge,
+a.status,
+a.delivery_date,
+a.delivery_time,
+a.delivery_asap,
+a.delivery_instruction,
+a.date_created,
+a.request_cancel,
+a.delivery_vehicle
+
+FROM  {{order}} a
+
+LEFT JOIN {{order_delivery_address}} b
+ON
+a.order_id = b.order_id
+
+LEFT JOIN {{client}} c
+ON
+a.client_id = c.client_id
+
+LEFT JOIN {{merchant}} d
+ON
+a.merchant_id = d.merchant_id
 ";
 /*END 5.4.3 view*/

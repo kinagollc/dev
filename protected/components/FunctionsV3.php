@@ -7870,6 +7870,11 @@ public static function sticPrettyTime($time='')
 			$new++;
 		}		
 		
+		/*5.4.5*/
+		$new_fields=array('delivery_options'=>"delivery_options");
+		if ( !self::checkTableFields('item',$new_fields)){			
+			$new++;
+		}		
 		
 		if ($new>0){
 			return true;
@@ -8103,6 +8108,7 @@ public static function sticPrettyTime($time='')
 		$list[]='updateReview';
 		$list[]='merchantPayment';
 		$list[]='setAddress';
+		$list[]='update_client_contact';
 				
 		return $list;
 	}
@@ -9057,19 +9063,51 @@ public static function sticPrettyTime($time='')
     
     public static function generateCustomerToken() 
 	{
-		$token=self::generateCode(70);
-		$db=new DbExt;
+		$token=self::generateCode(70);	
 		$stmt="
 		SELECT token
 		FROM {{client}}
 		WHERE
 		token=".self::q($token)."
 		LIMIT 0,1
-		";
-		if ( $res=$db->rst($stmt)){
+		";		
+		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){	
 			$token=self::generateCustomerToken();
 		}
 		return $token;
+	}	
+	
+	public static function getCustomerPreSelected($ids=array())
+	{		
+		$data = array();
+		if(is_array($ids) && count($ids)>=1){
+			$stmt="
+			SELECT client_id as id, 
+	    	concat(first_name,' ',last_name) as text
+	    	FROM {{client}}
+	    	WHERE client_id IN (".implode($ids,",").")
+			";			
+			if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
+				foreach ($res as $val) {					
+					$data[$val['id']] = stripslashes($val['text']);
+				}
+			}
+		}		
+		return $data;
+	}
+	
+	public static function getClientByToken($token='') 
+	{		
+		$stmt="
+		SELECT *
+		FROM {{client}}
+		WHERE
+		token=".self::q($token)."		
+		";
+		if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
+			return $res;
+		}
+		return false;
 	}	
 	
 }/* end class*/

@@ -653,6 +653,39 @@ echo CHtml::hiddenField('merchant_tax',$merchant_tax);
 	
 	</div> <!--packaging_wrap-->
 	
+	
+	<div class="driver_wrap">
+	
+	 <div class="uk-form-row">
+	  <label class="uk-form-label uk-h3"><?php echo t("Delivery options")?></label>  
+	  <div class="clear"></div>
+	  
+	  <p style="margin:0;"><?php echo t("Select vehicle type for this item can be used for delivery")?></p>
+	  
+	  <ul class="uk-list uk-list-striped">
+	  <li>
+	  <?php 
+	  $delivery_options = isset($data['delivery_options'])?json_decode($data['delivery_options'],true):'';	  
+	  ?>
+	  
+	  <?php echo CHtml::dropDownList("delivery_options",
+	  (array)$delivery_options
+	  ,
+	  Item_utility::transportType()
+	  ,array(
+        'class'=>'chosen',        
+        'multiple'=>true,     
+       ))?>
+	  
+	  </li>
+	  </ul>
+	  
+	  </div> 	
+	  
+	</div>
+	<!--driver_wrap-->
+	
+	
     </div><!-- END uk-width-1-2-->
 </div> <!--END uk-grid-->
 

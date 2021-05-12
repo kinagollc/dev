@@ -152,6 +152,9 @@ class ScriptManager
 		$cs->registerScriptFile($baseUrl."/assets/vendor/jquery-cookie.js"
 		,CClientScript::POS_END); 
 		
+		$cs->registerScriptFile($baseUrl."/assets/vendor/jquery.mask.js"
+		,CClientScript::POS_END); 
+		
 		$cs->registerScriptFile($baseUrl."/assets/js/store.js?ver=3"
 		,CClientScript::POS_END); 
 		

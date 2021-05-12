@@ -3457,7 +3457,40 @@ jQuery(document).ready(function() {
    $('.merchant_time_order_management').on('ifUnchecked', function(event){    	    	
     	processAjax("TimeOrderManagmentSettings","enabled=0");    	
    });
-      
+         
+   $( document ).delegate( ".used_once", "change", function() {
+   	   voucherSelection( $(this).val() );
+   });
+   
+   if( $('.used_once').exists() ) {
+   	  voucherSelection( $(".used_once").val() );
+   }
+
+   if( $('.ajax_selected_customer').exists() ) {
+   	   $('.ajax_selected_customer').select2({
+   	     language: {
+	        searching: function() {
+	            return "Searching...";
+	        },
+	        noResults: function (params) {
+		      return "No results";
+		    }
+	     },
+		  ajax: {
+		  	delay: 250,		  	 
+		    url: ajax_url+"/customer_list",
+		    type: 'POST',
+		    data: function (params) {
+		      var query = {
+		        search: params.term,
+		        'yii_session_token': yii_session_token,
+		        'YII_CSRF_TOKEN': YII_CSRF_TOKEN
+		      }			     
+		      return query;
+		    }
+		  }
+		});				
+   }
 
 });
 /*end ready*/
@@ -3602,3 +3635,16 @@ var processAjax = function(action , data , single_call, silent, method , loader_
     
 };
 /*end mycall*/
+
+voucherSelection = function($value){	
+	if($value==5){
+		$("#max_number_use_div").show();
+		$("#selected_customer_div").hide();
+	} else if ( $value==6){
+		$("#selected_customer_div").show();
+		$("#max_number_use_div").hide();
+	} else {
+		$("#max_number_use_div").hide();
+		$("#selected_customer_div").hide();
+	}
+};

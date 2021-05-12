@@ -593,6 +593,10 @@ class StoreController extends CController
 		  CClientScript::POS_HEAD
 		);
 		
+		$captcha_contact_form = getOptionA('captcha_contact_form');
+		if($captcha_contact_form==1){
+		   GoogleCaptchaV3::init();
+		}
 			
 		$this->render('contact',array(
 		  'address'=>$address,
@@ -600,7 +604,8 @@ class StoreController extends CController
 		  'contact_phone'=>getOptionA('website_contact_phone'),
 		  'contact_email'=>getOptionA('website_contact_email'),
 		  'contact_content'=>getOptionA('contact_content'),
-		  'country'=>Yii::app()->functions->adminCountry()		  
+		  'country'=>Yii::app()->functions->adminCountry(),
+		  'captcha_contact_form'=>$captcha_contact_form
 		));
 	}
 	
@@ -2250,14 +2255,15 @@ class StoreController extends CController
 	public function actionVerification()
 	{
 		$continue=true;
-		$msg='';
+		$msg=''; $res = array();
 		$id=Yii::app()->functions->getClientId();
 		if (!empty($id)){
 			$continue=false;
 			$msg=t("Sorry but we cannot find what you are looking for.");
 		}
 		if ( $continue==true){
-			if( $res=Yii::app()->functions->getClientInfo($_GET['id'])){								
+			$client_id = isset($_GET['id'])?(integer)$_GET['id']:0;
+			if( $res=Yii::app()->functions->getClientInfo($client_id)){								
 				if ( $res['status']=="active"){
 					$continue=false;
 					$msg=t("Your account is already verified");
@@ -2269,7 +2275,9 @@ class StoreController extends CController
 		}		
 		
 		if ( $continue==true){
-		   $this->render('mobile-verification');
+		   $this->render('mobile-verification',array(
+		    'data'=>$res
+		   ));
 		} else $this->render('error',array('message'=>$msg));
 	}
 
@@ -2604,7 +2612,7 @@ class StoreController extends CController
 		if(!isset($_GET['id'])){
 			$_GET['id']='';
 		}
-		if( $res=Yii::app()->functions->getClientInfo($_GET['id'])){	
+		if( $res=Yii::app()->functions->getClientInfo( (integer)$_GET['id'] )){	
 			if ( $res['status']=="active"){
 				$continue=false;
 				$msg=t("Your account is already verified");
@@ -4671,6 +4679,34 @@ class StoreController extends CController
 	    ));
 	}
 		
-	/*START CUSTOM CODE*/
+	/*START CUSTOM CODE*/	
+	
+	public function actionpending_payment()
+	{
+		$get = $_GET;
+		$payment_type = isset($get['payment_type'])?$get['payment_type']:'';
+		$order_id_token = isset($get['reference_id'])?$get['reference_id']:'';
+		
+		$error = ''; $back_url='';
+		
+		if($payment_type=="buy"){
+			$back_url = Yii::app()->createUrl('/store/confirmorder');	
+			$client_id=Yii::app()->functions->getClientId();
+			if(!$client_info = FunctionsV3::getClientByID($client_id)){
+				$error = t("Please relogin");
+			}	
+		}
+		
+		if(empty($error)){
+		    $this->render("pending_payment");
+		} else {
+			$error.='<p style="margin-top:20px;"><a href="'.$back_url.'" />'.t("back").'</a></p>';
+	        $this->render('error',array(
+			  'message'=>$error
+			));
+		}	
+	}
+	
+	
 	
 } /*END CLASS*/

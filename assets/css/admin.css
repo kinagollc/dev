@@ -1309,3 +1309,7 @@ animation: shadow-pulse 1s infinite;
      }
 }
 /* END PULSE  */
+
+.uk-list .chosen-container{
+width:100% !important;
+}

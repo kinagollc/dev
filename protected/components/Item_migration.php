@@ -25,11 +25,12 @@ class Item_migration
 		$total = 0;
 		if(Yii::app()->db->schema->getTable("{{subcategory_item_relationships}}")){	
 			//LENGTH(category) != 2
+			//TRIM(IFNULL(category,'')) <> ''
 			$stmt="
 			SELECT count(*) as total
 			FROM {{subcategory_item}} a		 
-			WHERE 			
-			TRIM(IFNULL(category,'')) <> ''
+			WHERE 						
+			LENGTH(category) >2
 			AND
 			sub_item_id NOT IN (
 			  select sub_item_id from {{subcategory_item_relationships}}

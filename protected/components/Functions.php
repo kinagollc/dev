@@ -3346,7 +3346,7 @@ class Functions extends CApplicationComponent
 	
 	public function displayOrderHTML($data='',$cart_item='',$receipt=false,$new_order_id='')
 	{
-		$item_array=array();
+		$item_array=array(); $delivery_vehicle = array();
 		$this->code=2;
 		$htm='';	
     	$subtotal=0;
@@ -3440,6 +3440,15 @@ class Functions extends CApplicationComponent
 	    				}	
     				} else $food_info=$this->getFoodItem($val['item_id']);
     				
+    				$delivery_options = array();
+    				if(isset($food_info['delivery_options'])){
+    				   	if($delivery_options = json_decode($food_info['delivery_options'],true)){
+    				   		 foreach ($delivery_options as $delivery_options_val) {
+    				   		 	 array_push($delivery_vehicle,$delivery_options_val);
+    				   		 }
+    				   	}    				
+    				}    			
+    				    		
     				
     				/*GET PACKAGING CHARGE*/
     				if($merchant_packaging_wise==1){ 
@@ -4428,7 +4437,11 @@ $htm.='<div class="b uk-text-muted">'. Price_Formatter::formatNumber($addon_raw_
     			$this->details=array(
     			  'item-count'=>$x,
     			  'html'=>$htm,
-    			  'raw'=>array('item'=>$item_array,'total'=>$item_array_total)
+    			  'raw'=>array(
+	    			  'item'=>$item_array,
+	    			  'total'=>$item_array_total,
+	    			  'delivery_vehicle'=>$delivery_vehicle
+    			  )
     			);
     		} else $this->msg=Yii::t("default","No Item added yet!");
 	    } else $this->msg=Yii::t("default","No Item added yet!");
@@ -7194,15 +7207,7 @@ $menu_html.="</li>";
     		
     		   break;
     		   
-    		case "msg91":    	    		   
-    		  /* $msg_resp=Msg91::sendSMS(
-    		      getOptionA('msg91_authkey'),
-    		      $to,
-    		      getOptionA('msg91_senderid'),
-    		      $message,
-    		      getOptionA('msg91_unicode'),
-    		      !empty(getOptionA('msg91_route'))?getOptionA('msg91_route'):'default'
-    		   );*/
+    		case "msg91":    	    		       		  
     		   $msg91_route=getOptionA('msg91_route');
     		   if(empty($msg91_route)){
     		   	  $msg91_route='default';
@@ -7302,7 +7307,40 @@ $menu_html.="</li>";
     			} catch (Exception $e){
     				$msg  = $e->getMessage();
     			}
-    			break;    			    	
+    			break;
+    			
+    		case "saudisms":	    		   
+    			$username=getOptionA('saudisms_username');
+				$password=getOptionA('saudisms_password');
+				$sender=getOptionA('saudisms_sender');
+				try {					
+					SaudismsWrapper::setCredentials($username,$password,$sender);
+					$resp = SaudismsWrapper::sendSMS(array(
+					  'to'=>$to,					  
+					  'body'=>$message
+					));
+					$msg="process";
+					$raw = $resp;
+				} catch (Exception $e){
+    				$msg  = $e->getMessage();    				
+    			}		    	
+    		   break;
+    		   
+    		case "mimosms":
+    			try {
+    				
+    				MimoSMSWrapper::$username = getOptionA('mimosms_username');
+    				MimoSMSWrapper::$password = getOptionA('mimosms_password');
+    				$sender = getOptionA('mimosms_sender');
+    				$resp = MimoSMSWrapper::sendSMS($to,$sender,$message);
+    				
+    				$msg="process";
+					$raw = $resp;
+					
+    			} catch (Exception $e){
+    				$msg  = $e->getMessage();    				
+    			}		    			
+    		  break;
     			    			    		       	
 		    default:
 		       $msg="No sms gateway selected";

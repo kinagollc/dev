@@ -1694,5 +1694,40 @@ class AjaxadminController extends CController
         }
         $this->jsonResponse();
 	}
+	
+	public function actioncustomer_list()
+	{
+		$post = $_POST; $data = array(); $and='';    			
+    	if(isset($post['search'])){    		
+    		if(strlen($post['search'])>0){    			
+    			$and = "
+    			AND (
+    			   first_name LIKE ".q($post['search']."%")." 
+    			   OR
+    			   last_name LIKE ".q($post['search']."%")." 
+    			)
+    			";
+    		}
+    	}
+    	
+    	$stmt="
+    	SELECT client_id as id, 
+    	concat(first_name,' ',last_name) as text
+    	FROM {{client}}
+    	WHERE status IN ('active')    	
+    	$and
+    	ORDER BY first_name ASC
+    	LIMIT 0,20
+    	";    	    	
+    	if($res = Yii::app()->db->createCommand($stmt)->queryAll()){
+    		$res = Yii::app()->request->stripSlashes($res);
+    		$data = $res;
+    	} 
+    	$result = array(
+    	  'results'=>$data
+    	);
+    	header('Content-type: application/json');
+    	echo json_encode($result);
+	}
 		
 } /*end class*/

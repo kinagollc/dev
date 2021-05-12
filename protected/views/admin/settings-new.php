@@ -398,6 +398,18 @@ FunctionsV3::addCsrfToken(false);
 	?>    
 	</div>
 	<?php endif;?>
+	
+	<div class="uk-form-row">
+	<label class="uk-form-label"><?php echo Yii::t("default","Enable Contact form")?></label>  
+	<?php 
+	echo CHtml::checkBox('captcha_contact_form',
+	Yii::app()->functions->getOptionAdmin('captcha_contact_form')==1?true:false
+	,array(
+	'class'=>"icheck",
+	'value'=>1
+	))
+	?>    
+	</div>
 
 
   </li>

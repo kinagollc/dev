@@ -1605,5 +1605,15 @@ class AjaxController extends CController
         } else $this->msg = t("No records");
         $this->jsonResponse();	
     }
-        
+    
+    public function actionregchange_phone()
+	{	
+		$id = isset($this->data['id'])?trim($this->data['id']):'';
+		$verification_type = isset($this->data['verification_type'])?trim($this->data['verification_type']):'';		
+		if($data = FunctionsV3::getClientByToken($id)){		
+		   require_once "reg-change-phone.php";
+		} else echo t("Invalid token");
+	}
+		
+    
 } /*end class*/    

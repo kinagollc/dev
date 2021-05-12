@@ -3061,7 +3061,9 @@ $this->msg=t("We have sent bank information instruction to your email")." :$merc
 		  'date_created'=>FunctionsV3::dateNow(),
 		  'ip_address'=>$_SERVER['REMOTE_ADDR'],
 		  'merchant_id'=>$merchant_id,
-		  'min_order'=>isset($this->data['min_order'])?(float)$this->data['min_order']:0
+		  'min_order'=>isset($this->data['min_order'])?(float)$this->data['min_order']:0,
+		  'max_number_use'=>isset($this->data['max_number_use'])?(integer)$this->data['max_number_use']:0,
+		  'selected_customer'=>isset($this->data['selected_customer'])?json_encode($this->data['selected_customer']):'',
 		);
 		
 		$days_list = FunctionsV3::dayList(); $days_input = isset($this->data['days'])?$this->data['days']:array();		
@@ -6823,6 +6825,85 @@ $this->msg=t("We have sent bank information instruction to your email")." :$merc
 			$this->otableOutput($feed_data);
 		}
 		$this->otableNodata();
-	}	
+	}
+	
+	public function update_client_contact()
+	{		
+		$id = isset($this->data['id'])?trim($this->data['id']):'';
+		$contact = isset($this->data['contact'])?trim($this->data['contact']):'';
+		$verification_type = isset($this->data['verification_type'])?trim($this->data['verification_type']):'';		
+		
+		if($data = FunctionsV3::getClientByToken($id)){
+
+			$client_id = isset($data['client_id'])?(integer)$data['client_id']:0;		
+			
+			$params =array(			 
+			 'date_modified'=>FunctionsV3::dateNow(),
+			 'ip_address'=>$_SERVER['REMOTE_ADDR']
+			);
+			if($verification_type=="sms"){
+				$params['contact_phone']=$contact;
+				
+				if ( FunctionsK::mobileBlockedCheck($contact)){
+		    		$this->msg=t("Sorry but your mobile number is blocked by website admin");
+		    		return ;
+		    	}	    
+		    	
+		    	$stmt="
+		    	SELECT client_id,contact_phone FROM {{client}}
+		    	WHERE 
+		    	contact_phone=".q($contact)."
+		    	AND client_id NOT IN (".q($client_id).")
+		    	";		    			    	
+		    	if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
+		    		$this->msg=t("Contact number already exist");
+		    		return ;
+		    	}
+				
+			} elseif ( $verification_type=="email"){
+				$params['email_address']=$contact;
+				
+				$Validator=new Validator;
+				$Validator->email(array(
+				  'contact'=>t("invalid email address")
+				),$this->data);
+				if(!$Validator->validate()){				   
+				   $this->msg= $Validator->getErrorAsHTML();
+				   return ;
+				}
+												
+				if ( FunctionsK::emailBlockedCheck($contact)){
+		    		$this->msg=t("Sorry but your email address is blocked by website admin");
+		    		return ;
+		    	}	   
+		    	
+		    	$stmt="
+		    	SELECT client_id,email_address FROM {{client}}
+		    	WHERE 
+		    	email_address=".q($contact)."
+		    	AND client_id NOT IN (".q($client_id).")
+		    	";		    			    	
+		    	if($res = Yii::app()->db->createCommand($stmt)->queryRow()){
+		    		$this->msg=t("Email address already exist");
+		    		return ;
+		    	}
+		    	
+			}		
+		
+								
+			try {
+		        Yii::app()->db->createCommand()->update("{{client}}",$params,
+		  	    'client_id=:client_id',
+			  	    array(
+			  	      ':client_id'=>(integer)$client_id
+			  	    )
+		  	    );
+		  	    $this->code=1;
+		  	    $this->msg = t("Successful");
+	  	    } catch (Exception $e) {
+				$this->msg = $e->getMessage();				 
+			}	
+		} else $this->msg  = t("Token not found");
+	}
 	
 } /*END CLASS*/

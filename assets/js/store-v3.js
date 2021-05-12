@@ -2541,6 +2541,14 @@ jQuery(document).ready(function() {
 		reInitLazyLoad();
 	});
 	
+	if ( $(".jquery_mask_card").exists()){
+	  $('.jquery_mask_card').mask('0000 0000 0000 0000');
+	}	  
+	
+	$( document ).on( "click", ".reg-change-phone", function() {    	    	
+    	fancyBoxFront('regchange_phone', "id=" + $(this).data("id") +"&verification_type="+  $(this).data("verification_type")  );
+    });	    
+	
 });
 /*end docu*/
 
